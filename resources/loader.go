@@ -8,10 +8,10 @@ import (
 
 	"github.com/alacrity-engine/core/animation"
 
+	codec "github.com/alacrity-engine/resource-codec"
 	"github.com/boltdb/bolt"
 	"github.com/faiface/pixel"
 	"github.com/golang/freetype/truetype"
-	codec "github.com/zergon321/resource-codec"
 )
 
 // ResourceLoader loads sprites,

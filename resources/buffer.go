@@ -1,9 +1,9 @@
 package resources
 
 import (
+	codec "github.com/alacrity-engine/resource-codec"
 	"github.com/faiface/pixel"
 	"github.com/golang/freetype/truetype"
-	codec "github.com/zergon321/resource-codec"
 )
 
 // resourceBuffer stores all the resources
