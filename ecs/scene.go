@@ -110,11 +110,11 @@ func (scene *Scene) Update() error {
 		return err
 	}
 
-	/*err = scene.placeGameObjects()
+	err = scene.placeGameObjects()
 
 	if err != nil {
 		return err
-	}*/
+	}
 
 	err = scene.addBufferedGameObjects()
 
