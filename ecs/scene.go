@@ -2,6 +2,7 @@ package ecs
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/alacrity-engine/core/tasking"
 )
@@ -12,17 +13,21 @@ type (
 	Scene struct {
 		name              string
 		gmobs             []*GameObject
-		additionBuffer    []*GameObject
+		addBuffer         []add
 		destructionBuffer []string
-		pasteBuffer       []*paste
+		changeZBuffer     []changeZ
 		systems           map[string]System
 		taskMgr           *tasking.TaskManager
 	}
 
-	paste struct {
-		movedGmob  string
-		targetGmob string
-		action     string
+	changeZ struct {
+		gmobName string
+		targetZ  float64
+	}
+
+	add struct {
+		gmob *GameObject
+		zUpd float64
 	}
 )
 
@@ -99,11 +104,11 @@ func (scene *Scene) Update() error {
 		return err
 	}
 
-	err = scene.placeGameObjects()
+	/*err = scene.placeGameObjects()
 
 	if err != nil {
 		return err
-	}
+	}*/
 
 	err = scene.addBufferedGameObjects()
 
@@ -130,46 +135,47 @@ func (scene *Scene) Update() error {
 	return nil
 }
 
-// placeGameObjects changes positions of the game
-// objects requested during runtime.
-func (scene *Scene) placeGameObjects() error {
-	for _, paste := range scene.pasteBuffer {
-		switch paste.action {
-		case "before":
-			err := scene.SetGameObjectPriorityBefore(
-				paste.movedGmob, paste.targetGmob)
+// insertGameObject inserts the game object
+// into the sorted Z-buffer using binary search.
+func (scene *Scene) insertGameObject(gmob *GameObject, zUpd float64) {
+	// Use binary search to insert the game
+	// object into the Z-sorted update buffer.
+	length := len(scene.gmobs)
+	ind := sort.Search(length, func(i int) bool {
+		return scene.gmobs[i].zUpdate >= zUpd
+	})
 
-			if err != nil {
-				switch err.(type) {
-				case *ErrorNoGameObjectOnScene:
-					continue
-
-				default:
-					return err
-				}
-			}
-
-		case "after":
-			err := scene.SetGameObjectPriorityAfter(
-				paste.movedGmob, paste.targetGmob)
-
-			if err != nil {
-				switch err.(type) {
-				case *ErrorNoGameObjectOnScene:
-					continue
-
-				default:
-					return err
-				}
-			}
-
-		default:
-			return fmt.Errorf("unknown action '%s'",
-				paste.action)
-		}
+	if ind == 0 {
+		scene.gmobs = append([]*GameObject{gmob},
+			scene.gmobs...)
+	} else if ind < length {
+		scene.gmobs = append(scene.gmobs[:ind+1],
+			scene.gmobs[ind:]...)
+		scene.gmobs[ind] = gmob
+	} else {
+		scene.gmobs = append(scene.gmobs, gmob)
 	}
+}
 
-	scene.pasteBuffer = []*paste{}
+// placeGameObjects changes Z update coordinate
+// of all the requested game objects.
+func (scene *Scene) placeGameObjects() error {
+	for _, changeZ := range scene.changeZBuffer {
+		pos, gmob := scene.FindGameObject(changeZ.gmobName)
+
+		if pos < 0 {
+			return RaiseErrorNoGameObjectOnScene(
+				scene, changeZ.gmobName)
+		}
+
+		// Remove the game object from
+		// its previous position.
+		scene.gmobs = append(scene.gmobs[:pos],
+			scene.gmobs[pos+1:]...)
+		// Insert the game object back
+		// into the Z-buffer.
+		scene.insertGameObject(gmob, changeZ.targetZ)
+	}
 
 	return nil
 }
@@ -177,18 +183,24 @@ func (scene *Scene) placeGameObjects() error {
 // addBufferedGameObjects adds all the buffered
 // game objects to the scene.
 func (scene *Scene) addBufferedGameObjects() error {
-	scene.gmobs = append(scene.gmobs, scene.additionBuffer...)
+	// Add all the game objects from the buffer
+	// and start them all.
+	for _, gmobAdd := range scene.addBuffer {
+		err := scene.AddGameObject(gmobAdd.gmob,
+			gmobAdd.zUpd)
 
-	for _, gmob := range scene.additionBuffer {
-		gmob.SetScene(scene)
-		err := gmob.Start()
+		if err != nil {
+			return err
+		}
+
+		err = gmobAdd.gmob.Start()
 
 		if err != nil {
 			return err
 		}
 	}
 
-	scene.additionBuffer = []*GameObject{}
+	scene.addBuffer = []add{}
 
 	return nil
 }
@@ -245,119 +257,6 @@ func (scene *Scene) removeDestroyedGameObjects() error {
 	return nil
 }
 
-// PlaceGameObjectBefore sets the game object to be
-// placed before the other game object in the next frame.
-func (scene *Scene) PlaceGameObjectBefore(name, beforeName string) error {
-	_, gmob := scene.FindGameObject(name)
-
-	if gmob == nil {
-		return RaiseErrorNoGameObjectOnScene(scene, name)
-	}
-
-	_, beforeGmob := scene.FindGameObject(beforeName)
-
-	if beforeGmob == nil {
-		return RaiseErrorNoGameObjectOnScene(scene, beforeName)
-	}
-
-	p := &paste{
-		movedGmob:  name,
-		targetGmob: beforeName,
-		action:     "before",
-	}
-
-	scene.pasteBuffer = append(scene.pasteBuffer, p)
-
-	return nil
-}
-
-// PlaceGameObjectAfter sets the game object to be
-// placed after the other game object in the next frame.
-func (scene *Scene) PlaceGameObjectAfter(name, afterName string) error {
-	_, gmob := scene.FindGameObject(name)
-
-	if gmob == nil {
-		return RaiseErrorNoGameObjectOnScene(scene, name)
-	}
-
-	_, beforeGmob := scene.FindGameObject(afterName)
-
-	if beforeGmob == nil {
-		return RaiseErrorNoGameObjectOnScene(scene, afterName)
-	}
-
-	p := &paste{
-		movedGmob:  name,
-		targetGmob: afterName,
-		action:     "after",
-	}
-
-	scene.pasteBuffer = append(scene.pasteBuffer, p)
-
-	return nil
-}
-
-// SetGameObjectPriorityBefore sets the game object
-// priority to be updated before the specified game object.
-func (scene *Scene) SetGameObjectPriorityBefore(name, beforeName string) error {
-	i, gmob := scene.FindGameObject(name)
-
-	if gmob == nil {
-		return RaiseErrorNoGameObjectOnScene(scene, name)
-	}
-
-	j, beforeGmob := scene.FindGameObject(beforeName)
-
-	if beforeGmob == nil {
-		return RaiseErrorNoGameObjectOnScene(scene, beforeName)
-	}
-
-	j--
-
-	if j < 0 {
-		j = 0
-	}
-
-	scene.gmobs = append(scene.gmobs[:i], scene.gmobs[i+1:]...)
-	buffer := make([]*GameObject, j+1)
-	copy(buffer, scene.gmobs[:j])
-	buffer[j] = gmob
-	scene.gmobs = append(buffer, scene.gmobs[j:]...)
-
-	return nil
-}
-
-// SetGameObjectPriorityAfter sets the game object
-// priority to be updated after the specified game object.
-func (scene *Scene) SetGameObjectPriorityAfter(name, afterName string) error {
-	i, gmob := scene.FindGameObject(name)
-
-	if gmob == nil {
-		return RaiseErrorNoGameObjectOnScene(scene, name)
-	}
-
-	j, beforeGmob := scene.FindGameObject(afterName)
-
-	if beforeGmob == nil {
-		return RaiseErrorNoGameObjectOnScene(scene, afterName)
-	}
-
-	j++
-	lastInd := len(scene.gmobs) - 1
-
-	if j > lastInd {
-		j = lastInd
-	}
-
-	scene.gmobs = append(scene.gmobs[:i], scene.gmobs[i+1:]...)
-	buffer := make([]*GameObject, j+1)
-	copy(buffer, scene.gmobs[:j])
-	buffer[j] = gmob
-	scene.gmobs = append(buffer, scene.gmobs[j:]...)
-
-	return nil
-}
-
 // FindGameObject finds the game object on the scene.
 func (scene *Scene) FindGameObject(name string) (int, *GameObject) {
 	ind := -1
@@ -395,20 +294,20 @@ func (scene *Scene) hasGameObjectInDestroyed(name string) bool {
 // findGameObjectInAdded searches for a game object
 // with the specified name in the buffer where game objects
 // set to be added reside.
-func (scene *Scene) findGameObjectInAdded(name string) (int, *GameObject) {
+func (scene *Scene) findGameObjectInAdded(name string) (int, add) {
 	ind := -1
-	var gameObject *GameObject
+	var gameObjectAdd add
 
-	for i, gmob := range scene.additionBuffer {
-		if name == gmob.Name() {
+	for i, gmobAdd := range scene.addBuffer {
+		if name == gmobAdd.gmob.Name() {
 			ind = i
-			gameObject = gmob
+			gameObjectAdd = gmobAdd
 
 			break
 		}
 	}
 
-	return ind, gameObject
+	return ind, gameObjectAdd
 }
 
 // HasGameObject returns true if the scene has a game
@@ -420,34 +319,24 @@ func (scene *Scene) HasGameObject(name string) bool {
 }
 
 // AddGameObject adds a new game object on the scene.
-func (scene *Scene) AddGameObject(gmob *GameObject, priority int) error {
+//
+// Should be used before the scene is started.
+func (scene *Scene) AddGameObject(gmob *GameObject, zUpd float64) error {
 	if scene.HasGameObject(gmob.name) {
 		return fmt.Errorf("scene '%s' already has game object '%s'",
 			scene.name, gmob.name)
 	}
 
-	length := len(scene.gmobs)
-
-	if length <= 0 || priority >= length {
-		scene.gmobs = append(scene.gmobs, gmob)
-	} else if priority < 0 {
-		scene.gmobs = append([]*GameObject{gmob},
-			scene.gmobs...)
-	} else {
-		scene.gmobs = append(scene.gmobs[:priority+1],
-			scene.gmobs[priority:]...)
-		scene.gmobs[priority] = gmob
-	}
-
+	scene.insertGameObject(gmob, zUpd)
 	gmob.SetScene(scene)
 
 	return nil
 }
 
-// AddGameObjectToBuffer must be called when the game
+// AddGameObjectInRuntime must be called when the game
 // object is created in the game loop and should be added
 // to the scene.
-func (scene *Scene) AddGameObjectToBuffer(gmob *GameObject) error {
+func (scene *Scene) AddGameObjectInRuntime(gmob *GameObject, zUpd float64) error {
 	if scene.HasGameObject(gmob.name) {
 		return fmt.Errorf("scene '%s' already has game object '%s'",
 			scene.name, gmob.name)
@@ -460,51 +349,9 @@ func (scene *Scene) AddGameObjectToBuffer(gmob *GameObject) error {
 			gmob.name)
 	}
 
-	scene.additionBuffer = append(scene.additionBuffer, gmob)
+	scene.addBuffer = append(scene.addBuffer, add{gmob, zUpd})
 
 	return nil
-}
-
-// PasteGameObjectBefore pastes the game object
-// before the game object with the specified name
-// in the game object list of the scene.
-func (scene *Scene) PasteGameObjectBefore(gmobName string, gmob *GameObject) error {
-	i, gmobReq := scene.FindGameObject(gmobName)
-
-	if gmobReq == nil {
-		return fmt.Errorf("scene '%s' doesn't have game object '%s'",
-			scene.name, gmobName)
-	}
-
-	if scene.HasGameObject(gmob.name) {
-		return fmt.Errorf("scene '%s' already has game object '%s'",
-			scene.name, gmob.name)
-	}
-
-	i--
-
-	return scene.AddGameObject(gmob, i)
-}
-
-// PasteGameObjectAfter pastes the game object
-// after the game object with the specified name
-// in the game object list of the scene.
-func (scene *Scene) PasteGameObjectAfter(gmobName string, gmob *GameObject) error {
-	i, gmobReq := scene.FindGameObject(gmobName)
-
-	if gmobReq == nil {
-		return fmt.Errorf("scene '%s' doesn't have game object '%s'",
-			scene.name, gmobName)
-	}
-
-	if scene.HasGameObject(gmob.name) {
-		return fmt.Errorf("scene '%s' already has game object '%s'",
-			scene.name, gmob.name)
-	}
-
-	i++
-
-	return scene.AddGameObject(gmob, i)
 }
 
 // RemoveGameObject removes the game object from the scene.
@@ -558,7 +405,8 @@ func (scene *Scene) DestroyGameObject(name string) error {
 func NewScene(name string) *Scene {
 	return &Scene{
 		name:              name,
-		additionBuffer:    []*GameObject{},
+		addBuffer:         []add{},
+		changeZBuffer:     []changeZ{},
 		gmobs:             []*GameObject{},
 		destructionBuffer: []string{},
 		systems:           map[string]System{},

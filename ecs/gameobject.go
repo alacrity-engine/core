@@ -20,6 +20,8 @@ type GameObject struct {
 	scene      *Scene
 	draw       bool
 	destroyed  bool
+	zUpdate    float64
+	zDraw      float64
 }
 
 // Destroyed returns true if the game object
@@ -208,7 +210,7 @@ func (gmob *GameObject) ComponentCount() int {
 }
 
 // NewGameObject creates a new game object with no components.
-func NewGameObject(parent *geometry.Transform, name string, sprite *pixel.Sprite) *GameObject {
+func NewGameObject(parent *geometry.Transform, name string, sprite *pixel.Sprite, zUpd, zDraw float64) *GameObject {
 	return &GameObject{
 		name:       name,
 		components: []Component{},
@@ -216,5 +218,7 @@ func NewGameObject(parent *geometry.Transform, name string, sprite *pixel.Sprite
 		sprite:     sprite,
 		draw:       false,
 		colorMask:  pixel.Alpha(1.0),
+		zUpdate:    zUpd,
+		zDraw:      zDraw,
 	}
 }
