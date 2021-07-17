@@ -5,7 +5,6 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/golang-collections/collections/queue"
-	"github.com/zergon321/cirno"
 )
 
 // Transform stores position, angle
@@ -100,11 +99,11 @@ func (t *Transform) Position() pixel.Vec {
 	return pixel.V(t.data[4], t.data[5])
 }
 
-// Angle returns the transform angle in degrees.
+// Angle returns the transform angle in radians.
 func (t *Transform) Angle() float64 {
 	localXaxis := pixel.V(t.data[0], t.data[1])
 
-	return localXaxis.Angle() * cirno.RadToDeg
+	return localXaxis.Angle()
 }
 
 // Scale returns the scale of the transform.
