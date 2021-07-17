@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image/color"
 
-	"github.com/alacrity-engine/core/draw"
 	"github.com/alacrity-engine/core/ecs"
 
 	"github.com/faiface/pixel"
@@ -19,9 +18,9 @@ type Caption struct {
 	atlas     *text.Atlas
 	str       string
 	txt       *text.Text
-	layout    *draw.Layout
 	target    string
 	colorMask color.Color
+	zDraw     float64
 }
 
 // String returns the contents of the caption.
@@ -78,11 +77,12 @@ func (c *Caption) Start() error {
 // Update fills the text object with
 // the content and sends it to be rendered.
 func (c *Caption) Update() error {
+	layout := c.GameObject().Scene().DrawLayout()
 	fmt.Fprint(c.txt, c.str)
 
-	err := c.layout.RenderTextOnTarget(
+	err := layout.RenderTextOnTarget(
 		c.target, c.txt, c.GameObject().
-			Transform().Data(), c.colorMask)
+			Transform().Data(), c.colorMask, c.zDraw)
 
 	if err != nil {
 		return err
@@ -98,12 +98,12 @@ func (c *Caption) Destroy() error {
 
 // NewCaption returns a new text object to
 // be rendered on the game scene.
-func NewCaption(orig pixel.Vec, name, target string, layout *draw.Layout, atlas *text.Atlas) *Caption {
+func NewCaption(orig pixel.Vec, name, target string, atlas *text.Atlas, zDraw float64) *Caption {
 	caption := &Caption{
-		layout: layout,
 		target: target,
 		txt:    text.New(orig, atlas),
 		orig:   orig,
+		zDraw:  zDraw,
 	}
 
 	caption.SetName(name)

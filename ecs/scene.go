@@ -18,6 +18,7 @@ type (
 		changeZBuffer     []changeZ
 		systems           map[string]System
 		taskMgr           *tasking.TaskManager
+		layout            *DrawLayout
 	}
 
 	changeZ struct {
@@ -39,6 +40,11 @@ func (scene *Scene) Name() string {
 // TaskManager returns the task manager of the scene.
 func (scene *Scene) TaskManager() *tasking.TaskManager {
 	return scene.taskMgr
+}
+
+// DrawLayout returns the draw layout og the scene.
+func (scene *Scene) DrawLayout() *DrawLayout {
+	return scene.layout
 }
 
 // FindSystem returns the system with the specified name.
@@ -411,5 +417,6 @@ func NewScene(name string) *Scene {
 		destructionBuffer: []string{},
 		systems:           map[string]System{},
 		taskMgr:           tasking.NewTaskManager(),
+		layout:            NewLayout(),
 	}
 }
