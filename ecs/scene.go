@@ -16,6 +16,7 @@ type (
 		addBuffer         []add
 		destructionBuffer []string
 		changeZBuffer     []changeZ
+		cache             map[string]record
 		systems           map[string]System
 		taskMgr           *tasking.TaskManager
 		layout            *DrawLayout
@@ -29,6 +30,11 @@ type (
 	add struct {
 		gmob *GameObject
 		zUpd float64
+	}
+
+	record struct {
+		gmob *GameObject
+		pos  int
 	}
 )
 
@@ -143,7 +149,7 @@ func (scene *Scene) Update() error {
 
 // insertGameObject inserts the game object
 // into the sorted Z-buffer using binary search.
-func (scene *Scene) insertGameObject(gmob *GameObject, zUpd float64) {
+func (scene *Scene) insertGameObject(gmob *GameObject, zUpd float64) int {
 	// Use binary search to insert the game
 	// object into the Z-sorted update buffer.
 	length := len(scene.gmobs)
@@ -161,6 +167,8 @@ func (scene *Scene) insertGameObject(gmob *GameObject, zUpd float64) {
 	} else {
 		scene.gmobs = append(scene.gmobs, gmob)
 	}
+
+	return ind
 }
 
 // placeGameObjects changes Z update coordinate
@@ -180,7 +188,13 @@ func (scene *Scene) placeGameObjects() error {
 			scene.gmobs[pos+1:]...)
 		// Insert the game object back
 		// into the Z-buffer.
-		scene.insertGameObject(gmob, changeZ.targetZ)
+		ind := scene.insertGameObject(gmob, changeZ.targetZ)
+
+		// Change the record about the
+		// game object in the cache.
+		if rec, ok := scene.cache[gmob.name]; ok {
+			rec.pos = ind
+		}
 	}
 
 	return nil
@@ -265,6 +279,13 @@ func (scene *Scene) removeDestroyedGameObjects() error {
 
 // FindGameObject finds the game object on the scene.
 func (scene *Scene) FindGameObject(name string) (int, *GameObject) {
+	// First look it up in the cache.
+	rec, ok := scene.cache[name]
+
+	if ok {
+		return rec.pos, rec.gmob
+	}
+
 	ind := -1
 	var gameObject *GameObject
 
@@ -274,6 +295,13 @@ func (scene *Scene) FindGameObject(name string) (int, *GameObject) {
 			gameObject = gmob
 
 			break
+		}
+	}
+
+	if ind >= 0 {
+		scene.cache[name] = record{
+			gmob: gameObject,
+			pos:  ind,
 		}
 	}
 
@@ -360,6 +388,22 @@ func (scene *Scene) AddGameObjectInRuntime(gmob *GameObject, zUpd float64) error
 	return nil
 }
 
+// ChangeGameObjectZ changes the game object Z.
+func (scene *Scene) ChangeGameObjectZ(name string, zUpd float64) error {
+	if !scene.HasGameObject(name) {
+		return RaiseErrorNoGameObjectOnScene(scene, name)
+	}
+
+	zChange := changeZ{
+		gmobName: name,
+		targetZ:  zUpd,
+	}
+
+	scene.changeZBuffer = append(scene.changeZBuffer, zChange)
+
+	return nil
+}
+
 // RemoveGameObject removes the game object from the scene.
 func (scene *Scene) RemoveGameObject(name string) error {
 	i, gmob := scene.FindGameObject(name)
@@ -370,6 +414,7 @@ func (scene *Scene) RemoveGameObject(name string) error {
 	}
 
 	scene.gmobs = append(scene.gmobs[:i], scene.gmobs[i+1:]...)
+	delete(scene.cache, name)
 
 	return nil
 }
@@ -402,6 +447,7 @@ func (scene *Scene) DestroyGameObject(name string) error {
 
 	scene.destructionBuffer = append(scene.
 		destructionBuffer, name)
+	delete(scene.cache, name)
 
 	return nil
 }
@@ -415,6 +461,7 @@ func NewScene(name string) *Scene {
 		changeZBuffer:     []changeZ{},
 		gmobs:             []*GameObject{},
 		destructionBuffer: []string{},
+		cache:             map[string]record{},
 		systems:           map[string]System{},
 		taskMgr:           tasking.NewTaskManager(),
 		layout:            NewLayout(),
