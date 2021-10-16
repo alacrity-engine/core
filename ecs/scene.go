@@ -2,8 +2,10 @@ package ecs
 
 import (
 	"fmt"
+	"path/filepath"
 	"sort"
 
+	"github.com/alacrity-engine/core/resources"
 	"github.com/alacrity-engine/core/tasking"
 )
 
@@ -20,6 +22,7 @@ type (
 		systems           map[string]System
 		taskMgr           *tasking.TaskManager
 		layout            *DrawLayout
+		resourceLoaders   map[string]*resources.ResourceLoader
 	}
 
 	changeZ struct {
@@ -51,6 +54,49 @@ func (scene *Scene) TaskManager() *tasking.TaskManager {
 // DrawLayout returns the draw layout og the scene.
 func (scene *Scene) DrawLayout() *DrawLayout {
 	return scene.layout
+}
+
+// openResourceFile opens a new resource file for the scene.
+func (scene *Scene) openResourceFile(fname string) (*resources.ResourceLoader, error) {
+	loaderID, err := filepath.Abs(fname)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if _, ok := scene.resourceLoaders[loaderID]; ok {
+		return nil, NewErrorLoaderAlreadyExists(scene, loaderID)
+	}
+
+	resourceLoader, err := resources.NewResourceLoader(loaderID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	scene.resourceLoaders[loaderID] = resourceLoader
+
+	return resourceLoader, nil
+}
+
+func (scene *Scene) GetResourceLoader(fname string) (*resources.ResourceLoader, error) {
+	loaderID, err := filepath.Abs(fname)
+
+	if err != nil {
+		return nil, err
+	}
+
+	loader, ok := scene.resourceLoaders[loaderID]
+
+	if !ok {
+		loader, err = scene.openResourceFile(loaderID)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return loader, nil
 }
 
 // FindSystem returns the system with the specified name.
@@ -465,5 +511,6 @@ func NewScene(name string) *Scene {
 		systems:           map[string]System{},
 		taskMgr:           tasking.NewTaskManager(),
 		layout:            NewLayout(),
+		resourceLoaders:   map[string]*resources.ResourceLoader{},
 	}
 }

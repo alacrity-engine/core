@@ -1,9 +1,9 @@
-package animation
+package ecs
 
 import (
 	"fmt"
 
-	"github.com/alacrity-engine/core/ecs"
+	"github.com/alacrity-engine/core/anim"
 )
 
 // Dummy is used to
@@ -14,9 +14,9 @@ const Dummy = ""
 // Animator is a component which controls
 // what animation to play.
 type Animator struct {
-	ecs.BaseComponent
+	BaseComponent
 	currentAnimation string
-	animations       map[string]*Animation
+	animations       map[string]*anim.Animation
 }
 
 // CurrentAnimation returns the animation currently
@@ -84,7 +84,7 @@ func (animator *Animator) Destroy() error {
 }
 
 // AddAnimation adds the animation with the given name in the animator.
-func (animator *Animator) AddAnimation(name string, anim *Animation) error {
+func (animator *Animator) AddAnimation(name string, anim *anim.Animation) error {
 	if _, ok := animator.animations[name]; ok {
 		return fmt.Errorf("animation with name '%s' already exists",
 			name)
@@ -114,7 +114,7 @@ func (animator *Animator) RemoveAnimation(name string) error {
 func NewAnimator(name string) *Animator {
 	animator := &Animator{
 		currentAnimation: Dummy,
-		animations:       map[string]*Animation{},
+		animations:       map[string]*anim.Animation{},
 	}
 
 	animator.SetName(name)

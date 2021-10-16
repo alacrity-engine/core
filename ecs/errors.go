@@ -118,3 +118,29 @@ func RaiseErrorWrongComponentType(component Component, assertedType, actualType 
 		actualType:   actualType,
 	}
 }
+
+/*****************************************************************************************************************/
+
+// ErrorLoaderAlreadyExists is returned
+// when the scene already has a loader
+// under the specidied name.
+type ErrorLoaderAlreadyExists struct {
+	scene    *Scene
+	loaderID string
+}
+
+// Error returns the error message.
+func (err *ErrorLoaderAlreadyExists) Error() string {
+	return fmt.Sprintf("scene %s already has loader %s",
+		err.scene.name, err.loaderID)
+}
+
+// NewErrorLoaderAlreadyExists creates a
+// new error that is returned when the scene
+// already has a loader under the specidied name.
+func NewErrorLoaderAlreadyExists(scene *Scene, loaderID string) *ErrorLoaderAlreadyExists {
+	return &ErrorLoaderAlreadyExists{
+		scene:    scene,
+		loaderID: loaderID,
+	}
+}

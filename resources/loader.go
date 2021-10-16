@@ -6,7 +6,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/alacrity-engine/core/animation"
+	"github.com/alacrity-engine/core/anim"
 
 	codec "github.com/alacrity-engine/resource-codec"
 	"github.com/boltdb/bolt"
@@ -29,7 +29,7 @@ func (loader *ResourceLoader) Close() error {
 
 // LoadAnimation loads the animation with spritesheet
 // and frames from the resource file.
-func (loader *ResourceLoader) LoadAnimation(animID string) (*animation.Animation, error) {
+func (loader *ResourceLoader) LoadAnimation(animID string) (*anim.Animation, error) {
 	// Load the animation frames from the buffer
 	// or the resource file.
 	animData, err := loader.buffer.takeAnimation(animID)
@@ -129,7 +129,7 @@ func (loader *ResourceLoader) LoadAnimation(animID string) (*animation.Animation
 		delays = append(delays, delay)
 	}
 
-	anim := animation.NewAnimation(spritesheet, animData.Frames,
+	anim := anim.NewAnimation(spritesheet, animData.Frames,
 		delays, false)
 
 	return anim, nil

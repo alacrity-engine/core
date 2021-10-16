@@ -1,4 +1,4 @@
-package animation
+package anim
 
 import (
 	"time"
