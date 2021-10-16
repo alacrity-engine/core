@@ -113,7 +113,7 @@ func (layout *DrawLayout) SetTargetTransform(name string, transform pixel.Matrix
 
 // AddGameObjectToTarget adds a new game object onto the target
 // with the specified name.
-func (layout *DrawLayout) AddGameObjectToTarget(targetName string, gmob *GameObject, zUpd float64) error {
+func (layout *DrawLayout) AddGameObjectToTarget(targetName string, gmob *GameObject, zDraw float64) error {
 	_, group := layout.findGroup(targetName)
 
 	if group == nil {
@@ -121,7 +121,7 @@ func (layout *DrawLayout) AddGameObjectToTarget(targetName string, gmob *GameObj
 			targetName)
 	}
 
-	err := group.addGameObject(gmob, zUpd)
+	err := group.addGameObject(gmob, zDraw)
 
 	return err
 }

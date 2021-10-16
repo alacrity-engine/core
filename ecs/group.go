@@ -69,17 +69,19 @@ func (group *drawGroup) insertGameObject(gmob *GameObject, zDraw float64) {
 	} else {
 		group.gmobs = append(group.gmobs, gmob)
 	}
+
+	gmob.zDraw = zDraw
 }
 
 // addGameObject adds a new game object in the
 // draw group computing its position by the priority.
-func (group *drawGroup) addGameObject(gmob *GameObject, zUpd float64) error {
+func (group *drawGroup) addGameObject(gmob *GameObject, zDraw float64) error {
 	if group.hasGameObject(gmob.Name()) {
 		return fmt.Errorf("the game object with name'%s'"+
 			" already exists in the draw group", gmob.Name())
 	}
 
-	group.insertGameObject(gmob, zUpd)
+	group.insertGameObject(gmob, zDraw)
 
 	return nil
 }
