@@ -12,7 +12,21 @@ var (
 	noDestroyOnSceneSwitch map[string]*GameObject
 	// scenes stores all the loaded scenes.
 	scenes map[string]*Scene
+	// currentSceneName is the name
+	// of the scene currently being played.
+	currentSceneName string
 )
+
+func init() {
+	noDestroyOnSceneSwitch = map[string]*GameObject{}
+	scenes = map[string]*Scene{}
+}
+
+// CurrentScene returns the scene
+// currently being played by the engine.
+func CurrentScene() *Scene {
+	return scenes[currentSceneName]
+}
 
 // StartLoadingScene starts an asynchronous
 // process of loading a new scene.

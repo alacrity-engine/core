@@ -152,6 +152,8 @@ func (scene *Scene) Start() error {
 		}
 	}
 
+	currentSceneName = scene.name
+
 	return nil
 }
 
@@ -498,6 +500,52 @@ func (scene *Scene) DestroyGameObject(name string) error {
 	scene.destructionBuffer = append(scene.
 		destructionBuffer, name)
 	delete(scene.cache, name)
+
+	return nil
+}
+
+// DontDestroyOnSceneSwitch sets the game object
+// under the specified name to be not destroyed on
+// scene switch.
+func (scene *Scene) DontDestroyOnSceneSwitch(gmobName string) error {
+	i, gmob := scene.FindGameObject(gmobName)
+
+	if i < 0 {
+		return RaiseErrorNoGameObjectOnScene(scene, gmobName)
+	}
+
+	if _, ok := noDestroyOnSceneSwitch[gmob.name]; ok {
+		return NewErrorObjectAlreadyNotDestroyedOnSceneSwitch(gmob)
+	}
+
+	noDestroyOnSceneSwitch[gmob.name] = gmob
+
+	return nil
+}
+
+// SwitchTo starts playing a different scene
+// under the specified name.
+func (scene *Scene) SwitchTo(sceneName string) error {
+	otherScene, ok := scenes[sceneName]
+
+	if !ok {
+		return NewErrorSceneDoesntExist(sceneName)
+	}
+
+	for _, gmob := range noDestroyOnSceneSwitch {
+		err := otherScene.AddGameObject(
+			gmob, gmob.zUpdate)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	err := otherScene.Start()
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

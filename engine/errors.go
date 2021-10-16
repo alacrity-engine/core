@@ -218,3 +218,27 @@ func NewErrorSceneDoesntExist(sceneName string) *ErrorSceneDoesntExist {
 		sceneName: sceneName,
 	}
 }
+
+/*****************************************************************************************************************/
+
+// ErrorObjectAlreadyNotDestroyedOnSceneSwitch is returned
+// when the caller tried to set the object to be not destroyed
+// on scene switch but it has been done already.
+type ErrorObjectAlreadyNotDestroyedOnSceneSwitch struct {
+	gmob *GameObject
+}
+
+// Error returns the error message.
+func (err *ErrorObjectAlreadyNotDestroyedOnSceneSwitch) Error() string {
+	return fmt.Sprintf(
+		"object '%s' is already set to be not destroyed on scene switch", err.gmob.name)
+}
+
+// NewErrorObjectAlreadyNotDestroyedOnSceneSwitch creates a new
+// error that is returned when the caller tried to set the object
+// to be not destroyed on scene switch but it has been done already.
+func NewErrorObjectAlreadyNotDestroyedOnSceneSwitch(gmob *GameObject) *ErrorObjectAlreadyNotDestroyedOnSceneSwitch {
+	return &ErrorObjectAlreadyNotDestroyedOnSceneSwitch{
+		gmob: gmob,
+	}
+}

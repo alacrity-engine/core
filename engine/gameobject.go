@@ -22,6 +22,7 @@ type GameObject struct {
 	destroyed  bool
 	zUpdate    float64
 	zDraw      float64
+	started    bool
 }
 
 // Destroyed returns true if the game object
@@ -56,6 +57,10 @@ func (gmob *GameObject) Transform() *geometry.Transform {
 // Start starts all the components
 // of the game object.
 func (gmob *GameObject) Start() error {
+	if gmob.started {
+		return nil
+	}
+
 	for _, comp := range gmob.components {
 		err := comp.Start()
 
@@ -65,6 +70,7 @@ func (gmob *GameObject) Start() error {
 	}
 
 	gmob.draw = true
+	gmob.started = true
 
 	return nil
 }
