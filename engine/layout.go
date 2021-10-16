@@ -80,6 +80,8 @@ func (layout *DrawLayout) AddTarget(name string, zDraw float64, target pixel.Tar
 		layout.groups = append(layout.groups, group)
 	}
 
+	group.zDraw = zDraw
+
 	return nil
 }
 

@@ -214,6 +214,8 @@ func (scene *Scene) insertGameObject(gmob *GameObject, zUpd float64) int {
 		scene.gmobs = append(scene.gmobs, gmob)
 	}
 
+	gmob.zUpdate = zUpd
+
 	return ind
 }
 

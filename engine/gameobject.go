@@ -210,7 +210,7 @@ func (gmob *GameObject) ComponentCount() int {
 }
 
 // NewGameObject creates a new game object with no components.
-func NewGameObject(parent *geometry.Transform, name string, sprite *pixel.Sprite, zUpd, zDraw float64) *GameObject {
+func NewGameObject(parent *geometry.Transform, name string, sprite *pixel.Sprite) *GameObject {
 	return &GameObject{
 		name:       name,
 		components: []Component{},
@@ -218,7 +218,5 @@ func NewGameObject(parent *geometry.Transform, name string, sprite *pixel.Sprite
 		sprite:     sprite,
 		draw:       false,
 		colorMask:  pixel.Alpha(1.0),
-		zUpdate:    zUpd,
-		zDraw:      zDraw,
 	}
 }
