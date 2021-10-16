@@ -144,3 +144,77 @@ func NewErrorLoaderAlreadyExists(scene *Scene, loaderID string) *ErrorLoaderAlre
 		loaderID: loaderID,
 	}
 }
+
+/*****************************************************************************************************************/
+
+// ErrorIncorrectSceneLoader is returned
+// when the plugin doesn't have a correct
+// scene loader function.
+type ErrorIncorrectSceneLoader struct {
+	lib string
+}
+
+// Error returns the error message.
+func (err *ErrorIncorrectSceneLoader) Error() string {
+	return fmt.Sprintf(
+		"function 'CreateScene()' from plugin '%s' is not a scene loader", err.lib)
+}
+
+// NewErrorIncorrectSceneLoader returns a new error
+// when the plugin doesn't have a correct
+// scene loader function.
+func NewErrorIncorrectSceneLoader(lib string) *ErrorIncorrectSceneLoader {
+	return &ErrorIncorrectSceneLoader{
+		lib: lib,
+	}
+}
+
+/*****************************************************************************************************************/
+
+// ErrorSceneAlreadyExists is returned
+// when the scene with the specified name
+// is already loaded and exists in the system.
+type ErrorSceneAlreadyExists struct {
+	scene *Scene
+}
+
+// Error returns the error message.
+func (err *ErrorSceneAlreadyExists) Error() string {
+	return fmt.Sprintf(
+		"scene '%s' already exists in the system", err.scene.name)
+}
+
+// NewErrorSceneAlreadyExists creates a new
+// error that is returned when the scene with
+// the specified name is already loaded and
+// exists in the system.
+func NewErrorSceneAlreadyExists(scene *Scene) *ErrorSceneAlreadyExists {
+	return &ErrorSceneAlreadyExists{
+		scene: scene,
+	}
+}
+
+/*****************************************************************************************************************/
+
+// ErrorSceneDoesntExist is returned when
+// the scene under the specified name is
+// not loaded and doesn't exist in the system.
+type ErrorSceneDoesntExist struct {
+	sceneName string
+}
+
+// Error returns the error message.
+func (err *ErrorSceneDoesntExist) Error() string {
+	return fmt.Sprintf(
+		"scene '%s' is not loaded and doesn't exist in the system", err.sceneName)
+}
+
+// NewErrorSceneDoesntExist creates a new
+// error that is returned when
+// the scene under the specified name is
+// not loaded and doesn't exist in the system.
+func NewErrorSceneDoesntExist(sceneName string) *ErrorSceneDoesntExist {
+	return &ErrorSceneDoesntExist{
+		sceneName: sceneName,
+	}
+}
