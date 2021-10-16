@@ -27,6 +27,11 @@ func (ap *AsynchronousProcess) Name() string {
 	return ap.name
 }
 
+// Result returns the final result of the
+// asynchronous process.
+//
+// This method returns an error if the process
+// is not complete yet.
 func (ap *AsynchronousProcess) Result() (interface{}, error) {
 	ap.locker.RLock()
 	defer ap.locker.RUnlock()
@@ -38,10 +43,16 @@ func (ap *AsynchronousProcess) Result() (interface{}, error) {
 	return ap.result, nil
 }
 
+// SetResult sets the result for the process.
 func (ap *AsynchronousProcess) SetResult(value interface{}) {
 	ap.result = value
 }
 
+// Error returns the error that
+// occurred during the process execution.
+//
+// This method returns an error if the process
+// is not complete yet.
 func (ap *AsynchronousProcess) Error() (error, error) {
 	ap.locker.RLock()
 	defer ap.locker.RUnlock()
@@ -53,6 +64,8 @@ func (ap *AsynchronousProcess) Error() (error, error) {
 	return ap.err, nil
 }
 
+// SetError sets an error that occurred
+// during the asynchronous process.
 func (ap *AsynchronousProcess) SetError(err error) {
 	ap.err = err
 }

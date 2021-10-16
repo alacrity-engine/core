@@ -79,6 +79,8 @@ func (scene *Scene) openResourceFile(fname string) (*resources.ResourceLoader, e
 	return resourceLoader, nil
 }
 
+// GetResourceLoader opens or returns
+// an already opened resource loader.
 func (scene *Scene) GetResourceLoader(fname string) (*resources.ResourceLoader, error) {
 	loaderID, err := filepath.Abs(fname)
 
