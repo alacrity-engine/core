@@ -113,3 +113,31 @@ func NewErrorAfterTaskAlreadyStarted(taskName string) *ErrorAfterTaskAlreadyStar
 		taskName: taskName,
 	}
 }
+
+/*******************************************************************************/
+
+// ErrorAsynchronousProcessNotComplete is returned
+// when the caller tries to access the result of the
+// asynchronous process when it's not complete yet.
+type ErrorAsynchronousProcessNotComplete struct {
+	ap       *AsynchronousProcess
+	progress int
+}
+
+// Error returns the error message.
+func (err *ErrorAsynchronousProcessNotComplete) Error() string {
+	return fmt.Sprintf(
+		"asynchronous process %s is not complete yet; the progress is %d%%",
+		err.ap.name, err.progress)
+}
+
+// NewErrorAsynchronousProcessNotComplete creates a
+// new error that is returned when the caller tries
+// to access the result of the asynchronous process
+// when it's not complete yet.
+func NewErrorAsynchronousProcessNotComplete(ap *AsynchronousProcess, progress int) *ErrorAsynchronousProcessNotComplete {
+	return &ErrorAsynchronousProcessNotComplete{
+		ap:       ap,
+		progress: progress,
+	}
+}

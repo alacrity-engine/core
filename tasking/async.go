@@ -17,12 +17,28 @@ type AsynchronousProcess struct {
 	progress        int
 	locker          *sync.RWMutex
 	progressChannel chan int
+	result          interface{}
 }
 
 // Name returns the name of the
 // asynchronous process.
 func (ap *AsynchronousProcess) Name() string {
 	return ap.name
+}
+
+func (ap *AsynchronousProcess) Result() (interface{}, error) {
+	ap.locker.RLock()
+	defer ap.locker.RUnlock()
+
+	if ap.progress < 100 {
+		return nil, NewErrorAsynchronousProcessNotComplete(ap, ap.progress)
+	}
+
+	return ap.result, nil
+}
+
+func (ap *AsynchronousProcess) SetResult(value interface{}) {
+	ap.result = value
 }
 
 // ProgressNotifier returns the channel
