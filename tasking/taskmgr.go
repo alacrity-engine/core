@@ -25,10 +25,8 @@ type (
 // started tasks from the buffer to the
 // array of tasks.
 func (mgr *TaskManager) addStartedTasks() {
-	for _, tsk := range mgr.startedTasks {
-		mgr.tasks = append(mgr.tasks, tsk)
-	}
-
+	mgr.tasks = append(mgr.tasks,
+		mgr.startedTasks...)
 	mgr.startedTasks = []*task{}
 }
 
