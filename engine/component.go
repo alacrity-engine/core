@@ -1,4 +1,4 @@
-package ecs
+package engine
 
 // Component is a single script
 // which contains data and instructions.

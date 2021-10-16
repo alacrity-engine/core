@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"image/color"
 
-	"github.com/alacrity-engine/core/ecs"
+	"github.com/alacrity-engine/core/engine"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/text"
@@ -13,7 +13,7 @@ import (
 // Caption is a text
 // attached to the game object.
 type Caption struct {
-	ecs.BaseComponent
+	engine.BaseComponent
 	orig      pixel.Vec
 	atlas     *text.Atlas
 	str       string

@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alacrity-engine/core/ecs"
+	"github.com/alacrity-engine/core/engine"
 	"github.com/alacrity-engine/core/system"
 
 	"github.com/faiface/beep"
@@ -16,7 +16,7 @@ import (
 // AudioSource is a component for
 // game object to play sound.
 type AudioSource struct {
-	ecs.BaseComponent
+	engine.BaseComponent
 	format            beep.Format
 	streamer          beep.StreamSeekCloser
 	resampledStreamer *beep.Resampler
