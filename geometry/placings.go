@@ -27,7 +27,7 @@ func generatePoints(x, y func(float64) float64, numberOfPoints int) []pixel.Vec 
 
 // BezierCurve returns a new Bezier curve consisting of
 // equidistant points.
-func BezierCurve(controlPoints []pixel.Vec, numberOfPoints int, dt float64) []pixel.Vec {
+func PlacingBezierCurve(controlPoints []pixel.Vec, numberOfPoints int, dt float64) []pixel.Vec {
 	vgControlPoints := []vg.Point{}
 
 	for _, controlPoint := range controlPoints {
@@ -60,7 +60,7 @@ func BezierCurve(controlPoints []pixel.Vec, numberOfPoints int, dt float64) []pi
 // rewrite Line() with generatePoints().
 
 // Line returns a new line consisting of equidistant points.
-func Line(start, end pixel.Vec, numberOfPoints int) []pixel.Vec {
+func PlacingLine(start, end pixel.Vec, numberOfPoints int) []pixel.Vec {
 	linePoints := []pixel.Vec{}
 	step := end.Sub(start).Scaled(1.0 / (float64(numberOfPoints) - 1))
 
@@ -75,7 +75,7 @@ func Line(start, end pixel.Vec, numberOfPoints int) []pixel.Vec {
 }
 
 // Ellipse creates a new ellipse consisting of points.
-func Ellipse(center pixel.Vec, a, b float64, numberOfPoints int) []pixel.Vec {
+func PlacingEllipse(center pixel.Vec, a, b float64, numberOfPoints int) []pixel.Vec {
 	x := func(t float64) float64 {
 		return a*math.Cos(2*math.Pi*t) + center.X
 	}
@@ -90,12 +90,12 @@ func Ellipse(center pixel.Vec, a, b float64, numberOfPoints int) []pixel.Vec {
 }
 
 // Circle creates a new circle consisting of points.
-func Circle(center pixel.Vec, radius float64, numberOfPoints int) []pixel.Vec {
-	return Ellipse(center, radius, radius, numberOfPoints)
+func PlacingCircle(center pixel.Vec, radius float64, numberOfPoints int) []pixel.Vec {
+	return PlacingEllipse(center, radius, radius, numberOfPoints)
 }
 
 // Astroid creates a new astroid consisting of points.
-func Astroid(center pixel.Vec, a, b float64, numberOfPoints int) []pixel.Vec {
+func PlacingAstroid(center pixel.Vec, a, b float64, numberOfPoints int) []pixel.Vec {
 	x := func(t float64) float64 {
 		return a*math.Pow(math.Cos(2*math.Pi*t), 3) + center.X
 	}
