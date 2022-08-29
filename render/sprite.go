@@ -2,7 +2,6 @@ package render
 
 import (
 	"fmt"
-	"unsafe"
 
 	"github.com/alacrity-engine/core/geometry"
 	"github.com/go-gl/gl/v4.6-core/gl"
@@ -34,17 +33,15 @@ func NewSpriteFromTextureAndProgram(drawMode DrawMode, texture *Texture, shaderP
 		return nil, fmt.Errorf("no shader program")
 	}
 
-	// TODO: draw sprites with original size
-	// using relativity to the screen size.
-
-	textureAspectRatio := float32(targetArea.W() / targetArea.H())
-	vertices := []float32{
-		textureAspectRatio * -1.0, -1.0, 0.0,
-		textureAspectRatio * -0.1, 0.1, 0.0,
-		textureAspectRatio * 0.1, 0.1, 0.0,
-		textureAspectRatio * 0.1, -0.1, 0.0,
+	texToScreenWidth := float32(targetArea.W() / float64(width))
+	texToscreenHeight := float32(targetArea.H() / float64(height))
+	vertices := [12]float32{
+		texToScreenWidth / 2.0 * -1.0, texToscreenHeight / 2.0 * -1.0, 0.0,
+		texToScreenWidth / 2.0 * -1.0, texToscreenHeight / 2.0 * 1.0, 0.0,
+		texToScreenWidth / 2.0 * 1.0, texToscreenHeight / 2.0 * 1.0, 0.0,
+		texToScreenWidth / 2.0 * 1.0, texToscreenHeight / 2.0 * -1.0, 0.0,
 	}
-	textureCoordinates := []float32{
+	textureCoordinates := [8]float32{
 		float32(targetArea.Min.X) / float32(texture.imageWidth), float32(targetArea.Min.Y) / float32(texture.imageHeight),
 		float32(targetArea.Min.X) / float32(texture.imageWidth), float32(targetArea.Max.Y) / float32(texture.imageHeight),
 		float32(targetArea.Max.X) / float32(texture.imageWidth), float32(targetArea.Max.Y) / float32(texture.imageHeight),
@@ -59,13 +56,13 @@ func NewSpriteFromTextureAndProgram(drawMode DrawMode, texture *Texture, shaderP
 	gl.GenBuffers(1, &vertexBufferHandler)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vertexBufferHandler)
 	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 3*4, unsafe.Pointer(uintptr(0)))
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 3*4, gl.Ptr(nil))
 
 	var textureCoordinatesBufferHandler uint32
 	gl.GenBuffers(1, &textureCoordinatesBufferHandler)
 	gl.BindBuffer(gl.ARRAY_BUFFER, textureCoordinatesBufferHandler)
 	gl.BufferData(gl.ARRAY_BUFFER, len(textureCoordinates)*4, gl.Ptr(textureCoordinates), uint32(drawMode))
-	gl.VertexAttribPointer(1, 2, gl.FLOAT, false, 2*4, unsafe.Pointer(uintptr(0)))
+	gl.VertexAttribPointer(1, 2, gl.FLOAT, false, 2*4, gl.Ptr(nil))
 
 	gl.BindVertexArray(0)
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
