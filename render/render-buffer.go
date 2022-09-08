@@ -5,8 +5,9 @@ import "github.com/go-gl/gl/v4.6-core/gl"
 type RenderBufferType uint32
 
 const (
-	RenderBufferTypeDepth           RenderBufferType = gl.DEPTH_COMPONENT
-	RenderBufferTypeDepth24Stencil8 RenderBufferType = gl.DEPTH24_STENCIL8
+	RenderBufferTypeDepth            RenderBufferType = gl.DEPTH_COMPONENT
+	RenderBufferTypeDepth24Stencil8  RenderBufferType = gl.DEPTH24_STENCIL8
+	RenderBufferTypeDepth32fStencil8 RenderBufferType = gl.DEPTH32F_STENCIL8
 )
 
 type RenderBuffer struct {
