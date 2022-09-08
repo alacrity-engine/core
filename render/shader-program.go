@@ -14,6 +14,10 @@ type ShaderProgram struct {
 	fragmentShader *Shader
 }
 
+func (program *ShaderProgram) Use() {
+	gl.UseProgram(program.glHandler)
+}
+
 func (program *ShaderProgram) SetInt(name string, value int) {
 	location := gl.GetUniformLocation(program.glHandler, gl.Str(name+"\x00"))
 	gl.Uniform1i(location, int32(value))
