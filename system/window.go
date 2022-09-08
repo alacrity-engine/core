@@ -51,7 +51,7 @@ func InitializeWindow(title string, width, height int, fullscreen, vsync bool) e
 	}
 
 	win.MakeContextCurrent()
-	win.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+	win.SetInputMode(glfw.CursorMode, glfw.CursorHidden)
 	win.SetInputMode(glfw.StickyKeysMode, glfw.True)
 
 	if !vsync {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alacrity-engine/core/geometry"
-	"github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/go-gl/gl/v4.6-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
@@ -41,7 +41,7 @@ func (sprite *Sprite) Draw(model, view, projection mgl32.Mat4) {
 
 	sprite.texture.Use()
 	defer func() {
-		//gl.ActiveTexture(0)
+		gl.ActiveTexture(0)
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 	}()
 
@@ -63,16 +63,20 @@ func NewSpriteFromTextureAndProgram(drawMode DrawMode, texture *Texture, shaderP
 	}
 
 	texToScreenWidth := float32(targetArea.W() / float64(width))
-	texToscreenHeight := float32(targetArea.H() / float64(height))
+	texToscreenHeight := float32(targetArea.H() / float64(width))
 	vertices := []float32{
-		texToScreenWidth / 2.0 * -1.0, texToscreenHeight / 2.0 * -1.0, 0.0,
-		texToScreenWidth / 2.0 * -1.0, texToscreenHeight / 2.0 * 1.0, 0.0,
-		texToScreenWidth / 2.0 * 1.0, texToscreenHeight / 2.0 * 1.0, 0.0,
-		texToScreenWidth / 2.0 * 1.0, texToscreenHeight / 2.0 * -1.0, 0.0,
+		texToScreenWidth * -1.0, texToscreenHeight * -1.0, 0.0,
+		texToScreenWidth * -1.0, texToscreenHeight * 1.0, 0.0,
+		texToScreenWidth * 1.0, texToscreenHeight * -1.0, 0.0, // extraneous 3
+		texToScreenWidth * -1.0, texToscreenHeight * 1.0, 0.0, // extraneous 1
+		texToScreenWidth * 1.0, texToscreenHeight * 1.0, 0.0,
+		texToScreenWidth * 1.0, texToscreenHeight * -1.0, 0.0,
 	}
 	textureCoordinates := []float32{
 		float32(targetArea.Min.X) / float32(texture.imageWidth), float32(targetArea.Min.Y) / float32(texture.imageHeight),
 		float32(targetArea.Min.X) / float32(texture.imageWidth), float32(targetArea.Max.Y) / float32(texture.imageHeight),
+		float32(targetArea.Max.X) / float32(texture.imageWidth), float32(targetArea.Min.Y) / float32(texture.imageHeight), // extraneous 3
+		float32(targetArea.Min.X) / float32(texture.imageWidth), float32(targetArea.Max.Y) / float32(texture.imageHeight), // extraneous 1
 		float32(targetArea.Max.X) / float32(texture.imageWidth), float32(targetArea.Max.Y) / float32(texture.imageHeight),
 		float32(targetArea.Max.X) / float32(texture.imageWidth), float32(targetArea.Min.Y) / float32(texture.imageHeight),
 	}

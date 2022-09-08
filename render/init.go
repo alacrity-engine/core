@@ -1,7 +1,7 @@
 package render
 
 import (
-	"github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/go-gl/gl/v4.6-core/gl"
 )
 
 func Initialize(_width, _height int) error {
@@ -23,6 +23,7 @@ func Initialize(_width, _height int) error {
 		return err
 	}
 
+	gl.Viewport(0, 0, int32(width), int32(height))
 	gl.Enable(gl.DEPTH_TEST)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 	gl.Enable(gl.BLEND)

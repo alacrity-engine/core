@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	width  = 1920
-	height = 1080
+	width  = 800
+	height = 600
 )
 
 func init() {
@@ -29,6 +29,7 @@ func main() {
 	img, _, err := image.Decode(file)
 	handleError(err)
 	imgRGBA := img.(*image.RGBA)
+	reversePix(imgRGBA.Pix)
 
 	vertexShaderSourceData, err := ioutil.ReadFile("vert.glsl")
 	handleError(err)
@@ -65,6 +66,23 @@ func main() {
 		render.Clear(render.ClearBitColor | render.ClearBitDepth)
 		sprite.Draw(mgl32.Ident4(), mgl32.Ident4(), projection)
 		system.TickLoop()
+	}
+}
+
+// TODO: fix vertical mirroring.
+func reversePix(arr []byte) {
+	start := 0
+	end := len(arr) - 4
+
+	for start < end {
+		for i := 0; i < 4; i++ {
+			temp := arr[start+i]
+			arr[start+i] = arr[end+i]
+			arr[end+i] = temp
+		}
+
+		start += 4
+		end -= 4
 	}
 }
 

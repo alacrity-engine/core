@@ -3,7 +3,7 @@ package render
 import (
 	"image"
 
-	"github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/go-gl/gl/v4.6-core/gl"
 )
 
 type TextureFiltering uint32
@@ -41,7 +41,7 @@ func NewTextureFromImage(img *image.RGBA, filter TextureFiltering) *Texture {
 		int32(img.Rect.Size().Y), 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(img.Pix))
 
 	gl.BindTexture(gl.TEXTURE_2D, 0)
-	//gl.ActiveTexture(0)
+	gl.ActiveTexture(0)
 
 	return &Texture{
 		glHandler:   handler,
@@ -67,7 +67,7 @@ func NewEmptyTexture(width, height int, filter TextureFiltering) *Texture {
 		int32(height), 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(nil))
 
 	gl.BindTexture(gl.TEXTURE_2D, 0)
-	//gl.ActiveTexture(0)
+	gl.ActiveTexture(0)
 
 	return &Texture{
 		glHandler:   handler,
