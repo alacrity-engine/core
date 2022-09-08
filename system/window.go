@@ -1,38 +1,80 @@
 package system
 
 import (
-	"github.com/faiface/pixel/pixelgl"
+	"fmt"
+
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
-// Win is the current window
-// of the game.
-var win *pixelgl.Window
-
-// Window returns the current
-// window of the game.
-func Window() *pixelgl.Window {
-	return win
+type window struct {
+	winHandler *glfw.Window
 }
 
-// SetWindow sets the window to read inputs from.
-func SetWindow(window *pixelgl.Window) {
-	win = window
+var (
+	mainWindow *window
+)
+
+func (win *window) buttonPressed(button Button) bool {
+	return win.winHandler.GetKey(glfw.Key(button)) == glfw.Press
 }
 
-// Resolution returns width and height
-// of the current window.
-func Resolution() (int, int) {
-	return int(win.Bounds().W()), int(win.Bounds().H())
+func InitializeWindow(title string, width, height int, fullscreen, vsync bool) error {
+	err := glfw.Init()
+
+	if err != nil {
+		return err
+	}
+
+	glfw.WindowHint(glfw.Resizable, glfw.False)
+	glfw.WindowHint(glfw.ContextVersionMajor, 4)
+	glfw.WindowHint(glfw.ContextVersionMinor, 6)
+	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
+	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+
+	var monitor *glfw.Monitor
+
+	if fullscreen {
+		monitors := glfw.GetMonitors()
+
+		if len(monitors) > 0 {
+			monitor = monitors[0]
+			SetDisplayResolution(width, height)
+		} else {
+			return fmt.Errorf("no monitors")
+		}
+	}
+
+	win, err := glfw.CreateWindow(width, height, title, monitor, nil)
+
+	if err != nil {
+		return err
+	}
+
+	win.MakeContextCurrent()
+	win.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+	win.SetInputMode(glfw.StickyKeysMode, glfw.True)
+
+	if !vsync {
+		glfw.SwapInterval(0)
+	}
+
+	mainWindow = &window{
+		winHandler: win,
+	}
+
+	return nil
 }
 
-// VSyncEnabled detects if vertical
-// synchronization is enabled.
-func VSyncEnabled() bool {
-	return win.VSync()
+// ButtonPressed returns true if the button is currently pressed down.
+func ButtonPressed(button Button) bool {
+	return mainWindow.buttonPressed(button)
 }
 
-// SetTitle sets a new title for
-// the window.
-func SetTitle(title string) {
-	win.SetTitle(title)
+func ShouldClose() bool {
+	return mainWindow.winHandler.ShouldClose()
+}
+
+func TickLoop() {
+	mainWindow.winHandler.SwapBuffers()
+	glfw.PollEvents()
 }

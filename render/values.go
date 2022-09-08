@@ -16,7 +16,7 @@ func Height() int {
 }
 
 func SetWidth(_width int) error {
-	if width <= 0 {
+	if _width <= 0 {
 		return fmt.Errorf("width must be above 0")
 	}
 
@@ -26,7 +26,7 @@ func SetWidth(_width int) error {
 }
 
 func SetHeight(_height int) error {
-	if height <= 0 {
+	if _height <= 0 {
 		return fmt.Errorf("height must be above 0")
 	}
 
