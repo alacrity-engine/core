@@ -30,6 +30,7 @@ func main() {
 	handleError(err)
 	imgRGBA := img.(*image.RGBA)
 	reversePix(imgRGBA.Pix)
+	mirror(imgRGBA)
 
 	vertexShaderSourceData, err := ioutil.ReadFile("vert.glsl")
 	handleError(err)
@@ -69,7 +70,6 @@ func main() {
 	}
 }
 
-// TODO: fix vertical mirroring.
 func reversePix(arr []byte) {
 	start := 0
 	end := len(arr) - 4
@@ -83,6 +83,12 @@ func reversePix(arr []byte) {
 
 		start += 4
 		end -= 4
+	}
+}
+
+func mirror(img *image.RGBA) {
+	for i := 0; i < img.Rect.Dy(); i++ {
+		reversePix(img.Pix[4*i*img.Rect.Dx() : 4*(i+1)*img.Rect.Dx()])
 	}
 }
 
