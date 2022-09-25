@@ -48,13 +48,19 @@ func main() {
 	projection := mgl32.Ortho(-1, 1, -1*aspect, 1*aspect, -1, 1)
 	model := mgl32.Ident4()
 
+	system.InitMetrics()
+
 	for !system.ShouldClose() {
+		system.UpdateDeltaTime()
+
 		render.SetClearColor(render.ToRGBA(colornames.Aquamarine))
 		render.Clear(render.ClearBitColor | render.ClearBitDepth)
-		// TODO: fix movement.
-		model = mgl32.Translate2D(200, 20).Mat4().Mul4(model)
+		model = mgl32.Translate3D(2*float32(system.DeltaTime()),
+			2*float32(system.DeltaTime()), 0).Mul4(model)
 		sprite.Draw(model, mgl32.Ident4(), projection)
+
 		system.TickLoop()
+		system.UpdateFrameRate()
 	}
 }
 

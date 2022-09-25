@@ -3,7 +3,7 @@ package geometry
 import (
 	"fmt"
 
-	"github.com/faiface/pixel"
+	"github.com/go-gl/mathgl/mgl32"
 	"github.com/golang-collections/collections/queue"
 )
 
@@ -11,7 +11,7 @@ import (
 // and scale of the game object.
 type Transform struct {
 	parent   *Transform
-	data     pixel.Matrix
+	data     mgl32.Mat4
 	children []*Transform
 }
 
@@ -86,44 +86,44 @@ func (t *Transform) RemoveChild(child *Transform) error {
 }
 
 // Axes returns the local axes (X and Y) of the transform.
-func (t *Transform) Axes() (pixel.Vec, pixel.Vec) {
-	tX := pixel.V(t.data[0], t.data[1]).Unit()
-	tY := pixel.V(t.data[2], t.data[3]).Unit()
+func (t *Transform) Axes() (Vec, Vec) {
+	tX := V(t.data[0], t.data[1]).Unit()
+	tY := V(t.data[2], t.data[3]).Unit()
 
 	return tX, tY
 }
 
 // Position returns the current position
 // stored in the transform.
-func (t *Transform) Position() pixel.Vec {
-	return pixel.V(t.data[4], t.data[5])
+func (t *Transform) Position() Vec {
+	return V(float64(t.data[3]), float64(t.data[7]))
 }
 
 // Angle returns the transform angle in radians.
 func (t *Transform) Angle() float64 {
-	localXaxis := pixel.V(t.data[0], t.data[1])
+	localXaxis := V(t.data[0], t.data[1])
 
 	return localXaxis.Angle()
 }
 
 // Scale returns the scale of the transform.
-func (t *Transform) Scale() pixel.Vec {
-	xAxis := pixel.V(t.data[0], t.data[1])
-	yAxis := pixel.V(t.data[2], t.data[3])
-	scale := pixel.V(xAxis.Len(), yAxis.Len())
+func (t *Transform) Scale() Vec {
+	xAxis := V(t.data[0], t.data[1])
+	yAxis := V(t.data[2], t.data[3])
+	scale := V(xAxis.Len(), yAxis.Len())
 
 	return scale
 }
 
 // Data returns the matrix held by the
 // given transform.
-func (t *Transform) Data() pixel.Matrix {
+func (t *Transform) Data() Matrix {
 	return t.data
 }
 
 // Move moves the transform and its children
 // in the specified direction.
-func (t *Transform) Move(direction pixel.Vec) *Transform {
+func (t *Transform) Move(direction Vec) *Transform {
 	t.data = t.data.Moved(direction)
 	tQueue := queue.New()
 
@@ -146,7 +146,7 @@ func (t *Transform) Move(direction pixel.Vec) *Transform {
 // MoveTo computes the translation by the current
 // position and the destination and then performs
 // movement of the transform and all its children.
-func (t *Transform) MoveTo(position pixel.Vec) *Transform {
+func (t *Transform) MoveTo(position Vec) *Transform {
 	offset := position.Sub(t.Position())
 
 	return t.Move(offset)
@@ -181,7 +181,7 @@ func (t *Transform) Rotate(angle float64) *Transform {
 // RotateAround rotates the transform and all its
 // children at the specified angle in radians around
 // the given point.
-func (t *Transform) RotateAround(angle float64, base pixel.Vec) *Transform {
+func (t *Transform) RotateAround(angle float64, base Vec) *Transform {
 	t.data = t.data.Rotated(base, angle)
 	//t.data = t.data.Rotated(t.Position(), angle)
 	tQueue := queue.New()
@@ -208,7 +208,7 @@ func (t *Transform) RotateAround(angle float64, base pixel.Vec) *Transform {
 
 // ApplyScale applies the specified scale factor
 // to the transform and all its children.
-func (t *Transform) ApplyScale(factor pixel.Vec) *Transform {
+func (t *Transform) ApplyScale(factor Vec) *Transform {
 	t.data = t.data.ScaledXY(t.Position(), factor)
 	tQueue := queue.New()
 
@@ -231,7 +231,7 @@ func (t *Transform) ApplyScale(factor pixel.Vec) *Transform {
 }
 
 // NewTransform creates a new empty transform out of given data.
-func NewTransform(parent *Transform, data pixel.Matrix) *Transform {
+func NewTransform(parent *Transform, data Matrix) *Transform {
 	return &Transform{
 		parent:   parent,
 		data:     data,
