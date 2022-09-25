@@ -2,8 +2,6 @@ package geometry
 
 import (
 	"math"
-
-	"github.com/faiface/pixel"
 )
 
 const (
@@ -14,13 +12,13 @@ const (
 
 // GetSegmentPoints returns the points of
 // the equally segmented curve.
-func GetSegmentPoints(points []pixel.Vec, numberOfSegments int) []pixel.Vec {
+func GetSegmentPoints(points []Vec, numberOfSegments int) []Vec {
 	// Create lines out of bezier
 	// curve points.
-	lines := []pixel.Line{}
+	lines := []Line{}
 
 	for i := 0; i < len(points)-1; i++ {
-		line := pixel.L(points[i],
+		line := L(points[i],
 			points[i+1])
 
 		lines = append(lines, line)
@@ -38,21 +36,17 @@ func GetSegmentPoints(points []pixel.Vec, numberOfSegments int) []pixel.Vec {
 	// Divide the bezier curve into
 	// equal segments.
 	step := length / float64(numberOfSegments)
-	segmentPoints := []pixel.Vec{}
+	segmentPoints := []Vec{}
 	lastLine := 0
 	lastPoint := lines[0].A
 	segmentPoints = append(segmentPoints, lastPoint)
 
 	for i := 0; i < numberOfSegments; i++ {
-		subsegments := []pixel.Line{}
-		startLine := pixel.L(lastPoint, lines[lastLine].B)
-
-		subsegments = append(subsegments, startLine)
+		startLine := L(lastPoint, lines[lastLine].B)
 		localLength := startLine.Len()
 
 		for step-localLength > Epsilon {
 			line := lines[lastLine+1]
-			subsegments = append(subsegments, line)
 
 			localLength += line.Len()
 			lastLine++
@@ -64,7 +58,7 @@ func GetSegmentPoints(points []pixel.Vec, numberOfSegments int) []pixel.Vec {
 			difference := localLength - step
 			t := difference / line.Len()
 
-			lastPoint = pixel.V(t*line.A.X+(1-t)*line.B.X,
+			lastPoint = V(t*line.A.X+(1-t)*line.B.X,
 				t*line.A.Y+(1-t)*line.B.Y)
 		} else {
 			lastPoint = line.B
@@ -79,7 +73,7 @@ func GetSegmentPoints(points []pixel.Vec, numberOfSegments int) []pixel.Vec {
 
 // ClampMagnitude clamps the vector to the specified magnitude
 // if its length exceeds it.
-func ClampMagnitude(vector pixel.Vec, magnitude float64) pixel.Vec {
+func ClampMagnitude(vector Vec, magnitude float64) Vec {
 	currentMagnitude := vector.Len()
 	factor := math.Min(currentMagnitude, magnitude) / currentMagnitude
 

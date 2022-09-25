@@ -67,3 +67,19 @@ func NewShaderProgramFromShaders(vertexShader, fragmentShader *Shader) (*ShaderP
 		fragmentShader: fragmentShader,
 	}, nil
 }
+
+func NewStandardSpriteShaderProgram() (*ShaderProgram, error) {
+	vertexShader, err := NewStandardSpriteShader(ShaderTypeVertex)
+
+	if err != nil {
+		return nil, err
+	}
+
+	fragmentShader, err := NewStandardSpriteShader(ShaderTypeFragment)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return NewShaderProgramFromShaders(vertexShader, fragmentShader)
+}

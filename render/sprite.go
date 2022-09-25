@@ -29,6 +29,34 @@ type Sprite struct {
 	drawMode                          DrawMode
 }
 
+func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
+	textureRect := geometry.R(0, 0,
+		float64(sprite.texture.imageWidth),
+		float64(sprite.texture.imageHeight))
+
+	if !textureRect.Contains(targetArea.Min) || !textureRect.Contains(targetArea.Max) ||
+		!textureRect.Contains(geometry.V(targetArea.Min.X, targetArea.Max.Y)) ||
+		!textureRect.Contains(geometry.V(targetArea.Max.X, targetArea.Min.Y)) {
+		return fmt.Errorf(
+			"rectangle '%v' cannot server as a texture subarea for the sprite", targetArea)
+	}
+
+	textureCoordinates := []float32{
+		float32(targetArea.Min.X) / float32(sprite.texture.imageWidth), float32(targetArea.Min.Y) / float32(sprite.texture.imageHeight),
+		float32(targetArea.Min.X) / float32(sprite.texture.imageWidth), float32(targetArea.Max.Y) / float32(sprite.texture.imageHeight),
+		float32(targetArea.Max.X) / float32(sprite.texture.imageWidth), float32(targetArea.Min.Y) / float32(sprite.texture.imageHeight), // extraneous 3
+		float32(targetArea.Min.X) / float32(sprite.texture.imageWidth), float32(targetArea.Max.Y) / float32(sprite.texture.imageHeight), // extraneous 1
+		float32(targetArea.Max.X) / float32(sprite.texture.imageWidth), float32(targetArea.Max.Y) / float32(sprite.texture.imageHeight),
+		float32(targetArea.Max.X) / float32(sprite.texture.imageWidth), float32(targetArea.Min.Y) / float32(sprite.texture.imageHeight),
+	}
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glTextureCoordinatesBufferHandler)
+	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(textureCoordinates)*4, gl.Ptr(textureCoordinates))
+	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+
+	return nil
+}
+
 func (sprite *Sprite) Draw(model, view, projection mgl32.Mat4) {
 	//gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, spriteIndexBufferHandler)
 	//defer gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)

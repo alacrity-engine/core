@@ -1,6 +1,7 @@
 package render
 
 import (
+	_ "embed"
 	"fmt"
 	"strings"
 
@@ -12,6 +13,13 @@ type ShaderType uint32
 const (
 	ShaderTypeVertex   ShaderType = gl.VERTEX_SHADER
 	ShaderTypeFragment ShaderType = gl.FRAGMENT_SHADER
+)
+
+var (
+	//go:embed std-sprite-vert.glsl
+	standardSpriteVertexShaderSource string
+	//go:embed std-sprite-frag.glsl
+	standardSpriteFragmentShaderSource string
 )
 
 type Shader struct {
@@ -52,4 +60,17 @@ func NewShaderFromSource(source string, typ ShaderType) (*Shader, error) {
 		glHandler: shaderHandler,
 		typ:       typ,
 	}, nil
+}
+
+func NewStandardSpriteShader(typ ShaderType) (*Shader, error) {
+	switch typ {
+	case ShaderTypeVertex:
+		return NewShaderFromSource(standardSpriteVertexShaderSource, typ)
+
+	case ShaderTypeFragment:
+		return NewShaderFromSource(standardSpriteFragmentShaderSource, typ)
+
+	default:
+		return nil, fmt.Errorf("incorrect shader type: '%v'", typ)
+	}
 }

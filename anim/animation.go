@@ -3,19 +3,20 @@ package anim
 import (
 	"time"
 
-	"github.com/faiface/pixel"
+	"github.com/alacrity-engine/core/geometry"
+	"github.com/alacrity-engine/core/render"
+	codec "github.com/alacrity-engine/resource-codec"
 )
 
 // Animation represent a single
 // animation made of sprites.
 type Animation struct {
-	spritesheet   pixel.Picture
-	frames        []pixel.Rect
+	frames        []geometry.Rect
 	delays        []time.Duration
 	timeout       <-chan time.Time
 	cancel        chan interface{}
 	currentFrame  int
-	currentSprite *pixel.Sprite
+	currentSprite *render.Sprite
 	active        bool
 	loop          bool
 }
@@ -82,7 +83,7 @@ func (anim *Animation) process() {
 }
 
 func (anim *Animation) setSprite(ind int) {
-	anim.currentSprite.Set(anim.spritesheet,
+	anim.currentSprite.SetTargetArea(
 		anim.frames[ind])
 }
 
@@ -105,22 +106,54 @@ func (anim *Animation) Stop() {
 
 // GetCurrentSprite returns a new sprite for the animation frame
 // played at the moment.
-func (anim *Animation) GetCurrentSprite() *pixel.Sprite {
+func (anim *Animation) GetCurrentSprite() *render.Sprite {
 	return anim.currentSprite
 }
 
 // NewAnimation creates a new animation
 // out of frames and their delays.
 func NewAnimation(
-	spritesheet pixel.Picture, frames []pixel.Rect,
-	delays []time.Duration, loop bool,
-) *Animation {
+	spritesheet *render.Texture,
+	shaderProgram *render.ShaderProgram,
+	frames []geometry.Rect,
+	delays []time.Duration,
+	loop bool,
+) (*Animation, error) {
+	animSprite, err := render.NewSpriteFromTextureAndProgram(
+		render.DrawModeDynamic, spritesheet, shaderProgram, geometry.Rect{})
+
+	if err != nil {
+		return nil, err
+	}
+
 	anim := &Animation{
-		spritesheet:   spritesheet,
-		frames:        make([]pixel.Rect, len(frames)),
+		frames:        make([]geometry.Rect, len(frames)),
 		delays:        make([]time.Duration, len(delays)),
 		currentFrame:  0,
-		currentSprite: pixel.NewSprite(nil, pixel.Rect{}),
+		currentSprite: animSprite,
+		active:        false,
+		loop:          loop,
+	}
+
+	copy(anim.frames, frames)
+	copy(anim.delays, delays)
+
+	return anim, nil
+}
+
+// NewAnimationWithExistingSprite cerates
+// a new animation with the existing sprite.
+func NewAnimationWithExistingSprite(
+	sprite *render.Sprite,
+	frames []geometry.Rect,
+	delays []time.Duration,
+	loop bool,
+) *Animation {
+	anim := &Animation{
+		frames:        make([]geometry.Rect, len(frames)),
+		delays:        make([]time.Duration, len(delays)),
+		currentFrame:  0,
+		currentSprite: sprite,
 		active:        false,
 		loop:          loop,
 	}
@@ -129,4 +162,35 @@ func NewAnimation(
 	copy(anim.delays, delays)
 
 	return anim
+}
+
+func NewAnimationFromPictureAndData(
+	picture *codec.Picture,
+	filter render.TextureFiltering,
+	shaderProgram *render.ShaderProgram,
+	frames []geometry.Rect,
+	delays []time.Duration,
+	loop bool,
+) (*Animation, error) {
+	texture := render.NewTextureFromPicture(picture, filter)
+	animSprite, err := render.NewSpriteFromTextureAndProgram(
+		render.DrawModeDynamic, texture, shaderProgram, geometry.Rect{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	anim := &Animation{
+		frames:        make([]geometry.Rect, len(frames)),
+		delays:        make([]time.Duration, len(delays)),
+		currentFrame:  0,
+		currentSprite: animSprite,
+		active:        false,
+		loop:          loop,
+	}
+
+	copy(anim.frames, frames)
+	copy(anim.delays, delays)
+
+	return anim, nil
 }

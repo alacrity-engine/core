@@ -7,11 +7,10 @@ import (
 	"time"
 
 	"github.com/alacrity-engine/core/anim"
+	"github.com/alacrity-engine/core/render"
 
 	codec "github.com/alacrity-engine/resource-codec"
-	"github.com/boltdb/bolt"
-	"github.com/faiface/pixel"
-	"github.com/golang/freetype/truetype"
+	bolt "go.etcd.io/bbolt"
 )
 
 // ResourceLoader loads sprites,
@@ -29,7 +28,7 @@ func (loader *ResourceLoader) Close() error {
 
 // LoadAnimation loads the animation with spritesheet
 // and frames from the resource file.
-func (loader *ResourceLoader) LoadAnimation(animID string) (*anim.Animation, error) {
+func (loader *ResourceLoader) LoadAnimation(animID string, filter render.TextureFiltering, shaderProgram *render.ShaderProgram) (*anim.Animation, error) {
 	// Load the animation frames from the buffer
 	// or the resource file.
 	animData, err := loader.buffer.takeAnimation(animID)
@@ -97,8 +96,14 @@ func (loader *ResourceLoader) LoadAnimation(animID string) (*anim.Animation, err
 						animData.Spritesheet)
 				}
 
-				var err error
-				spritesheet, err = codec.PictureDataFromBytes(spritesheetBytes)
+				compressedSpritesheet, err := codec.CompressedPictureFromBytes(
+					spritesheetBytes)
+
+				if err != nil {
+					return err
+				}
+
+				spritesheet, err = compressedSpritesheet.Decompress()
 
 				if err != nil {
 					return err
@@ -129,14 +134,18 @@ func (loader *ResourceLoader) LoadAnimation(animID string) (*anim.Animation, err
 		delays = append(delays, delay)
 	}
 
-	anim := anim.NewAnimation(spritesheet, animData.Frames,
-		delays, false)
+	anim, err := anim.NewAnimationFromPictureAndData(spritesheet,
+		filter, shaderProgram, animData.Frames, delays, false)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return anim, nil
 }
 
 // LoadPicture loads the picture from the resource file by the name of the picture.
-func (loader *ResourceLoader) LoadPicture(name string) (*pixel.PictureData, error) {
+func (loader *ResourceLoader) LoadPicture(name string) (*codec.Picture, error) {
 	picture, err := loader.buffer.takePicture(name)
 
 	if err != nil {
@@ -156,8 +165,13 @@ func (loader *ResourceLoader) LoadPicture(name string) (*pixel.PictureData, erro
 						name)
 				}
 
-				var err error
-				picture, err = codec.PictureDataFromBytes(pictureBytes)
+				compressedPicture, err := codec.CompressedPictureFromBytes(pictureBytes)
+
+				if err != nil {
+					return err
+				}
+
+				picture, err = compressedPicture.Decompress()
 
 				if err != nil {
 					return err
@@ -185,52 +199,52 @@ func (loader *ResourceLoader) LoadPicture(name string) (*pixel.PictureData, erro
 }
 
 // LoadFont loads a font stored in the resource file under the specified name.
-func (loader *ResourceLoader) LoadFont(name string) (*truetype.Font, error) {
-	font, err := loader.buffer.takeFont(name)
-
-	if err != nil {
-		switch err.(type) {
-		case *ErrorFontDoesntExist:
-			er := loader.resourceFile.View(func(tx *bolt.Tx) error {
-				buck := tx.Bucket([]byte("fonts"))
-
-				if buck == nil {
-					return fmt.Errorf("bucket 'fonts' not found")
-				}
-
-				fontData := buck.Get([]byte(name))
-
-				if fontData == nil {
-					return fmt.Errorf("font '%s' not found", name)
-				}
-
-				var err error
-				font, err = truetype.Parse(fontData)
-
-				if err != nil {
-					return err
-				}
-
-				return nil
-			})
-
-			if er != nil {
-				return nil, er
-			}
-
-			er = loader.buffer.putFont(name, font)
-
-			if er != nil {
-				return nil, er
-			}
-
-		default:
-			return nil, err
-		}
-	}
-
-	return font, nil
-}
+// func (loader *ResourceLoader) LoadFont(name string) (*truetype.Font, error) {
+// 	font, err := loader.buffer.takeFont(name)
+//
+// 	if err != nil {
+// 		switch err.(type) {
+// 		case *ErrorFontDoesntExist:
+// 			er := loader.resourceFile.View(func(tx *bolt.Tx) error {
+// 				buck := tx.Bucket([]byte("fonts"))
+//
+// 				if buck == nil {
+// 					return fmt.Errorf("bucket 'fonts' not found")
+// 				}
+//
+// 				fontData := buck.Get([]byte(name))
+//
+// 				if fontData == nil {
+// 					return fmt.Errorf("font '%s' not found", name)
+// 				}
+//
+// 				var err error
+// 				font, err = truetype.Parse(fontData)
+//
+// 				if err != nil {
+// 					return err
+// 				}
+//
+// 				return nil
+// 			})
+//
+// 			if er != nil {
+// 				return nil, er
+// 			}
+//
+// 			er = loader.buffer.putFont(name, font)
+//
+// 			if er != nil {
+// 				return nil, er
+// 			}
+//
+// 		default:
+// 			return nil, err
+// 		}
+// 	}
+//
+// 	return font, nil
+// }
 
 // LoadAudio loads the specified audio from the resource file.
 func (loader *ResourceLoader) LoadAudio(name string) (io.ReadCloser, error) {

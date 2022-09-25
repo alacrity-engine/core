@@ -1,30 +1,29 @@
-package convert
+package geometry
 
 import (
-	"github.com/faiface/pixel"
 	"github.com/zergon321/cirno"
 	"gonum.org/v1/plot/vg"
 )
 
-// GonumVGToPixelVector converts vg.Point (from
+// GonumVGToAlacrityVector converts vg.Point (from
 // gonum/plot) to pixel.Vec.
-func GonumVGToPixelVector(point vg.Point) pixel.Vec {
-	return pixel.V(float64(point.X), float64(point.Y))
+func GonumVGToAlacrityVector(point vg.Point) Vec {
+	return V(float64(point.X), float64(point.Y))
 }
 
-// PixelVectorToGonumVG converts pixel.Vec to vg.Point
+// AlacrityVectorToGonumVG converts Vec to vg.Point
 // (from gonum/plot).
-func PixelVectorToGonumVG(vector pixel.Vec) vg.Point {
+func AlacrityVectorToGonumVG(vector Vec) vg.Point {
 	return vg.Point{X: vg.Length(vector.X), Y: vg.Length(vector.Y)}
 }
 
-// VectorCirnoToPixel converts cirno.Vector to pixel.Vec.
-func VectorCirnoToPixel(vector cirno.Vector) pixel.Vec {
-	return pixel.V(vector.X, vector.Y)
+// VectorCirnoToAlacrity converts cirno.Vector to Vec.
+func VectorCirnoToAlacrity(vector cirno.Vector) Vec {
+	return V(vector.X, vector.Y)
 }
 
-// VectorPixelToCirno converts pixel.Vec to cirno.Vector.
-func VectorPixelToCirno(vector pixel.Vec) cirno.Vector {
+// VectorAlacrityToCirno converts pixel.Vec to cirno.Vector.
+func VectorAlacrityToCirno(vector Vec) cirno.Vector {
 	return cirno.NewVector(vector.X, vector.Y)
 }
 

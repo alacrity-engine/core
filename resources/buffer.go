@@ -2,8 +2,6 @@ package resources
 
 import (
 	codec "github.com/alacrity-engine/resource-codec"
-	"github.com/faiface/pixel"
-	"github.com/golang/freetype/truetype"
 )
 
 // resourceBuffer stores all the resources
@@ -12,14 +10,14 @@ import (
 // in the buffer and if it isn't loaded the loader
 // will take the resource from the resource file.
 type resourceBuffer struct {
-	pictures   map[string]*pixel.PictureData
+	pictures   map[string]*codec.Picture
 	animations map[string]*codec.AnimationData
-	fonts      map[string]*truetype.Font
-	audio      map[string][]byte
+	//fonts      map[string]*truetype.Font
+	audio map[string][]byte
 }
 
 // putPicture puts the picture in the buffer.
-func (rb *resourceBuffer) putPicture(name string, pic *pixel.PictureData) error {
+func (rb *resourceBuffer) putPicture(name string, pic *codec.Picture) error {
 	if _, ok := rb.pictures[name]; ok {
 		return RaiseErrorPictureAlreadyExists(name)
 	}
@@ -30,7 +28,7 @@ func (rb *resourceBuffer) putPicture(name string, pic *pixel.PictureData) error 
 }
 
 // takePicture takes the picture from the buffer.
-func (rb *resourceBuffer) takePicture(name string) (*pixel.PictureData, error) {
+func (rb *resourceBuffer) takePicture(name string) (*codec.Picture, error) {
 	if _, ok := rb.pictures[name]; !ok {
 		return nil, RaiseErrorPictureDoesntExist(name)
 	}
@@ -59,24 +57,24 @@ func (rb *resourceBuffer) takeAnimation(name string) (*codec.AnimationData, erro
 }
 
 // putFont puts the font in the buffer.
-func (rb *resourceBuffer) putFont(name string, fnt *truetype.Font) error {
-	if _, ok := rb.fonts[name]; ok {
-		return RaiseErrorFontAlreadyExists(name)
-	}
-
-	rb.fonts[name] = fnt
-
-	return nil
-}
+// func (rb *resourceBuffer) putFont(name string, fnt *truetype.Font) error {
+// 	if _, ok := rb.fonts[name]; ok {
+// 		return RaiseErrorFontAlreadyExists(name)
+// 	}
+//
+// 	rb.fonts[name] = fnt
+//
+// 	return nil
+// }
 
 // takeFont takes the font from the buffer.
-func (rb *resourceBuffer) takeFont(name string) (*truetype.Font, error) {
-	if _, ok := rb.fonts[name]; !ok {
-		return nil, RaiseErrorFontDoesntExist(name)
-	}
-
-	return rb.fonts[name], nil
-}
+// func (rb *resourceBuffer) takeFont(name string) (*truetype.Font, error) {
+// 	if _, ok := rb.fonts[name]; !ok {
+// 		return nil, RaiseErrorFontDoesntExist(name)
+// 	}
+//
+// 	return rb.fonts[name], nil
+// }
 
 // putAudio puts the audio in the buffer.
 func (rb *resourceBuffer) putAudio(name string, audio []byte) error {
@@ -102,9 +100,9 @@ func (rb *resourceBuffer) takeAudio(name string) ([]byte, error) {
 // to store every resource ever loaded by the loader.
 func newResourceBuffer() *resourceBuffer {
 	return &resourceBuffer{
-		pictures:   map[string]*pixel.PictureData{},
+		pictures:   map[string]*codec.Picture{},
 		animations: map[string]*codec.AnimationData{},
-		fonts:      map[string]*truetype.Font{},
-		audio:      map[string][]byte{},
+		//fonts:      map[string]*truetype.Font{},
+		audio: map[string][]byte{},
 	}
 }
