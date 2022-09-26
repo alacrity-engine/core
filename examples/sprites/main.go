@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	width  = 800
-	height = 600
+	width  = 1920
+	height = 1080
 )
 
 func init() {
@@ -27,12 +27,19 @@ func init() {
 // of the window resoltion thus moving with
 // different speed that depends on the screen size.
 // This should be fixed.
+//
+// Problem: I pass absolute coordinates, but
+// the standard shader perceives them as relative.
+// I need to pass the screen resolution as well
+// so the the shader could make use of them and
+// transform an absolute offset into a local offset.
+// It seems that scaling and rotating are okay though.
 
-// TODO: add a canvas (a group of sprites with
+// TODO: add canvas (a group of sprites with
 // the same Z drawing coordinate).
 
 func main() {
-	file, err := os.Open("cirno.png")
+	file, err := os.Open("sakuya.png")
 	handleError(err)
 	img, _, err := image.Decode(file)
 	handleError(err)
@@ -56,7 +63,8 @@ func main() {
 	aspect := float32(height) / float32(width)
 	projection := mgl32.Ortho(-1, 1, -1*aspect, 1*aspect, -1, 1)
 	transform := geometry.NewTransform(nil)
-	//transform.ApplyScale(geometry.V(0.5, 0.5))
+	transform.ApplyScale(geometry.V(0.5, 0.5))
+	//transform.Move(geometry.V(0.5, 0.5))
 
 	system.InitMetrics()
 
@@ -70,7 +78,7 @@ func main() {
 		render.SetClearColor(render.ToRGBA(colornames.Aquamarine))
 		render.Clear(render.ClearBitColor | render.ClearBitDepth)
 		//transform.Rotate(math.Pi / 4.0 * geometry.RadToDeg * system.DeltaTime())
-		transform.Move(geometry.V(0.1, 0.1).Scaled(system.DeltaTime()))
+		//transform.Move(geometry.V(0.1, 0.1).Scaled(system.DeltaTime()))
 		sprite.Draw(transform.Data(), mgl32.Ident4(), projection)
 
 		system.TickLoop()
