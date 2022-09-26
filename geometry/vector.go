@@ -152,6 +152,21 @@ func (u Vec) Rotated(angle float64) Vec {
 	}
 }
 
+// RotatedAround rotates the point represented
+// as a vectore around another point (base).
+func (v Vec) RotatedAround(angle float64, base Vec) Vec {
+	x := v.X - base.X
+	y := v.Y - base.Y
+
+	cosA := math.Cos(angle)
+	sinA := math.Sin(angle)
+
+	xRot := x*cosA - y*sinA
+	yRot := y*cosA + x*sinA
+
+	return V(base.X+xRot, base.Y+yRot)
+}
+
 // Normal returns a vector normal to u. Equivalent to u.Rotated(math.Pi / 2), but faster.
 func (u Vec) Normal() Vec {
 	return Vec{-u.Y, u.X}

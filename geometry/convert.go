@@ -1,9 +1,39 @@
 package geometry
 
 import (
+	"math"
+
 	"github.com/zergon321/cirno"
 	"gonum.org/v1/plot/vg"
 )
+
+const (
+	// RadToDeg is a factor to transfrom radians to degrees.
+	RadToDeg float64 = 180.0 / math.Pi
+	// DegToRad is a factor to transform degrees to radians.
+	DegToRad float64 = math.Pi / 180.0
+)
+
+// AdjustAngle adjusts the value of the angle so it
+// is bettween 0 and 360.
+func AdjustAngle(angle float64) float64 {
+	// Adjust the angle so its value is between 0 and 360.
+	if angle >= 360 {
+		angle = angle - float64(int64(angle/360))*360
+	} else if angle < 0 {
+		if angle <= -360 {
+			angle = angle - float64(int64(angle/360))*360
+		}
+
+		angle += 360
+
+		if angle >= 360 {
+			angle = angle - float64(int64(angle/360))*360
+		}
+	}
+
+	return angle
+}
 
 // GonumVGToAlacrityVector converts vg.Point (from
 // gonum/plot) to pixel.Vec.

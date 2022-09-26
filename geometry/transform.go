@@ -2,6 +2,7 @@ package geometry
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/golang-collections/collections/queue"
@@ -11,7 +12,10 @@ import (
 // and scale of the game object.
 type Transform struct {
 	parent   *Transform
-	data     mgl32.Mat4
+	model    mgl32.Mat4
+	position Vec
+	angle    float64
+	scale    Vec
 	children []*Transform
 }
 
@@ -87,44 +91,41 @@ func (t *Transform) RemoveChild(child *Transform) error {
 
 // Axes returns the local axes (X and Y) of the transform.
 func (t *Transform) Axes() (Vec, Vec) {
-	tX := V(t.data[0], t.data[1]).Unit()
-	tY := V(t.data[2], t.data[3]).Unit()
+	sinA := math.Sin(t.angle)
+	cosA := 1 - sinA*sinA
 
-	return tX, tY
+	return V(cosA, sinA), V(-sinA, cosA)
 }
 
 // Position returns the current position
 // stored in the transform.
 func (t *Transform) Position() Vec {
-	return V(float64(t.data[3]), float64(t.data[7]))
+	return t.position
 }
 
 // Angle returns the transform angle in radians.
 func (t *Transform) Angle() float64 {
-	localXaxis := V(t.data[0], t.data[1])
-
-	return localXaxis.Angle()
+	return t.angle
 }
 
 // Scale returns the scale of the transform.
 func (t *Transform) Scale() Vec {
-	xAxis := V(t.data[0], t.data[1])
-	yAxis := V(t.data[2], t.data[3])
-	scale := V(xAxis.Len(), yAxis.Len())
-
-	return scale
+	return t.scale
 }
 
 // Data returns the matrix held by the
 // given transform.
-func (t *Transform) Data() Matrix {
-	return t.data
+func (t *Transform) Data() mgl32.Mat4 {
+	return t.model
 }
 
 // Move moves the transform and its children
 // in the specified direction.
 func (t *Transform) Move(direction Vec) *Transform {
-	t.data = t.data.Moved(direction)
+	t.position = t.position.Add(direction)
+	t.model = mgl32.Translate3D(float32(direction.X),
+		float32(direction.Y), 0).Mul4(t.model)
+
 	tQueue := queue.New()
 
 	for _, transform := range t.children {
@@ -133,7 +134,10 @@ func (t *Transform) Move(direction Vec) *Transform {
 
 	for tQueue.Len() > 0 {
 		transform := tQueue.Dequeue().(*Transform)
-		transform.data = transform.data.Moved(direction)
+
+		transform.position = transform.position.Add(direction)
+		transform.model = mgl32.Translate3D(float32(direction.X),
+			float32(direction.Y), 0).Mul4(transform.model)
 
 		for _, child := range transform.children {
 			tQueue.Enqueue(child)
@@ -148,14 +152,18 @@ func (t *Transform) Move(direction Vec) *Transform {
 // movement of the transform and all its children.
 func (t *Transform) MoveTo(position Vec) *Transform {
 	offset := position.Sub(t.Position())
-
 	return t.Move(offset)
 }
 
 // Rotate rotates the transform and all its children
-// at the specified angle.
+// at the specified angle in degrees.
 func (t *Transform) Rotate(angle float64) *Transform {
-	t.data = t.data.Rotated(t.Position(), angle)
+	t.angle += angle
+	t.angle = AdjustAngle(t.angle)
+
+	t.model = t.model.Mul4(mgl32.HomogRotate3DZ(
+		float32(angle * DegToRad)))
+
 	tQueue := queue.New()
 
 	for _, transform := range t.children {
@@ -165,10 +173,22 @@ func (t *Transform) Rotate(angle float64) *Transform {
 	for tQueue.Len() > 0 {
 		transform := tQueue.Dequeue().(*Transform)
 
-		transform.data = transform.data.Rotated(
-			transform.Position(), angle)
-		transform.data = transform.data.Rotated(
-			transform.parent.Position(), angle)
+		// Rotate the child transform itself.
+		transform.angle += angle
+		transform.angle = AdjustAngle(transform.angle)
+
+		transform.model = transform.model.Mul4(mgl32.HomogRotate3DZ(
+			float32(angle * DegToRad)))
+
+		// Rotate the child transform
+		// around the parent transform.
+		base := transform.parent.Position()
+		destination := transform.position.RotatedAround(angle*DegToRad, base)
+		offset := destination.Sub(transform.Position())
+
+		transform.position = transform.position.Add(offset)
+		transform.model = mgl32.Translate3D(float32(offset.X),
+			float32(offset.Y), 0).Mul4(transform.model)
 
 		for _, child := range transform.children {
 			tQueue.Enqueue(child)
@@ -179,37 +199,20 @@ func (t *Transform) Rotate(angle float64) *Transform {
 }
 
 // RotateAround rotates the transform and all its
-// children at the specified angle in radians around
+// children at the specified angle in degrees around
 // the given point.
 func (t *Transform) RotateAround(angle float64, base Vec) *Transform {
-	t.data = t.data.Rotated(base, angle)
-	//t.data = t.data.Rotated(t.Position(), angle)
-	tQueue := queue.New()
-
-	for _, transform := range t.children {
-		tQueue.Enqueue(transform)
-	}
-
-	for tQueue.Len() > 0 {
-		transform := tQueue.Dequeue().(*Transform)
-
-		transform.data = transform.data.Rotated(
-			base, angle)
-		transform.data = transform.data.Rotated(
-			transform.Position(), angle)
-
-		for _, child := range transform.children {
-			tQueue.Enqueue(child)
-		}
-	}
-
-	return t
+	destination := t.position.RotatedAround(angle*DegToRad, base)
+	return t.MoveTo(destination)
 }
 
 // ApplyScale applies the specified scale factor
 // to the transform and all its children.
 func (t *Transform) ApplyScale(factor Vec) *Transform {
-	t.data = t.data.ScaledXY(t.Position(), factor)
+	t.scale = t.scale.Add(factor)
+	t.model = t.model.Mul4(mgl32.Scale3D(
+		float32(factor.X), float32(factor.Y), 0))
+
 	tQueue := queue.New()
 
 	for _, transform := range t.children {
@@ -219,8 +222,9 @@ func (t *Transform) ApplyScale(factor Vec) *Transform {
 	for tQueue.Len() > 0 {
 		transform := tQueue.Dequeue().(*Transform)
 
-		transform.data = transform.data.ScaledXY(
-			transform.Position(), factor)
+		transform.scale = transform.scale.Add(factor)
+		transform.model = transform.model.Mul4(mgl32.Scale3D(
+			float32(factor.X), float32(factor.Y), 0))
 
 		for _, child := range transform.children {
 			tQueue.Enqueue(child)
@@ -231,10 +235,10 @@ func (t *Transform) ApplyScale(factor Vec) *Transform {
 }
 
 // NewTransform creates a new empty transform out of given data.
-func NewTransform(parent *Transform, data Matrix) *Transform {
+func NewTransform(parent *Transform) *Transform {
 	return &Transform{
 		parent:   parent,
-		data:     data,
+		model:    mgl32.Ident4(),
 		children: []*Transform{},
 	}
 }

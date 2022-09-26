@@ -22,8 +22,17 @@ func init() {
 	runtime.LockOSThread()
 }
 
+// TODO: the sprite always reaches the upper
+// edge of the window at the same time regardless
+// of the window resoltion thus moving with
+// different speed that depends on the screen size.
+// This should be fixed.
+
+// TODO: add a canvas (a group of sprites with
+// the same Z drawing coordinate).
+
 func main() {
-	file, err := os.Open("sakuya.png")
+	file, err := os.Open("cirno.png")
 	handleError(err)
 	img, _, err := image.Decode(file)
 	handleError(err)
@@ -46,18 +55,31 @@ func main() {
 
 	aspect := float32(height) / float32(width)
 	projection := mgl32.Ortho(-1, 1, -1*aspect, 1*aspect, -1, 1)
-	model := mgl32.Ident4()
+	//model := mgl32.Ident4()
+	//model = model.Mul4(mgl32.Scale3D(0.5, 0.5, 0))
+	transform := geometry.NewTransform(nil)
+	//transform.ApplyScale(geometry.V(0.5, 0.5))
 
 	system.InitMetrics()
 
 	for !system.ShouldClose() {
 		system.UpdateDeltaTime()
 
+		if system.ButtonPressed(system.KeyEscape) {
+			return
+		}
+
 		render.SetClearColor(render.ToRGBA(colornames.Aquamarine))
 		render.Clear(render.ClearBitColor | render.ClearBitDepth)
-		model = mgl32.Translate3D(2*float32(system.DeltaTime()),
-			2*float32(system.DeltaTime()), 0).Mul4(model)
-		sprite.Draw(model, mgl32.Ident4(), projection)
+		//model = model.Mul4(mgl32.Scale3D(1.1*float32(system.DeltaTime()),
+		//	1.1*float32(system.DeltaTime()), 0))
+		//model = model.Mul4(mgl32.HomogRotate3DZ(float32(math.Pi/4.0) * float32(
+		//	system.DeltaTime())))
+		//model = mgl32.Translate3D(0.1*float32(system.DeltaTime()),
+		//	0.1*float32(system.DeltaTime()), 0).Mul4(model)
+		//transform.Rotate(math.Pi / 4.0 * geometry.RadToDeg * system.DeltaTime())
+		transform.Move(geometry.V(0.1, 0.1).Scaled(system.DeltaTime()))
+		sprite.Draw(transform.Data(), mgl32.Ident4(), projection)
 
 		system.TickLoop()
 		system.UpdateFrameRate()
