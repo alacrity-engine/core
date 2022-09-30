@@ -76,7 +76,7 @@ func (sprite *Sprite) Draw(model, view, projection mgl32.Mat4) {
 
 	model[12] /= float32(width)
 	model[13] /= float32(width)
-	//model[14] = 2.9
+	model[14] += float32(sprite.drawZ)
 
 	sprite.shaderProgram.SetMatrix4("model", model)
 	sprite.shaderProgram.SetMatrix4("view", view)

@@ -15,3 +15,10 @@ func (canvas *Canvas) AddSprite(sprite *Sprite) {
 	canvas.sprites = append(canvas.sprites, sprite)
 	sprite.drawZ = canvas.drawZ
 }
+
+func NewCanvas(drawZ int) *Canvas {
+	return &Canvas{
+		sprites: []*Sprite{},
+		drawZ:   drawZ,
+	}
+}

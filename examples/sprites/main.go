@@ -52,6 +52,9 @@ func main() {
 		texture, shaderProgram, geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
 	handleError(err)
 
+	canvas := render.NewCanvas(3)
+	canvas.AddSprite(sprite)
+
 	aspect := float32(height) / float32(width)
 	projection := mgl32.Ortho(-1, 1, -1*aspect, 1*aspect, -1, 1)
 	transform := geometry.NewTransform(nil)
@@ -71,7 +74,7 @@ func main() {
 		render.Clear(render.ClearBitColor | render.ClearBitDepth)
 		transform.Rotate(math.Pi / 4.0 * geometry.RadToDeg * system.DeltaTime())
 		transform.Move(geometry.V(200, 200).Scaled(system.DeltaTime()))
-		sprite.Draw(transform.Data() /*mgl32.Translate3D(0, 0, -2.0) - it's actually +*/, mgl32.Ident4(), projection)
+		sprite.Draw(transform.Data(), canvas.View(), projection)
 
 		system.TickLoop()
 		system.UpdateFrameRate()
