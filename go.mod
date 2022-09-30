@@ -15,6 +15,7 @@ require (
 	github.com/go-gl/gl v0.0.0-20190320180904-bf2b1f2f34d7
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20220806181222-55e207c401ad
 	github.com/go-gl/mathgl v0.0.0-20190416160123-c4601bc793c7
+	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
 	github.com/zergon321/cirno v0.0.0-20210828194350-f13a757fd188
 	go.etcd.io/bbolt v1.3.6
 	gonum.org/v1/plot v0.12.0
@@ -24,7 +25,6 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/ethereum/go-ethereum v1.10.25 // indirect
-	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3 // indirect
 	github.com/hajimehoshi/oto v0.7.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect

@@ -73,6 +73,9 @@ func (sprite *Sprite) Draw(model, view, projection mgl32.Mat4) {
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 	}()
 
+	model[12] /= float32(width)
+	model[13] /= float32(width)
+
 	sprite.shaderProgram.SetMatrix4("model", model)
 	sprite.shaderProgram.SetMatrix4("view", view)
 	sprite.shaderProgram.SetMatrix4("projection", projection)
