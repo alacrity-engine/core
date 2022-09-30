@@ -71,7 +71,7 @@ func main() {
 		render.Clear(render.ClearBitColor | render.ClearBitDepth)
 		transform.Rotate(math.Pi / 4.0 * geometry.RadToDeg * system.DeltaTime())
 		transform.Move(geometry.V(200, 200).Scaled(system.DeltaTime()))
-		sprite.Draw(transform.Data(), mgl32.Ident4(), projection)
+		sprite.Draw(transform.Data() /*mgl32.Translate3D(0, 0, -2.0) - it's actually +*/, mgl32.Ident4(), projection)
 
 		system.TickLoop()
 		system.UpdateFrameRate()
