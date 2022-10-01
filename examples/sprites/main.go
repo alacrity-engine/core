@@ -25,6 +25,8 @@ func init() {
 
 // TODO: add a gradient (multi-color) color mask.
 
+// TODO: add batch rendering.
+
 // TODO: add a 2D camera type and assign a camera
 // to each canvas.
 
