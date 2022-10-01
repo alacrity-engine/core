@@ -27,7 +27,7 @@ type Sprite struct {
 	texture                           *Texture
 	shaderProgram                     *ShaderProgram
 	drawMode                          DrawMode
-	drawZ                             float32 // drawZ must be in teh range of [-1; 1]
+	drawZ                             float32 // drawZ must be in the range of [-1; 1]
 	canvas                            *Canvas
 }
 
