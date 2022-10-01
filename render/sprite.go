@@ -27,7 +27,12 @@ type Sprite struct {
 	texture                           *Texture
 	shaderProgram                     *ShaderProgram
 	drawMode                          DrawMode
-	drawZ                             int
+	drawZ                             float32 // drawZ must be in teh range of [-1; 1]
+	canvas                            *Canvas
+}
+
+func (sprite *Sprite) SetZ(z float32) {
+	sprite.drawZ = mgl32.Clamp(z, -1, 1)
 }
 
 func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
@@ -39,7 +44,7 @@ func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
 		!textureRect.Contains(geometry.V(targetArea.Min.X, targetArea.Max.Y)) ||
 		!textureRect.Contains(geometry.V(targetArea.Max.X, targetArea.Min.Y)) {
 		return fmt.Errorf(
-			"rectangle '%v' cannot server as a texture subarea for the sprite", targetArea)
+			"rectangle '%v' cannot serveS as a texture subarea for the sprite", targetArea)
 	}
 
 	textureCoordinates := []float32{
@@ -74,9 +79,18 @@ func (sprite *Sprite) Draw(model, view, projection mgl32.Mat4) {
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 	}()
 
+	zModifier := sprite.drawZ
+
+	if sprite.canvas != nil && sprite.canvas.layout != nil {
+		globalZMin, globalZMax := sprite.canvas.layout.Range()
+		// A range conversion formaula.
+		zModifier = 2*(sprite.drawZ+sprite.canvas.Z()-globalZMin)/
+			(globalZMax-globalZMin) - 1
+	}
+
 	model[12] /= float32(width)
 	model[13] /= float32(width)
-	model[14] += float32(sprite.drawZ)
+	model[14] += zModifier
 
 	debug := projection.Mul4(view).Mul4(model)
 	_ = debug
