@@ -83,7 +83,7 @@ func (sprite *Sprite) Draw(model, view, projection mgl32.Mat4) {
 
 	if sprite.canvas != nil && sprite.canvas.layout != nil {
 		globalZMin, globalZMax := sprite.canvas.layout.Range()
-		// A range conversion formaula.
+		// A range conversion formula.
 		zModifier = 2*(sprite.drawZ+sprite.canvas.Z()-globalZMin)/
 			(globalZMax-globalZMin) - 1
 	}
