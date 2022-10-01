@@ -78,11 +78,11 @@ func main() {
 	// Add canvases.
 	layout := render.NewLayout()
 
-	cirnoCanvas := render.NewCanvas(2)
+	cirnoCanvas := render.NewCanvas(0)
 	layout.AddCanvas(cirnoCanvas)
 	cirnoCanvas.AddSprite(cirnoSprite)
 
-	sakuyaCanvas := render.NewCanvas(0)
+	sakuyaCanvas := render.NewCanvas(2)
 	layout.AddCanvas(sakuyaCanvas)
 	sakuyaCanvas.AddSprite(sakuyaSprite)
 

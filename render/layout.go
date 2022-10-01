@@ -31,10 +31,9 @@ func (layout *Layout) AddCanvas(canvas *Canvas) error {
 	}
 
 	if ind == 0 {
-		canvases := make([]*Canvas, 0, length+1)
-		canvases = append(canvases, canvas)
-		canvases = append(canvases, layout.canvases...)
-		layout.canvases = canvases
+		layout.canvases = append(layout.canvases, nil)
+		copy(layout.canvases[1:], layout.canvases)
+		layout.canvases[0] = canvas
 
 		canvasZMin, canvasZMax := canvas.Range()
 		layout.zMin = canvasZMin
