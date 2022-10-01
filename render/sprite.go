@@ -149,7 +149,7 @@ func NewSpriteFromTextureAndProgram(drawMode DrawMode, texture *Texture, shaderP
 	gl.BufferData(gl.ARRAY_BUFFER, len(textureCoordinates)*4, gl.Ptr(textureCoordinates), uint32(drawMode))
 	texCoordAttrib := uint32(gl.GetAttribLocation(shaderProgram.glHandler, gl.Str("aTexCoord\x00")))
 	gl.EnableVertexAttribArray(texCoordAttrib)
-	gl.VertexAttribPointer(1, 2, gl.FLOAT, false, 2*4, gl.PtrOffset(0))
+	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 2*4, gl.PtrOffset(0))
 
 	gl.BindVertexArray(0)
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
