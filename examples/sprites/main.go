@@ -38,6 +38,8 @@ func main() {
 	imgRGBA := img.(*image.RGBA)
 	reversePix(imgRGBA.Pix)
 	mirror(imgRGBA)
+	err = file.Close()
+	handleError(err)
 
 	err = system.InitializeWindow("Demo", width, height, false, false)
 	handleError(err)
@@ -47,13 +49,30 @@ func main() {
 	shaderProgram, err := render.NewStandardSpriteShaderProgram()
 	handleError(err)
 
-	texture := render.NewTextureFromImage(imgRGBA, render.TextureFilteringLinear)
-	sprite, err := render.NewSpriteFromTextureAndProgram(render.DrawModeStatic,
-		texture, shaderProgram, geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
+	cirnoTexture := render.NewTextureFromImage(imgRGBA, render.TextureFilteringLinear)
+	cirnoSprite, err := render.NewSpriteFromTextureAndProgram(render.DrawModeStatic,
+		cirnoTexture, shaderProgram, geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
 	handleError(err)
 
-	canvas := render.NewCanvas(3)
-	canvas.AddSprite(sprite)
+	file, err = os.Open("sakuya.png")
+	handleError(err)
+	img, _, err = image.Decode(file)
+	handleError(err)
+	imgRGBA = img.(*image.RGBA)
+	reversePix(imgRGBA.Pix)
+	mirror(imgRGBA)
+	err = file.Close()
+	handleError(err)
+
+	sakuyaTexture := render.NewTextureFromImage(imgRGBA, render.TextureFilteringLinear)
+	sakuyaSprite, err := render.NewSpriteFromTextureAndProgram(render.DrawModeStatic,
+		sakuyaTexture, shaderProgram, geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
+	handleError(err)
+
+	cirnoCanvas := render.NewCanvas(0)
+	cirnoCanvas.AddSprite(cirnoSprite)
+	sakuyaCanvas := render.NewCanvas(2)
+	sakuyaCanvas.AddSprite(sakuyaSprite)
 
 	aspect := float32(height) / float32(width)
 	projection := mgl32.Ortho(-1, 1, -1*aspect, 1*aspect, -1, 1)
@@ -74,7 +93,8 @@ func main() {
 		render.Clear(render.ClearBitColor | render.ClearBitDepth)
 		transform.Rotate(math.Pi / 4.0 * geometry.RadToDeg * system.DeltaTime())
 		transform.Move(geometry.V(200, 200).Scaled(system.DeltaTime()))
-		sprite.Draw(transform.Data(), canvas.View(), projection)
+		cirnoSprite.Draw(transform.Data(), cirnoCanvas.View(), projection)
+		sakuyaSprite.Draw(transform.Data(), sakuyaCanvas.View(), projection)
 
 		system.TickLoop()
 		system.UpdateFrameRate()
