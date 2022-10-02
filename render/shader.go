@@ -37,7 +37,7 @@ func (shader *Shader) Delete() {
 
 func NewShaderFromSource(source string, typ ShaderType) (*Shader, error) {
 	shaderHandler := gl.CreateShader(uint32(typ))
-	csources, free := gl.Strs(source)
+	csources, free := gl.Strs(source + "\x00")
 
 	gl.ShaderSource(shaderHandler, 1, csources, nil)
 	free()
