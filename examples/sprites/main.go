@@ -22,9 +22,15 @@ func init() {
 	runtime.LockOSThread()
 }
 
-// TODO: add a gradient (multi-color) color mask.
+// TODO: add an opportunity to assign a size and a transform to a canvas.
+// I think I'll need to make all the canvas sprites' transforms children
+// of the canvas transform in order to move the canvas with its contents.
+// This will allow me make different versions of the same game for 4:3 and
+// 16:9 aspects.
 
-// TODO: add batch rendering.
+// TODO: resolve the gl.DrawElemnts SIGSEGV.
+
+// TODO: add batch rendering for static and animated sprites.
 
 func main() {
 	// Initialize the engine.
@@ -50,9 +56,10 @@ func main() {
 
 	// Create a texture and a sprite for Cirno.
 	cirnoTexture := render.NewTextureFromImage(imgRGBA, render.TextureFilteringLinear)
-	cirnoSprite, err := render.NewSpriteFromTextureAndProgram(render.DrawModeStatic,
+	cirnoSprite, err := render.NewSpriteFromTextureAndProgram(render.DrawModeStatic, render.DrawModeStatic,
 		cirnoTexture, shaderProgram, geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
 	handleError(err)
+	cirnoSprite.SetColorMask(render.RGBARepeat6(render.ToRGBA(colornames.Red)))
 
 	// Load the Sakuya picture.
 	file, err = os.Open("sakuya.png")
@@ -67,9 +74,17 @@ func main() {
 
 	// Create a texture and a sprite for Sakuya.
 	sakuyaTexture := render.NewTextureFromImage(imgRGBA, render.TextureFilteringLinear)
-	sakuyaSprite, err := render.NewSpriteFromTextureAndProgram(render.DrawModeStatic,
+	sakuyaSprite, err := render.NewSpriteFromTextureAndProgram(render.DrawModeStatic, render.DrawModeStatic,
 		sakuyaTexture, shaderProgram, geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
 	handleError(err)
+	sakuyaSprite.SetColorMask([6]render.RGBA{
+		render.ToRGBA(colornames.Red),
+		render.ToRGBA(colornames.Green),
+		render.ToRGBA(colornames.Blue),
+		render.ToRGBA(colornames.Green),
+		render.ToRGBA(colornames.Black),
+		render.ToRGBA(colornames.Blue),
+	})
 
 	// Add canvases.
 	layout := render.NewLayout()

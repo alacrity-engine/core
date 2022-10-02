@@ -8,19 +8,19 @@ import "image/color"
 //
 // Taken from github.com/faiface/pixel.
 type RGBA struct {
-	R, G, B, A float64
+	R, G, B, A float32
 }
 
 // RGB returns a fully opaque RGBA color with the given RGB values.
 //
 // A common way to construct a transparent color is to create one with RGB constructor, then
 // multiply it by a color obtained from the Alpha constructor.
-func RGB(r, g, b float64) RGBA {
+func RGB(r, g, b float32) RGBA {
 	return RGBA{r, g, b, 1}
 }
 
 // Alpha returns a white RGBA color with the given alpha component.
-func Alpha(a float64) RGBA {
+func Alpha(a float32) RGBA {
 	return RGBA{a, a, a, a}
 }
 
@@ -58,7 +58,7 @@ func (c RGBA) Mul(d RGBA) RGBA {
 
 // Scaled multiplies each component of color c by scale and returns the result (the components
 // are not clamped).
-func (c RGBA) Scaled(scale float64) RGBA {
+func (c RGBA) Scaled(scale float32) RGBA {
 	return RGBA{
 		R: c.R * scale,
 		G: c.G * scale,
@@ -76,6 +76,17 @@ func (c RGBA) RGBA() (r, g, b, a uint32) {
 	return
 }
 
+func RGBARepeat6(_color RGBA) [6]RGBA {
+	return [6]RGBA{
+		_color,
+		_color,
+		_color,
+		_color,
+		_color,
+		_color,
+	}
+}
+
 // ToRGBA converts a color to RGBA format. Using this function is preferred to using RGBAModel, for
 // performance (using RGBAModel introduces additional unnecessary allocations).
 func ToRGBA(c color.Color) RGBA {
@@ -84,10 +95,10 @@ func ToRGBA(c color.Color) RGBA {
 	}
 	r, g, b, a := c.RGBA()
 	return RGBA{
-		float64(r) / 0xffff,
-		float64(g) / 0xffff,
-		float64(b) / 0xffff,
-		float64(a) / 0xffff,
+		float32(r) / 0xffff,
+		float32(g) / 0xffff,
+		float32(b) / 0xffff,
+		float32(a) / 0xffff,
 	}
 }
 

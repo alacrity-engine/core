@@ -24,6 +24,7 @@ type Sprite struct {
 	glHandler                         uint32
 	glVertexBufferHandler             uint32
 	glTextureCoordinatesBufferHandler uint32
+	glColorMaskBufferHandler          uint32
 	texture                           *Texture
 	shaderProgram                     *ShaderProgram
 	drawMode                          DrawMode
@@ -33,6 +34,12 @@ type Sprite struct {
 
 func (sprite *Sprite) SetZ(z float32) {
 	sprite.drawZ = mgl32.Clamp(z, -1, 1)
+}
+
+func (sprite *Sprite) SetColorMask(colorMask [6]RGBA) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glColorMaskBufferHandler)
+	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(colorMask)*4*4, gl.Ptr(colorMask[:]))
+	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 }
 
 func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
@@ -121,7 +128,7 @@ func (sprite *Sprite) DrawTransform(transform *geometry.Transform) error {
 	return nil
 }
 
-func NewSpriteFromTextureAndProgram(drawMode DrawMode, texture *Texture, shaderProgram *ShaderProgram, targetArea geometry.Rect) (*Sprite, error) {
+func NewSpriteFromTextureAndProgram(textureDrawMode, colorDrawMode DrawMode, texture *Texture, shaderProgram *ShaderProgram, targetArea geometry.Rect) (*Sprite, error) {
 	if texture == nil || texture.glHandler == 0 {
 		return nil, fmt.Errorf("no texture")
 	}
@@ -148,6 +155,14 @@ func NewSpriteFromTextureAndProgram(drawMode DrawMode, texture *Texture, shaderP
 		float32(targetArea.Max.X) / float32(texture.imageWidth), float32(targetArea.Max.Y) / float32(texture.imageHeight),
 		float32(targetArea.Max.X) / float32(texture.imageWidth), float32(targetArea.Min.Y) / float32(texture.imageHeight),
 	}
+	colorMask := []float32{
+		1.0, 1.0, 1.0, 1.0,
+		1.0, 1.0, 1.0, 1.0,
+		1.0, 1.0, 1.0, 1.0, // extraneous 3
+		1.0, 1.0, 1.0, 1.0, // extraneous 1
+		1.0, 1.0, 1.0, 1.0,
+		1.0, 1.0, 1.0, 1.0,
+	}
 
 	var handler uint32
 	gl.GenVertexArrays(1, &handler)
@@ -164,10 +179,18 @@ func NewSpriteFromTextureAndProgram(drawMode DrawMode, texture *Texture, shaderP
 	var textureCoordinatesBufferHandler uint32
 	gl.GenBuffers(1, &textureCoordinatesBufferHandler)
 	gl.BindBuffer(gl.ARRAY_BUFFER, textureCoordinatesBufferHandler)
-	gl.BufferData(gl.ARRAY_BUFFER, len(textureCoordinates)*4, gl.Ptr(textureCoordinates), uint32(drawMode))
+	gl.BufferData(gl.ARRAY_BUFFER, len(textureCoordinates)*4, gl.Ptr(textureCoordinates), uint32(textureDrawMode))
 	texCoordAttrib := uint32(gl.GetAttribLocation(shaderProgram.glHandler, gl.Str("aTexCoord\x00")))
 	gl.EnableVertexAttribArray(texCoordAttrib)
 	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 2*4, gl.PtrOffset(0))
+
+	var colorMaskBufferHandler uint32
+	gl.GenBuffers(1, &colorMaskBufferHandler)
+	gl.BindBuffer(gl.ARRAY_BUFFER, colorMaskBufferHandler)
+	gl.BufferData(gl.ARRAY_BUFFER, len(colorMask)*4, gl.Ptr(colorMask), uint32(colorDrawMode))
+	colorAttrib := uint32(gl.GetAttribLocation(shaderProgram.glHandler, gl.Str("aColor\x00")))
+	gl.EnableVertexAttribArray(colorAttrib)
+	gl.VertexAttribPointer(colorAttrib, 4, gl.FLOAT, false, 4*4, gl.PtrOffset(0))
 
 	gl.BindVertexArray(0)
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
@@ -176,8 +199,9 @@ func NewSpriteFromTextureAndProgram(drawMode DrawMode, texture *Texture, shaderP
 		glHandler:                         handler,
 		glVertexBufferHandler:             vertexBufferHandler,
 		glTextureCoordinatesBufferHandler: textureCoordinatesBufferHandler,
+		glColorMaskBufferHandler:          colorMaskBufferHandler,
 		texture:                           texture,
 		shaderProgram:                     shaderProgram,
-		drawMode:                          drawMode,
+		drawMode:                          textureDrawMode,
 	}, nil
 }

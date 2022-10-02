@@ -115,12 +115,14 @@ func (anim *Animation) GetCurrentSprite() *render.Sprite {
 func NewAnimation(
 	spritesheet *render.Texture,
 	shaderProgram *render.ShaderProgram,
+	colorDrawMode render.DrawMode,
 	frames []geometry.Rect,
 	delays []time.Duration,
 	loop bool,
 ) (*Animation, error) {
 	animSprite, err := render.NewSpriteFromTextureAndProgram(
-		render.DrawModeDynamic, spritesheet, shaderProgram, geometry.Rect{})
+		render.DrawModeDynamic, colorDrawMode, spritesheet,
+		shaderProgram, geometry.Rect{})
 
 	if err != nil {
 		return nil, err
@@ -167,6 +169,7 @@ func NewAnimationWithExistingSprite(
 func NewAnimationFromPictureAndData(
 	picture *codec.Picture,
 	filter render.TextureFiltering,
+	colorDrawMode render.DrawMode,
 	shaderProgram *render.ShaderProgram,
 	frames []geometry.Rect,
 	delays []time.Duration,
@@ -174,7 +177,8 @@ func NewAnimationFromPictureAndData(
 ) (*Animation, error) {
 	texture := render.NewTextureFromPicture(picture, filter)
 	animSprite, err := render.NewSpriteFromTextureAndProgram(
-		render.DrawModeDynamic, texture, shaderProgram, geometry.Rect{})
+		render.DrawModeDynamic, colorDrawMode, texture,
+		shaderProgram, geometry.Rect{})
 
 	if err != nil {
 		return nil, err

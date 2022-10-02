@@ -28,7 +28,7 @@ func (loader *ResourceLoader) Close() error {
 
 // LoadAnimation loads the animation with spritesheet
 // and frames from the resource file.
-func (loader *ResourceLoader) LoadAnimation(animID string, filter render.TextureFiltering, shaderProgram *render.ShaderProgram) (*anim.Animation, error) {
+func (loader *ResourceLoader) LoadAnimation(animID string, filter render.TextureFiltering, colorDrawMode render.DrawMode, shaderProgram *render.ShaderProgram) (*anim.Animation, error) {
 	// Load the animation frames from the buffer
 	// or the resource file.
 	animData, err := loader.buffer.takeAnimation(animID)
@@ -135,7 +135,7 @@ func (loader *ResourceLoader) LoadAnimation(animID string, filter render.Texture
 	}
 
 	anim, err := anim.NewAnimationFromPictureAndData(spritesheet,
-		filter, shaderProgram, animData.Frames, delays, false)
+		filter, colorDrawMode, shaderProgram, animData.Frames, delays, false)
 
 	if err != nil {
 		return nil, err

@@ -13,7 +13,7 @@ const (
 )
 
 func SetClearColor(_color RGBA) {
-	gl.ClearColor(float32(_color.R), float32(_color.G), float32(_color.B), float32(_color.A))
+	gl.ClearColor(_color.R, _color.G, _color.B, _color.A)
 }
 
 func Clear(bit ClearBit) {
