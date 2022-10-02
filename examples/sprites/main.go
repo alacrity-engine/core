@@ -10,7 +10,6 @@ import (
 	"github.com/alacrity-engine/core/geometry"
 	"github.com/alacrity-engine/core/render"
 	"github.com/alacrity-engine/core/system"
-	"github.com/go-gl/mathgl/mgl32"
 	"golang.org/x/image/colornames"
 )
 
@@ -26,9 +25,6 @@ func init() {
 // TODO: add a gradient (multi-color) color mask.
 
 // TODO: add batch rendering.
-
-// TODO: add a 2D camera type and assign a camera
-// to each canvas.
 
 func main() {
 	// Initialize the engine.
@@ -86,12 +82,9 @@ func main() {
 	layout.AddCanvas(sakuyaCanvas)
 	sakuyaCanvas.AddSprite(sakuyaSprite)
 
-	aspect := float32(height) / float32(width)
-	projection := mgl32.Ortho(-1, 1, -1*aspect, 1*aspect, -1, 1)
 	sakuyaTransform := geometry.NewTransform(nil)
 	cirnoTransform := geometry.NewTransform(nil)
 	//transform.ApplyScale(geometry.V(0.5, 0.5))
-	//transform.Move(geometry.V(0.5, 0.5))
 
 	system.InitMetrics()
 
@@ -102,16 +95,46 @@ func main() {
 			return
 		}
 
+		//moveCamera(sakuyaCanvas.Camera(), 1000, system.DeltaTime())
+
 		render.SetClearColor(render.ToRGBA(colornames.Aquamarine))
 		render.Clear(render.ClearBitColor | render.ClearBitDepth)
 		sakuyaTransform.Rotate(math.Pi / 4.0 * geometry.RadToDeg * system.DeltaTime())
+		sakuyaCanvas.Camera().Move(geometry.V(200, 200).Scaled(system.DeltaTime()))
 		sakuyaTransform.Move(geometry.V(200, 200).Scaled(system.DeltaTime()))
 		cirnoTransform.Move(geometry.V(400, 400).Scaled(system.DeltaTime()))
-		cirnoSprite.Draw(cirnoTransform.Data(), mgl32.Ident4(), projection)
-		sakuyaSprite.Draw(sakuyaTransform.Data(), mgl32.Ident4(), projection)
+		cirnoSprite.DrawTransform(cirnoTransform)
+		sakuyaSprite.DrawTransform(sakuyaTransform)
 
 		system.TickLoop()
 		system.UpdateFrameRate()
+	}
+}
+
+func moveCamera(camera *render.Camera, speed, deltaTime float64) {
+	movement := geometry.ZV
+
+	if system.ButtonPressed(system.KeyUp) {
+		movement.Y += 1.0
+	}
+
+	if system.ButtonPressed(system.KeyDown) {
+		movement.Y -= 1.0
+	}
+
+	if system.ButtonPressed(system.KeyLeft) {
+		movement.X -= 1.0
+	}
+
+	if system.ButtonPressed(system.KeyRight) {
+		movement.X += 1.0
+	}
+
+	if movement != geometry.ZV {
+		movement = geometry.ClampMagnitude(movement, 1.0)
+		movement = movement.Scaled(speed * deltaTime)
+
+		camera.Move(movement)
 	}
 }
 

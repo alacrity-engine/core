@@ -4,6 +4,11 @@ type Canvas struct {
 	index   int
 	sprites []*Sprite
 	layout  *Layout
+	camera  *Camera
+}
+
+func (canvas *Canvas) Camera() *Camera {
+	return canvas.camera
 }
 
 func (canvas *Canvas) Index() int {
@@ -28,5 +33,6 @@ func NewCanvas(drawZ int) *Canvas {
 	return &Canvas{
 		sprites: []*Sprite{},
 		index:   drawZ,
+		camera:  NewCamera(),
 	}
 }

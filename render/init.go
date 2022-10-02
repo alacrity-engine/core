@@ -17,6 +17,7 @@ func Initialize(_width, _height int) error {
 		return err
 	}
 
+	ortho2D = ortho2DCompute()
 	err = gl.Init()
 
 	if err != nil {

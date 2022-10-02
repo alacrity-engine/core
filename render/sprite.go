@@ -92,8 +92,11 @@ func (sprite *Sprite) Draw(model, view, projection mgl32.Mat4) {
 	model[13] /= float32(width)
 	model[14] += zModifier
 
-	debug := projection.Mul4(view).Mul4(model)
-	_ = debug
+	view[12] /= -float32(width)
+	view[13] /= -float32(width)
+
+	//debug := projection.Mul4(view).Mul4(model)
+	//_ = debug
 
 	sprite.shaderProgram.SetMatrix4("model", model)
 	sprite.shaderProgram.SetMatrix4("view", view)
@@ -101,6 +104,21 @@ func (sprite *Sprite) Draw(model, view, projection mgl32.Mat4) {
 
 	//gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
 	gl.DrawArrays(gl.TRIANGLES, 0, 6)
+}
+
+func (sprite *Sprite) DrawTransform(transform *geometry.Transform) error {
+	if transform == nil {
+		return fmt.Errorf("the transform is nil")
+	}
+
+	if sprite.canvas == nil {
+		return fmt.Errorf("the sprite has no canvas")
+	}
+
+	sprite.Draw(transform.Data(), sprite.canvas.
+		camera.View(), ortho2D)
+
+	return nil
 }
 
 func NewSpriteFromTextureAndProgram(drawMode DrawMode, texture *Texture, shaderProgram *ShaderProgram, targetArea geometry.Rect) (*Sprite, error) {
