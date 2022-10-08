@@ -36,7 +36,7 @@ func (sprite *Sprite) SetZ(z float32) {
 	sprite.drawZ = mgl32.Clamp(z, -1, 1)
 }
 
-func (sprite *Sprite) SetColorMask(colorMask [6]RGBA) {
+func (sprite *Sprite) SetColorMask(colorMask [4]RGBA) {
 	gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glColorMaskBufferHandler)
 	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(colorMask)*4*4, gl.Ptr(colorMask[:]))
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
@@ -57,8 +57,6 @@ func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
 	textureCoordinates := []float32{
 		float32(targetArea.Min.X) / float32(sprite.texture.imageWidth), float32(targetArea.Min.Y) / float32(sprite.texture.imageHeight),
 		float32(targetArea.Min.X) / float32(sprite.texture.imageWidth), float32(targetArea.Max.Y) / float32(sprite.texture.imageHeight),
-		float32(targetArea.Max.X) / float32(sprite.texture.imageWidth), float32(targetArea.Min.Y) / float32(sprite.texture.imageHeight), // extraneous 3
-		float32(targetArea.Min.X) / float32(sprite.texture.imageWidth), float32(targetArea.Max.Y) / float32(sprite.texture.imageHeight), // extraneous 1
 		float32(targetArea.Max.X) / float32(sprite.texture.imageWidth), float32(targetArea.Max.Y) / float32(sprite.texture.imageHeight),
 		float32(targetArea.Max.X) / float32(sprite.texture.imageWidth), float32(targetArea.Min.Y) / float32(sprite.texture.imageHeight),
 	}
@@ -71,14 +69,14 @@ func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
 }
 
 func (sprite *Sprite) Draw(model, view, projection mgl32.Mat4) {
-	//gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, spriteIndexBufferHandler)
-	//defer gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
-
 	sprite.shaderProgram.Use()
 	defer gl.UseProgram(0)
 
 	gl.BindVertexArray(sprite.glHandler)
 	defer gl.BindVertexArray(0)
+
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, spriteIndexBufferHandler)
+	defer gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
 
 	sprite.texture.Use()
 	defer func() {
@@ -109,8 +107,7 @@ func (sprite *Sprite) Draw(model, view, projection mgl32.Mat4) {
 	sprite.shaderProgram.SetMatrix4("view", view)
 	sprite.shaderProgram.SetMatrix4("projection", projection)
 
-	//gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
-	gl.DrawArrays(gl.TRIANGLES, 0, 6)
+	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
 }
 
 func (sprite *Sprite) DrawTransform(transform *geometry.Transform) error {
@@ -142,24 +139,18 @@ func NewSpriteFromTextureAndProgram(textureDrawMode, colorDrawMode DrawMode, tex
 	vertices := []float32{
 		texToScreenWidth * -1.0, texToscreenHeight * -1.0, 0.0,
 		texToScreenWidth * -1.0, texToscreenHeight * 1.0, 0.0,
-		texToScreenWidth * 1.0, texToscreenHeight * -1.0, 0.0, // extraneous 3
-		texToScreenWidth * -1.0, texToscreenHeight * 1.0, 0.0, // extraneous 1
 		texToScreenWidth * 1.0, texToscreenHeight * 1.0, 0.0,
 		texToScreenWidth * 1.0, texToscreenHeight * -1.0, 0.0,
 	}
 	textureCoordinates := []float32{
 		float32(targetArea.Min.X) / float32(texture.imageWidth), float32(targetArea.Min.Y) / float32(texture.imageHeight),
 		float32(targetArea.Min.X) / float32(texture.imageWidth), float32(targetArea.Max.Y) / float32(texture.imageHeight),
-		float32(targetArea.Max.X) / float32(texture.imageWidth), float32(targetArea.Min.Y) / float32(texture.imageHeight), // extraneous 3
-		float32(targetArea.Min.X) / float32(texture.imageWidth), float32(targetArea.Max.Y) / float32(texture.imageHeight), // extraneous 1
 		float32(targetArea.Max.X) / float32(texture.imageWidth), float32(targetArea.Max.Y) / float32(texture.imageHeight),
 		float32(targetArea.Max.X) / float32(texture.imageWidth), float32(targetArea.Min.Y) / float32(texture.imageHeight),
 	}
 	colorMask := []float32{
 		1.0, 1.0, 1.0, 1.0,
 		1.0, 1.0, 1.0, 1.0,
-		1.0, 1.0, 1.0, 1.0, // extraneous 3
-		1.0, 1.0, 1.0, 1.0, // extraneous 1
 		1.0, 1.0, 1.0, 1.0,
 		1.0, 1.0, 1.0, 1.0,
 	}

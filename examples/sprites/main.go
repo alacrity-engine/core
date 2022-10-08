@@ -59,7 +59,7 @@ func main() {
 	cirnoSprite, err := render.NewSpriteFromTextureAndProgram(render.DrawModeStatic, render.DrawModeStatic,
 		cirnoTexture, shaderProgram, geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
 	handleError(err)
-	cirnoSprite.SetColorMask(render.RGBARepeat6(render.ToRGBA(colornames.Red)))
+	cirnoSprite.SetColorMask(render.RGBARepeat4(render.ToRGBA(colornames.Red)))
 
 	// Load the Sakuya picture.
 	file, err = os.Open("sakuya.png")
@@ -77,13 +77,11 @@ func main() {
 	sakuyaSprite, err := render.NewSpriteFromTextureAndProgram(render.DrawModeStatic, render.DrawModeStatic,
 		sakuyaTexture, shaderProgram, geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
 	handleError(err)
-	sakuyaSprite.SetColorMask([6]render.RGBA{
+	sakuyaSprite.SetColorMask([4]render.RGBA{
 		render.ToRGBA(colornames.Red),
 		render.ToRGBA(colornames.Green),
 		render.ToRGBA(colornames.Blue),
-		render.ToRGBA(colornames.Green),
 		render.ToRGBA(colornames.Black),
-		render.ToRGBA(colornames.Blue),
 	})
 
 	// Add canvases.

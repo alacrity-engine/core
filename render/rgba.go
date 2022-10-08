@@ -76,10 +76,8 @@ func (c RGBA) RGBA() (r, g, b, a uint32) {
 	return
 }
 
-func RGBARepeat6(_color RGBA) [6]RGBA {
-	return [6]RGBA{
-		_color,
-		_color,
+func RGBARepeat4(_color RGBA) [4]RGBA {
+	return [4]RGBA{
 		_color,
 		_color,
 		_color,
