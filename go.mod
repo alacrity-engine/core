@@ -18,6 +18,7 @@ require (
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
 	github.com/zergon321/cirno v0.0.0-20210828194350-f13a757fd188
 	go.etcd.io/bbolt v1.3.6
+	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
 	gonum.org/v1/plot v0.12.0
 )
 

@@ -8,14 +8,6 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-type DrawMode uint32
-
-const (
-	DrawModeStatic  DrawMode = gl.STATIC_DRAW
-	DrawModeDynamic DrawMode = gl.DYNAMIC_DRAW
-	DrawModeStream  DrawMode = gl.STREAM_DRAW
-)
-
 var (
 	spriteIndexBufferHandler uint32
 )
@@ -42,6 +34,9 @@ func (sprite *Sprite) SetColorMask(colorMask [4]RGBA) {
 	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(colorMask)*4*4, gl.Ptr(colorMask[:]))
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 }
+
+// TODO: cache all the incoming target areas
+// in a batch for batched sprites.
 
 func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
 	textureRect := geometry.R(0, 0,
@@ -115,20 +110,27 @@ func (sprite *Sprite) draw(model, view, projection mgl32.Mat4) {
 	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
 }
 
+func (sprite *Sprite) drawToBatch(transform *geometry.Transform) {
+	sprite.batch.shouldCreateVertexBuffer()
+
+	ind := sprite.batch.findSpriteIndex(sprite)
+	sprite.batch.transforms[ind] = transform
+	sprite.batch.shouldDraw[ind] = true
+}
+
 func (sprite *Sprite) Draw(transform *geometry.Transform) error {
 	if transform == nil {
 		return fmt.Errorf("the transform is nil")
 	}
 
-	if sprite.batch != nil {
-		ind := sprite.batch.findSpriteIndex(sprite)
-		sprite.batch.transforms[ind] = transform
-
-		return nil
-	}
-
 	if sprite.canvas == nil {
 		return fmt.Errorf("the sprite has no canvas")
+	}
+
+	if sprite.batch != nil {
+		sprite.drawToBatch(transform)
+
+		return nil
 	}
 
 	sprite.draw(transform.Data(), sprite.canvas.

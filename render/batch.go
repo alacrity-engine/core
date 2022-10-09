@@ -15,13 +15,40 @@ import (
 
 // TODO: add a shader program field to batch.
 
+// TODO: a vertex draw buffer for all the
+// vertices of all the attached sprites.
+// If a sprite shouldn't be drawn, don't
+// add its vertex data to the vertex
+// buffer. When the vertex buffer is
+// being filled with the vertex data of
+// all the sprites that should be drawn,
+// the quantity of the sprites that
+// shouldn't be drawn must be counted in
+// order to cut the length of the vertex
+// buffer to the number of the sprites
+// that should be drawn.
+
 type Batch struct {
-	glHandler  uint32
-	length     int
-	capacity   int
-	sprites    []*Sprite
-	transforms []*geometry.Transform
-	texture    *Texture
+	// glHandler is an OpenGL name
+	// for the underlying batch VAO.
+	glHandler    uint32
+	list         *glList[float32]
+	sprites      []*Sprite
+	transforms   []*geometry.Transform
+	shouldDraw   []bool
+	layout       *Layout
+	texture      *Texture
+	vertexBuffer []float32
+}
+
+func (batch *Batch) shouldCreateVertexBuffer() {
+	if batch.vertexBuffer == nil {
+		batch.vertexBuffer = make([]float32, len(batch.sprites)*20) // paste the actual size of the vertex here
+	}
+}
+
+func (batch *Batch) Draw() {
+	batch.shouldCreateVertexBuffer()
 }
 
 func (batch *Batch) findSpritePlaceIndex(sprite *Sprite) int {
@@ -69,6 +96,7 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 
 	sprite.batch = batch
 	batch.transforms = append(batch.transforms, nil)
+	batch.shouldDraw = append(batch.shouldDraw, false)
 
 	return nil
 }
@@ -98,6 +126,7 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 
 	sprite.batch = nil
 	batch.transforms = batch.transforms[:length-1]
+	batch.shouldDraw = batch.shouldDraw[:length-1]
 
 	return nil
 }

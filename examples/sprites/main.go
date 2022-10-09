@@ -86,12 +86,16 @@ func main() {
 	layout := render.NewLayout()
 
 	cirnoCanvas := render.NewCanvas(0)
-	layout.AddCanvas(cirnoCanvas)
-	cirnoCanvas.AddSprite(cirnoSprite)
+	err = layout.AddCanvas(cirnoCanvas)
+	handleError(err)
+	err = cirnoCanvas.AddSprite(cirnoSprite)
+	handleError(err)
 
 	sakuyaCanvas := render.NewCanvas(2)
-	layout.AddCanvas(sakuyaCanvas)
-	sakuyaCanvas.AddSprite(sakuyaSprite)
+	err = layout.AddCanvas(sakuyaCanvas)
+	handleError(err)
+	err = sakuyaCanvas.AddSprite(sakuyaSprite)
+	handleError(err)
 
 	sakuyaTransform := geometry.NewTransform(nil)
 	cirnoTransform := geometry.NewTransform(nil)

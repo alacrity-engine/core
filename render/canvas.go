@@ -1,8 +1,10 @@
 package render
 
+import "fmt"
+
 type Canvas struct {
 	index   int
-	sprites []*Sprite
+	sprites map[*Sprite]struct{}
 	layout  *Layout
 	camera  *Camera
 }
@@ -24,14 +26,33 @@ func (canvas *Canvas) Range() (float32, float32) {
 		1.0 + float32(canvas.index)*2.0
 }
 
-func (canvas *Canvas) AddSprite(sprite *Sprite) {
-	canvas.sprites = append(canvas.sprites, sprite)
+func (canvas *Canvas) AddSprite(sprite *Sprite) error {
+	if _, ok := canvas.sprites[sprite]; ok {
+		return fmt.Errorf(
+			"the sprite already exists on the canvas")
+	}
+
+	canvas.sprites[sprite] = struct{}{}
 	sprite.canvas = canvas
+
+	return nil
+}
+
+func (canvas *Canvas) RemoveSprite(sprite *Sprite) error {
+	if _, ok := canvas.sprites[sprite]; !ok {
+		return fmt.Errorf(
+			"the sprite doesn't exist on the canvas")
+	}
+
+	delete(canvas.sprites, sprite)
+	sprite.canvas = nil
+
+	return nil
 }
 
 func NewCanvas(drawZ int) *Canvas {
 	return &Canvas{
-		sprites: []*Sprite{},
+		sprites: map[*Sprite]struct{}{},
 		index:   drawZ,
 		camera:  NewCamera(),
 	}

@@ -5,10 +5,13 @@ import (
 	"sort"
 )
 
+// TODO: add a remove canvas method.
+
 type Layout struct {
 	zMin     float32
 	zMax     float32
 	canvases []*Canvas
+	indexer  map[int]int
 }
 
 func (layot *Layout) Range() (float32, float32) {
@@ -58,6 +61,11 @@ func (layout *Layout) AddCanvas(canvas *Canvas) error {
 
 	canvas.layout = layout
 
+	// Re-index the layout as a new canvas added.
+	for i, canvas := range layout.canvases {
+		layout.indexer[canvas.index] = i
+	}
+
 	return nil
 }
 
@@ -66,5 +74,6 @@ func NewLayout() *Layout {
 		zMin:     0,
 		zMax:     0,
 		canvases: []*Canvas{},
+		indexer:  map[int]int{},
 	}
 }
