@@ -30,6 +30,7 @@ type Sprite struct {
 	drawMode                          DrawMode
 	drawZ                             float32 // drawZ must be in the range of [-1; 1]
 	canvas                            *Canvas
+	batch                             *Batch
 }
 
 func (sprite *Sprite) SetZ(z float32) {
@@ -68,7 +69,11 @@ func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
 	return nil
 }
 
-func (sprite *Sprite) Draw(model, view, projection mgl32.Mat4) {
+func (sprite *Sprite) draw(model, view, projection mgl32.Mat4) {
+	if sprite.batch != nil {
+		return
+	}
+
 	sprite.shaderProgram.Use()
 	defer gl.UseProgram(0)
 
@@ -110,16 +115,23 @@ func (sprite *Sprite) Draw(model, view, projection mgl32.Mat4) {
 	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
 }
 
-func (sprite *Sprite) DrawTransform(transform *geometry.Transform) error {
+func (sprite *Sprite) Draw(transform *geometry.Transform) error {
 	if transform == nil {
 		return fmt.Errorf("the transform is nil")
+	}
+
+	if sprite.batch != nil {
+		ind := sprite.batch.findSpriteIndex(sprite)
+		sprite.batch.transforms[ind] = transform
+
+		return nil
 	}
 
 	if sprite.canvas == nil {
 		return fmt.Errorf("the sprite has no canvas")
 	}
 
-	sprite.Draw(transform.Data(), sprite.canvas.
+	sprite.draw(transform.Data(), sprite.canvas.
 		camera.View(), ortho2D)
 
 	return nil

@@ -28,8 +28,6 @@ func init() {
 // This will allow me make different versions of the same game for 4:3 and
 // 16:9 aspects.
 
-// TODO: resolve the gl.DrawElemnts SIGSEGV.
-
 // TODO: add batch rendering for static and animated sprites.
 
 func main() {
@@ -116,8 +114,8 @@ func main() {
 		sakuyaCanvas.Camera().Move(geometry.V(200, 200).Scaled(system.DeltaTime()))
 		sakuyaTransform.Move(geometry.V(200, 200).Scaled(system.DeltaTime()))
 		cirnoTransform.Move(geometry.V(400, 400).Scaled(system.DeltaTime()))
-		cirnoSprite.DrawTransform(cirnoTransform)
-		sakuyaSprite.DrawTransform(sakuyaTransform)
+		cirnoSprite.Draw(cirnoTransform)
+		sakuyaSprite.Draw(sakuyaTransform)
 
 		system.TickLoop()
 		system.UpdateFrameRate()
