@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	_ "image/png"
 	"math"
@@ -102,6 +103,9 @@ func main() {
 	//transform.ApplyScale(geometry.V(0.5, 0.5))
 
 	system.InitMetrics()
+
+	fmt.Println("GPU vendor:", system.Vendor())
+	fmt.Println("GPU model:", system.Renderer())
 
 	for !system.ShouldClose() {
 		system.UpdateDeltaTime()
