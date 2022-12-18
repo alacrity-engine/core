@@ -64,6 +64,23 @@ func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
 	return nil
 }
 
+// TODO: we don't need the space shrinking
+// in the range conversion formula. Therefore
+// no need for it at all. Instead just convert
+// the canvas limits from relative to global
+// (with the Range() method) and add the sprite
+// Z to the leftmost canvas' global limit in
+// order to obtain the sprite's global Z. This
+// method is more appropriate because a
+// canvas may have a perspective projection
+// for 3D, and the global canvas space shrinking
+// is not appropriate for it.
+
+// TODO: rename the ortho2D projection to the
+// ortho2DStandard. Don't hard-code its values
+// in the range conversion formula or the canvas
+// code. Each canvas may have a different projection.
+
 func (sprite *Sprite) draw(model, view, projection mgl32.Mat4) {
 	if sprite.batch != nil {
 		return

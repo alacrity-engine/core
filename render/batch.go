@@ -17,22 +17,13 @@ import (
 
 // TODO: a vertex draw buffer for all the
 // vertices of all the attached sprites.
-// If a sprite shouldn't be drawn, don't
-// add its vertex data to the vertex
-// buffer. When the vertex buffer is
-// being filled with the vertex data of
-// all the sprites that should be drawn,
-// the quantity of the sprites that
-// shouldn't be drawn must be counted in
-// order to cut the length of the vertex
-// buffer to the number of the sprites
-// that should be drawn.
+// If a sprite shouldn't be drawn, set
+// its color to 0 in all the batch shaders.
 
 type Batch struct {
 	// glHandler is an OpenGL name
 	// for the underlying batch VAO.
 	glHandler    uint32
-	list         *glList[float32]
 	sprites      []*Sprite
 	transforms   []*geometry.Transform
 	shouldDraw   []bool
