@@ -2,6 +2,8 @@ package render
 
 import (
 	"fmt"
+
+	"github.com/alacrity-engine/core/geometry"
 )
 
 // TODO: collect views and projections
@@ -10,6 +12,15 @@ import (
 // and a projection index for each sprite.
 
 // TODO: add a shader program field to batch.
+// The projections and views should be
+// uniform arrays of predefined sizes.
+// The user can assign the initial size
+// to the shader program, and if he needs
+// to go beyond it, the shader program must
+// be recompiled. The absolute max uniform
+// array size cannot go past 256 because the
+// projection index number for a vertice
+// is only 1 byte long.
 
 // TODO: a vertex draw buffer for all the
 // vertices of all the attached sprites.
@@ -17,14 +28,27 @@ import (
 // its color to 0 in all the batch shaders.
 
 type Batch struct {
-	glHandler uint32 // glHandler is an OpenGL name for the underlying batch VAO.
-	sprites   []*Sprite
-	layout    *Layout
-	texture   *Texture
+	glHandler  uint32 // glHandler is an OpenGL name for the underlying batch VAO.
+	sprites    []*Sprite
+	transforms []*geometry.Transform
+	layout     *Layout
+	texture    *Texture
+
+	// TODO: everytime we change a
+	// parameter of the sprite we
+	// should also change in in the
+	// corresponding GPU list by the
+	// batch index of the sprite.
 
 	// TODO: add buffers for the
 	// data of all the sprites
 	// on the batch (type: *gpuList).
+	projectionsIdx *gpuList[byte]
+	models         *gpuList[float32]
+	viewsIdx       *gpuList[byte]
+	vertices       *gpuList[float32]
+	texCoords      *gpuList[float32]
+	colorMasks     *gpuList[float32]
 }
 
 func (batch *Batch) Draw() {}
@@ -44,7 +68,9 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	sprite.batch = batch
 
 	// TODO: copy all the sprite data
-	// to the batch buffers.
+	// to the batch buffers. Remove the
+	// buffers of the sprite because we
+	// won't need them anymore.
 
 	return nil
 }
@@ -77,6 +103,8 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 
 	// TODO: remove all the sprite
 	// data from the batch buffers.
+	// Copy all that data to the
+	// newly created buffers of the sprite.
 
 	return nil
 }

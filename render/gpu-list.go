@@ -19,8 +19,6 @@ type gpuList[T numeric] struct {
 	drawMode  DrawMode
 }
 
-// TODO: add a copyDataFromBuffer() method.
-
 func (list *gpuList[T]) getLength() int {
 	var zeroVal T
 	dataSize := int(unsafe.Sizeof(zeroVal))
@@ -35,7 +33,7 @@ func (list *gpuList[T]) getCapacity() int {
 	return list.capacity / dataSize
 }
 
-func (list *gpuList[T]) grow() {
+func (list *gpuList[T]) grow(targetCap int) {
 	var zeroVal T
 	dataSize := int(unsafe.Sizeof(zeroVal))
 	growFactor := 2
@@ -46,6 +44,11 @@ func (list *gpuList[T]) grow() {
 
 	// Allocate a greater buffer for the GPU list.
 	newCapacity := list.capacity + list.capacity/growFactor
+
+	if targetCap > newCapacity {
+		newCapacity = targetCap
+	}
+
 	var glHandler uint32
 	gl.GenBuffers(1, &glHandler)
 	gl.BindBuffer(gl.ARRAY_BUFFER, glHandler)
@@ -73,7 +76,7 @@ func (list *gpuList[T]) addElement(elem T) {
 	dataSize := int(unsafe.Sizeof(elem))
 
 	if list.length+dataSize > list.capacity {
-		list.grow()
+		list.grow(list.length + dataSize)
 	}
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
@@ -87,7 +90,7 @@ func (list *gpuList[T]) addElements(elems []T) {
 	dataSize := int(unsafe.Sizeof(zeroVal))
 
 	if list.length+len(elems)*dataSize > list.capacity {
-		list.grow()
+		list.grow(list.length + len(elems)*dataSize)
 	}
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
@@ -154,9 +157,9 @@ func (list *gpuList[T]) removeElement(idx int) error {
 	list.length -= dataSize
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
+	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.BufferSubData(gl.ARRAY_BUFFER, list.capacity-dataSize,
 		dataSize, gl.Ptr(nil))
-	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
 	return nil
 }
@@ -181,9 +184,9 @@ func (list *gpuList[T]) removeElements(offset, count int) error {
 	list.length -= count * dataSize
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
+	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.BufferSubData(gl.ARRAY_BUFFER, list.capacity-count*dataSize,
 		count*dataSize, gl.Ptr(nil))
-	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
 	return nil
 }
@@ -217,10 +220,37 @@ func (list *gpuList[T]) setData(data []T) {
 	}
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
+	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.BufferSubData(gl.ARRAY_BUFFER, 0, dataLength, gl.Ptr(data))
 
 	if list.capacity-dataLength > 0 {
 		gl.BufferSubData(gl.ARRAY_BUFFER, dataLength,
 			list.capacity-dataLength, gl.Ptr(nil))
 	}
+}
+
+func (list *gpuList[T]) addDataFromBuffer(buffer uint32, offset, count int) {
+	var zeroVal T
+	dataSize := int(unsafe.Sizeof(zeroVal))
+
+	if list.length+count*dataSize > list.capacity {
+		list.grow(list.length + count*dataSize)
+	}
+
+	gl.BindBuffer(gl.COPY_READ_BUFFER, buffer)
+	gl.BindBuffer(gl.COPY_WRITE_BUFFER, list.glHandler)
+	gl.CopyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER,
+		0, offset*dataSize, count*dataSize)
+	gl.BindBuffer(gl.COPY_READ_BUFFER, 0)
+	gl.BindBuffer(gl.COPY_WRITE_BUFFER, 0)
+}
+
+func newGPUList[T numeric](mode DrawMode, initData []T) *gpuList[T] {
+	list := &gpuList[T]{
+		drawMode: mode,
+	}
+
+	list.setData(initData)
+
+	return list
 }
