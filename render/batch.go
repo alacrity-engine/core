@@ -2,10 +2,6 @@ package render
 
 import (
 	"fmt"
-	"sort"
-	"unsafe"
-
-	"github.com/alacrity-engine/core/geometry"
 )
 
 // TODO: collect views and projections
@@ -21,40 +17,17 @@ import (
 // its color to 0 in all the batch shaders.
 
 type Batch struct {
-	// glHandler is an OpenGL name
-	// for the underlying batch VAO.
-	glHandler    uint32
-	sprites      []*Sprite
-	transforms   []*geometry.Transform
-	shouldDraw   []bool
-	layout       *Layout
-	texture      *Texture
-	vertexBuffer []float32
+	glHandler uint32 // glHandler is an OpenGL name for the underlying batch VAO.
+	sprites   []*Sprite
+	layout    *Layout
+	texture   *Texture
+
+	// TODO: add buffers for the
+	// data of all the sprites
+	// on the batch (type: *gpuList).
 }
 
-func (batch *Batch) shouldCreateVertexBuffer() {
-	if batch.vertexBuffer == nil {
-		batch.vertexBuffer = make([]float32, len(batch.sprites)*20) // paste the actual size of the vertex here
-	}
-}
-
-func (batch *Batch) Draw() {
-	batch.shouldCreateVertexBuffer()
-}
-
-func (batch *Batch) findSpritePlaceIndex(sprite *Sprite) int {
-	return sort.Search(len(batch.sprites), func(i int) bool {
-		return uintptr(unsafe.Pointer(batch.sprites[i])) >=
-			uintptr(unsafe.Pointer(sprite))
-	})
-}
-
-func (batch *Batch) findSpriteIndex(sprite *Sprite) int {
-	return sort.Search(len(batch.sprites), func(i int) bool {
-		return uintptr(unsafe.Pointer(batch.sprites[i])) ==
-			uintptr(unsafe.Pointer(sprite))
-	})
-}
+func (batch *Batch) Draw() {}
 
 func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	if sprite == nil {
@@ -66,28 +39,12 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 			"the sprite should have the same texture as the batch")
 	}
 
-	length := len(batch.sprites)
-	ind := batch.findSpritePlaceIndex(sprite)
-
-	if ind < length && batch.sprites[ind] == sprite {
-		return fmt.Errorf("the sprite already exists on the batch")
-	}
-
-	if ind == 0 {
-		batch.sprites = append(batch.sprites, nil)
-		copy(batch.sprites[1:], batch.sprites)
-		batch.sprites[0] = sprite
-	} else if ind < length {
-		batch.sprites = append(batch.sprites[:ind+1],
-			batch.sprites[ind:]...)
-		batch.sprites[ind] = sprite
-	} else {
-		batch.sprites = append(batch.sprites, sprite)
-	}
-
+	ind := len(batch.sprites)
+	sprite.batchIndex = ind
 	sprite.batch = batch
-	batch.transforms = append(batch.transforms, nil)
-	batch.shouldDraw = append(batch.shouldDraw, false)
+
+	// TODO: copy all the sprite data
+	// to the batch buffers.
 
 	return nil
 }
@@ -98,7 +55,7 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 	}
 
 	length := len(batch.sprites)
-	ind := batch.findSpriteIndex(sprite)
+	ind := sprite.batchIndex
 
 	if ind < length && batch.sprites[ind] != sprite ||
 		ind >= length || ind < 0 {
@@ -116,8 +73,10 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 	}
 
 	sprite.batch = nil
-	batch.transforms = batch.transforms[:length-1]
-	batch.shouldDraw = batch.shouldDraw[:length-1]
+	sprite.batchIndex = -1
+
+	// TODO: remove all the sprite
+	// data from the batch buffers.
 
 	return nil
 }

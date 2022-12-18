@@ -2,6 +2,9 @@ package render
 
 import "fmt"
 
+// TODO: add a projection field and
+// use it in sprite.Draw() operations.
+
 type Canvas struct {
 	index   int
 	sprites map[*Sprite]struct{}

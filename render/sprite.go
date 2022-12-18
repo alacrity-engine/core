@@ -23,6 +23,7 @@ type Sprite struct {
 	drawZ                             float32 // drawZ must be in the range of [-1; 1]
 	canvas                            *Canvas
 	batch                             *Batch
+	batchIndex                        int
 }
 
 func (sprite *Sprite) SetZ(z float32) {
@@ -128,11 +129,8 @@ func (sprite *Sprite) draw(model, view, projection mgl32.Mat4) {
 }
 
 func (sprite *Sprite) drawToBatch(transform *geometry.Transform) {
-	sprite.batch.shouldCreateVertexBuffer()
-
-	ind := sprite.batch.findSpriteIndex(sprite)
-	sprite.batch.transforms[ind] = transform
-	sprite.batch.shouldDraw[ind] = true
+	// TODO: copy all the dynamic data to
+	// the batch buffers.
 }
 
 func (sprite *Sprite) Draw(transform *geometry.Transform) error {
@@ -151,7 +149,7 @@ func (sprite *Sprite) Draw(transform *geometry.Transform) error {
 	}
 
 	sprite.draw(transform.Data(), sprite.canvas.
-		camera.View(), ortho2D)
+		camera.View(), Ortho2DStandard())
 
 	return nil
 }
@@ -225,5 +223,6 @@ func NewSpriteFromTextureAndProgram(textureDrawMode, colorDrawMode DrawMode, tex
 		texture:                           texture,
 		shaderProgram:                     shaderProgram,
 		drawMode:                          textureDrawMode,
+		batchIndex:                        -1,
 	}, nil
 }
