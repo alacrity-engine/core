@@ -3,7 +3,7 @@ package render
 import (
 	"fmt"
 
-	"github.com/alacrity-engine/core/geometry"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 // TODO: collect views and projections
@@ -20,29 +20,21 @@ import (
 // be recompiled. The absolute max uniform
 // array size cannot go past 256 because the
 // projection index number for a vertice
-// is only 1 byte long.
-
-// TODO: a vertex draw buffer for all the
-// vertices of all the attached sprites.
-// If a sprite shouldn't be drawn, set
-// its color to 0 in all the batch shaders.
+// is only 1 byte long. Everytime the user
+// adds a new canvas to the layout, the batch
+// shader program uniforms are reassigned.
 
 type Batch struct {
-	glHandler  uint32 // glHandler is an OpenGL name for the underlying batch VAO.
-	sprites    []*Sprite
-	transforms []*geometry.Transform
-	layout     *Layout
-	texture    *Texture
+	glHandler uint32 // glHandler is an OpenGL name for the underlying batch VAO.
+	sprites   []*Sprite
+	layout    *Layout
+	texture   *Texture
 
 	// TODO: everytime we change a
 	// parameter of the sprite we
-	// should also change in in the
+	// should also change it in the
 	// corresponding GPU list by the
 	// batch index of the sprite.
-
-	// TODO: add buffers for the
-	// data of all the sprites
-	// on the batch (type: *gpuList).
 	projectionsIdx *gpuList[byte]
 	models         *gpuList[float32]
 	viewsIdx       *gpuList[byte]
@@ -66,11 +58,25 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	ind := len(batch.sprites)
 	sprite.batchIndex = ind
 	sprite.batch = batch
+	batch.sprites = append(batch.sprites, sprite)
 
-	// TODO: copy all the sprite data
-	// to the batch buffers. Remove the
-	// buffers of the sprite because we
-	// won't need them anymore.
+	identMatrix := mgl32.Ident4()
+
+	batch.vertices.addDataFromBuffer(
+		sprite.glVertexBufferHandler, 8)
+	batch.texCoords.addDataFromBuffer(
+		sprite.glTextureCoordinatesBufferHandler, 8)
+	batch.colorMasks.addDataFromBuffer(
+		sprite.glColorMaskBufferHandler, 16)
+
+	batch.projectionsIdx.addElement(byte(sprite.canvas.index))
+	batch.viewsIdx.addElement(byte(sprite.canvas.index))
+	batch.models.addElements(identMatrix[:])
+
+	sprite.deleteVertexBuffer()
+	sprite.deleteTextureCoordinatesBuffer()
+	sprite.deleteColorMaskBuffer()
+	sprite.deleteVertexArray()
 
 	return nil
 }
@@ -99,12 +105,58 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 	}
 
 	sprite.batch = nil
+	batchIndex := sprite.batchIndex
 	sprite.batchIndex = -1
 
-	// TODO: remove all the sprite
-	// data from the batch buffers.
-	// Copy all that data to the
-	// newly created buffers of the sprite.
+	sprite.createVertexBuffer()
+	sprite.createTextureCoordinatesBuffer()
+	sprite.createColorMaskBuffer()
+
+	batch.vertices.copyDataToBuffer(sprite.
+		glVertexBufferHandler, batchIndex, 8)
+	batch.texCoords.copyDataToBuffer(sprite.
+		glTextureCoordinatesBufferHandler, batchIndex, 8)
+	batch.colorMasks.copyDataToBuffer(sprite.
+		glColorMaskBufferHandler, batchIndex, 16)
+
+	sprite.createVertexArray()
+	sprite.assembleVertexArray()
+
+	err := batch.vertices.removeElements(batchIndex, 8)
+
+	if err != nil {
+		return err
+	}
+
+	err = batch.texCoords.removeElements(batchIndex, 8)
+
+	if err != nil {
+		return err
+	}
+
+	err = batch.colorMasks.removeElements(batchIndex, 16)
+
+	if err != nil {
+		return err
+	}
+
+	err = batch.projectionsIdx.removeElement(batchIndex)
+
+	if err != nil {
+		return err
+	}
+
+	err = batch.viewsIdx.removeElement(batchIndex)
+
+	if err != nil {
+		return err
+	}
+
+	err = batch.models.removeElements(batchIndex, 16)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

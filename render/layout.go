@@ -7,6 +7,10 @@ import (
 
 // TODO: add a remove canvas method.
 
+// TODO: change the global variables
+// for views and projections on all
+// the batches when a new canvas gets added.
+
 type Layout struct {
 	zMin     float32
 	zMax     float32

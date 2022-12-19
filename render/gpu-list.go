@@ -229,7 +229,7 @@ func (list *gpuList[T]) setData(data []T) {
 	}
 }
 
-func (list *gpuList[T]) addDataFromBuffer(buffer uint32, offset, count int) {
+func (list *gpuList[T]) addDataFromBuffer(buffer uint32, count int) {
 	var zeroVal T
 	dataSize := int(unsafe.Sizeof(zeroVal))
 
@@ -240,9 +240,29 @@ func (list *gpuList[T]) addDataFromBuffer(buffer uint32, offset, count int) {
 	gl.BindBuffer(gl.COPY_READ_BUFFER, buffer)
 	gl.BindBuffer(gl.COPY_WRITE_BUFFER, list.glHandler)
 	gl.CopyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER,
-		0, offset*dataSize, count*dataSize)
+		0, list.length, count*dataSize)
 	gl.BindBuffer(gl.COPY_READ_BUFFER, 0)
 	gl.BindBuffer(gl.COPY_WRITE_BUFFER, 0)
+}
+
+func (list *gpuList[T]) copyDataToBuffer(buffer uint32, offset, count int) error {
+	var zeroVal T
+	dataSize := int(unsafe.Sizeof(zeroVal))
+
+	if (offset+count-1)*dataSize > list.length-dataSize {
+		return fmt.Errorf(
+			"wrong offset %d and count %d with data length %d",
+			offset, count, list.length)
+	}
+
+	gl.BindBuffer(gl.COPY_READ_BUFFER, list.glHandler)
+	gl.BindBuffer(gl.COPY_WRITE_BUFFER, buffer)
+	gl.CopyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER,
+		offset*dataSize, 0, count*dataSize)
+	gl.BindBuffer(gl.COPY_READ_BUFFER, 0)
+	gl.BindBuffer(gl.COPY_WRITE_BUFFER, 0)
+
+	return nil
 }
 
 func newGPUList[T numeric](mode DrawMode, initData []T) *gpuList[T] {

@@ -26,6 +26,72 @@ type Sprite struct {
 	batchIndex                        int
 }
 
+func (sprite *Sprite) createVertexBuffer() {
+	var vertexBufferHandler uint32
+	gl.GenBuffers(1, &vertexBufferHandler)
+	sprite.glVertexBufferHandler = vertexBufferHandler
+}
+
+func (sprite *Sprite) deleteVertexBuffer() {
+	gl.DeleteBuffers(1, &sprite.glVertexBufferHandler)
+	sprite.glVertexBufferHandler = 0
+}
+
+func (sprite *Sprite) createTextureCoordinatesBuffer() {
+	var texCoordBufferHandler uint32
+	gl.GenBuffers(1, &texCoordBufferHandler)
+	sprite.glTextureCoordinatesBufferHandler = texCoordBufferHandler
+}
+
+func (sprite *Sprite) deleteTextureCoordinatesBuffer() {
+	gl.DeleteBuffers(1, &sprite.glTextureCoordinatesBufferHandler)
+	sprite.glTextureCoordinatesBufferHandler = 0
+}
+
+func (sprite *Sprite) createColorMaskBuffer() {
+	var colorMaskBufferHandler uint32
+	gl.GenBuffers(1, &colorMaskBufferHandler)
+	sprite.glColorMaskBufferHandler = colorMaskBufferHandler
+}
+
+func (sprite *Sprite) deleteColorMaskBuffer() {
+	gl.DeleteBuffers(1, &sprite.glColorMaskBufferHandler)
+	sprite.glColorMaskBufferHandler = 0
+}
+
+func (sprite *Sprite) createVertexArray() {
+	var handler uint32
+	gl.GenVertexArrays(1, &handler)
+	sprite.glHandler = handler
+}
+
+func (sprite *Sprite) deleteVertexArray() {
+	gl.DeleteVertexArrays(1, &sprite.glHandler)
+	sprite.glHandler = 0
+}
+
+func (sprite *Sprite) assembleVertexArray() {
+	gl.BindVertexArray(sprite.glHandler)
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glVertexBufferHandler)
+	vertAttrib := uint32(gl.GetAttribLocation(sprite.shaderProgram.glHandler, gl.Str("aPos\x00")))
+	gl.EnableVertexAttribArray(vertAttrib)
+	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glTextureCoordinatesBufferHandler)
+	texCoordAttrib := uint32(gl.GetAttribLocation(sprite.shaderProgram.glHandler, gl.Str("aTexCoord\x00")))
+	gl.EnableVertexAttribArray(texCoordAttrib)
+	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 2*4, gl.PtrOffset(0))
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glColorMaskBufferHandler)
+	colorAttrib := uint32(gl.GetAttribLocation(sprite.shaderProgram.glHandler, gl.Str("aColor\x00")))
+	gl.EnableVertexAttribArray(colorAttrib)
+	gl.VertexAttribPointer(colorAttrib, 4, gl.FLOAT, false, 4*4, gl.PtrOffset(0))
+
+	gl.BindVertexArray(0)
+	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+}
+
 func (sprite *Sprite) SetZ(z float32) {
 	sprite.drawZ = mgl32.Clamp(z, -1, 1)
 }
@@ -35,9 +101,6 @@ func (sprite *Sprite) SetColorMask(colorMask [4]RGBA) {
 	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(colorMask)*4*4, gl.Ptr(colorMask[:]))
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 }
-
-// TODO: cache all the incoming target areas
-// in a batch for batched sprites.
 
 func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
 	textureRect := geometry.R(0, 0,
