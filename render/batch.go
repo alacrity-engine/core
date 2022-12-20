@@ -41,6 +41,7 @@ type Batch struct {
 	vertices       *gpuList[float32]
 	texCoords      *gpuList[float32]
 	colorMasks     *gpuList[float32]
+	shouldDraw     *gpuList[byte]
 }
 
 func (batch *Batch) Draw() {}
@@ -72,6 +73,7 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	batch.projectionsIdx.addElement(byte(sprite.canvas.index))
 	batch.viewsIdx.addElement(byte(sprite.canvas.index))
 	batch.models.addElements(identMatrix[:])
+	batch.shouldDraw.addElement(0)
 
 	sprite.deleteVertexBuffer()
 	sprite.deleteTextureCoordinatesBuffer()
@@ -93,6 +95,12 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 		ind >= length || ind < 0 {
 		return fmt.Errorf(
 			"the sprite doesn't exist on the batch")
+	}
+
+	// Reindex all the sprites
+	// remaining on the batch.
+	for i := ind + 1; i < length; i++ {
+		batch.sprites[i].batchIndex--
 	}
 
 	if ind == 0 {
@@ -153,6 +161,12 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 	}
 
 	err = batch.models.removeElements(batchIndex, 16)
+
+	if err != nil {
+		return err
+	}
+
+	err = batch.shouldDraw.removeElement(batchIndex)
 
 	if err != nil {
 		return err

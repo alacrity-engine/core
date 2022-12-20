@@ -2,6 +2,8 @@ package render
 
 import (
 	"fmt"
+	"reflect"
+	"unsafe"
 
 	"github.com/alacrity-engine/core/geometry"
 	"github.com/go-gl/gl/v4.6-core/gl"
@@ -96,10 +98,28 @@ func (sprite *Sprite) SetZ(z float32) {
 	sprite.drawZ = mgl32.Clamp(z, -1, 1)
 }
 
-func (sprite *Sprite) SetColorMask(colorMask [4]RGBA) {
-	gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glColorMaskBufferHandler)
-	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(colorMask)*4*4, gl.Ptr(colorMask[:]))
-	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+func (sprite *Sprite) SetColorMask(colorMask [4]RGBA) error {
+	header := *(*reflect.SliceHeader)(unsafe.Pointer(&colorMask))
+	header.Len *= 4
+	header.Cap *= 4
+	data := *(*[]float32)(unsafe.Pointer(&header))
+
+	if sprite.batch == nil {
+		gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glColorMaskBufferHandler)
+		gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(colorMask)*4*4, gl.Ptr(data))
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+
+		return nil
+	}
+
+	err := sprite.batch.colorMasks.replaceElements(
+		sprite.batchIndex, header.Len, data)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
@@ -121,9 +141,20 @@ func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
 		float32(targetArea.Max.X) / float32(sprite.texture.imageWidth), float32(targetArea.Min.Y) / float32(sprite.texture.imageHeight),
 	}
 
-	gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glTextureCoordinatesBufferHandler)
-	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(textureCoordinates)*4, gl.Ptr(textureCoordinates))
-	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+	if sprite.batch == nil {
+		gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glTextureCoordinatesBufferHandler)
+		gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(textureCoordinates)*4, gl.Ptr(textureCoordinates))
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+
+		return nil
+	}
+
+	err := sprite.batch.texCoords.replaceElements(sprite.batchIndex,
+		len(textureCoordinates), textureCoordinates)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -191,9 +222,35 @@ func (sprite *Sprite) draw(model, view, projection mgl32.Mat4) {
 	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
 }
 
-func (sprite *Sprite) drawToBatch(transform *geometry.Transform) {
-	// TODO: copy all the dynamic data to
-	// the batch buffers.
+func (sprite *Sprite) drawToBatch(model mgl32.Mat4) error {
+	zModifier := sprite.drawZ
+
+	if sprite.canvas != nil && sprite.canvas.layout != nil {
+		globalZMin, globalZMax := sprite.canvas.layout.Range()
+		// A range conversion formula.
+		zModifier = 2*(sprite.drawZ+sprite.canvas.Z()-globalZMin)/
+			(globalZMax-globalZMin) - 1
+	}
+
+	model[12] /= float32(width)
+	model[13] /= float32(width)
+	model[14] += zModifier
+
+	err := sprite.batch.models.replaceElements(
+		sprite.batchIndex, len(model), model[:])
+
+	if err != nil {
+		return err
+	}
+
+	err = sprite.batch.shouldDraw.replaceElement(
+		sprite.batchIndex, 1)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (sprite *Sprite) Draw(transform *geometry.Transform) error {
@@ -206,9 +263,7 @@ func (sprite *Sprite) Draw(transform *geometry.Transform) error {
 	}
 
 	if sprite.batch != nil {
-		sprite.drawToBatch(transform)
-
-		return nil
+		return sprite.drawToBatch(transform.Data())
 	}
 
 	sprite.draw(transform.Data(), sprite.canvas.
