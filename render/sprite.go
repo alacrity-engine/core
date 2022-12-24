@@ -22,7 +22,7 @@ type Sprite struct {
 	texture                           *Texture
 	shaderProgram                     *ShaderProgram
 	drawMode                          DrawMode
-	drawZ                             float32 // drawZ must be in the range of [-1; 1]
+	drawZ                             float32 // drawZ must be in the range of [zMin; zMax]
 	canvas                            *Canvas
 	batch                             *Batch
 	batchIndex                        int
@@ -95,7 +95,7 @@ func (sprite *Sprite) assembleVertexArray() {
 }
 
 func (sprite *Sprite) SetZ(z float32) {
-	sprite.drawZ = mgl32.Clamp(z, -1, 1)
+	sprite.drawZ = mgl32.Clamp(z, zMin, zMax)
 }
 
 func (sprite *Sprite) SetColorMask(colorMask [4]RGBA) error {
@@ -172,11 +172,6 @@ func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
 // for 3D, and the global canvas space shrinking
 // is not appropriate for it.
 
-// TODO: rename the ortho2D projection to the
-// ortho2DStandard. Don't hard-code its values
-// in the range conversion formula or the canvas
-// code. Each canvas may have a different projection.
-
 func (sprite *Sprite) draw(model, view, projection mgl32.Mat4) {
 	if sprite.batch != nil {
 		return
@@ -202,8 +197,8 @@ func (sprite *Sprite) draw(model, view, projection mgl32.Mat4) {
 	if sprite.canvas != nil && sprite.canvas.layout != nil {
 		globalZMin, globalZMax := sprite.canvas.layout.Range()
 		// A range conversion formula.
-		zModifier = 2*(sprite.drawZ+sprite.canvas.Z()-globalZMin)/
-			(globalZMax-globalZMin) - 1
+		zModifier = (zMax-zMin)*(sprite.drawZ+sprite.canvas.Z()-globalZMin)/
+			(globalZMax-globalZMin) + zMin
 	}
 
 	model[12] /= float32(width)
@@ -229,8 +224,8 @@ func (sprite *Sprite) drawToBatch(model mgl32.Mat4) error {
 	if sprite.canvas != nil && sprite.canvas.layout != nil {
 		globalZMin, globalZMax := sprite.canvas.layout.Range()
 		// A range conversion formula.
-		zModifier = 2*(sprite.drawZ+sprite.canvas.Z()-globalZMin)/
-			(globalZMax-globalZMin) - 1
+		zModifier = (zMax-zMin)*(sprite.drawZ+sprite.canvas.Z()-globalZMin)/
+			(globalZMax-globalZMin) + zMin
 	}
 
 	model[12] /= float32(width)
@@ -268,7 +263,7 @@ func (sprite *Sprite) Draw(transform *geometry.Transform) error {
 	}
 
 	sprite.draw(transform.Data(), sprite.canvas.
-		camera.View(), Ortho2DStandard())
+		camera.View(), sprite.canvas.projection)
 
 	return nil
 }

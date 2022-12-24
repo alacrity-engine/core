@@ -5,6 +5,8 @@ import "fmt"
 var (
 	width  int
 	height int
+	zMin   float32
+	zMax   float32
 )
 
 func Width() int {

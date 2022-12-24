@@ -35,7 +35,7 @@ func main() {
 	// Initialize the engine.
 	err := system.InitializeWindow("Demo", width, height, false, false)
 	handleError(err)
-	err = render.Initialize(width, height)
+	err = render.Initialize(width, height, -30, 30)
 	handleError(err)
 
 	// Initialize the shader program.
@@ -86,13 +86,13 @@ func main() {
 	// Add canvases.
 	layout := render.NewLayout()
 
-	cirnoCanvas := render.NewCanvas(0)
+	cirnoCanvas := render.NewCanvas(2, render.Ortho2DStandard())
 	err = layout.AddCanvas(cirnoCanvas)
 	handleError(err)
 	err = cirnoCanvas.AddSprite(cirnoSprite)
 	handleError(err)
 
-	sakuyaCanvas := render.NewCanvas(2)
+	sakuyaCanvas := render.NewCanvas(0, render.Ortho2DStandard())
 	err = layout.AddCanvas(sakuyaCanvas)
 	handleError(err)
 	err = sakuyaCanvas.AddSprite(sakuyaSprite)

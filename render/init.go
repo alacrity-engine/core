@@ -1,10 +1,19 @@
 package render
 
 import (
+	"fmt"
+
 	"github.com/go-gl/gl/v4.6-core/gl"
 )
 
-func Initialize(_width, _height int) error {
+func Initialize(_width, _height int, _zMin, _zMax float32) error {
+	if _zMin >= _zMax {
+		return fmt.Errorf("max Z must be greater tham min Z")
+	}
+
+	zMin = _zMin
+	zMax = _zMax
+
 	err := SetWidth(_width)
 
 	if err != nil {
