@@ -99,7 +99,8 @@ func (sprite *Sprite) SetZ(z float32) {
 }
 
 func (sprite *Sprite) SetColorMask(colorMask [4]RGBA) error {
-	header := *(*reflect.SliceHeader)(unsafe.Pointer(&colorMask))
+	colorMaskSlice := colorMask[:]
+	header := *(*reflect.SliceHeader)(unsafe.Pointer(&colorMaskSlice))
 	header.Len *= 4
 	header.Cap *= 4
 	data := *(*[]float32)(unsafe.Pointer(&header))
