@@ -86,13 +86,13 @@ func main() {
 	// Add canvases.
 	layout := render.NewLayout()
 
-	cirnoCanvas := render.NewCanvas(2, render.Ortho2DStandard())
+	cirnoCanvas := render.NewCanvas(0, render.Ortho2DStandard())
 	err = layout.AddCanvas(cirnoCanvas)
 	handleError(err)
 	err = cirnoCanvas.AddSprite(cirnoSprite)
 	handleError(err)
 
-	sakuyaCanvas := render.NewCanvas(0, render.Ortho2DStandard())
+	sakuyaCanvas := render.NewCanvas(2, render.Ortho2DStandard())
 	err = layout.AddCanvas(sakuyaCanvas)
 	handleError(err)
 	err = sakuyaCanvas.AddSprite(sakuyaSprite)
