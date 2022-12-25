@@ -17,6 +17,15 @@ type Transform struct {
 	angle    float64
 	scale    Vec
 	children []*Transform
+	z        float32
+}
+
+func (t *Transform) AdjustZ(z float32) *Transform {
+	t.z += z
+	t.model = mgl32.Translate3D(0,
+		0, z).Mul4(t.model)
+
+	return t
 }
 
 // findChild returns the index of the given transform
