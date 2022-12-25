@@ -15,7 +15,7 @@ type Layout struct {
 	zMin     float32
 	zMax     float32
 	canvases []*Canvas
-	indexer  map[int]int
+	batches  []*Batch
 }
 
 func (layot *Layout) Range() (float32, float32) {
@@ -65,9 +65,11 @@ func (layout *Layout) AddCanvas(canvas *Canvas) error {
 
 	canvas.layout = layout
 
-	// Re-index the layout as a new canvas added.
-	for i, canvas := range layout.canvases {
-		layout.indexer[canvas.index] = i
+	for i := 0; i < len(layout.batches); i++ {
+		batch := layout.batches[i]
+
+		batch.setCanvasProjection(canvas.index, canvas.projection)
+		batch.setCanvasView(canvas.index, canvas.camera.View())
 	}
 
 	return nil
@@ -78,6 +80,5 @@ func NewLayout() *Layout {
 		zMin:     0,
 		zMax:     0,
 		canvases: []*Canvas{},
-		indexer:  map[int]int{},
 	}
 }

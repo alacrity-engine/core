@@ -33,6 +33,11 @@ func (program *ShaderProgram) SetMatrix4(name string, value mgl32.Mat4) {
 	gl.UniformMatrix4fv(location, 1, false, &value[0])
 }
 
+func (program *ShaderProgram) SetFloat32Array(name string, value []float32) {
+	location := gl.GetUniformLocation(program.glHandler, gl.Str(name+"\x00"))
+	gl.Uniform1fv(location, int32(len(value)), &value[0])
+}
+
 func NewShaderProgramFromShaders(vertexShader, fragmentShader *Shader) (*ShaderProgram, error) {
 	if vertexShader == nil || vertexShader.glHandler == 0 {
 		return nil, fmt.Errorf("no vertex shader")
