@@ -32,6 +32,8 @@ import (
 // TODO: use sampler buffers for models,
 // should draw flags, projection and view indices.
 
+// TODO: add a separate texture buffer type.
+
 type Batch struct {
 	glHandler                            uint32 // glHandler is an OpenGL name for the underlying batch VAO.
 	glModelsTextureBufferHandler         uint32
