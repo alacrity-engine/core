@@ -27,7 +27,7 @@ import (
 // adds a new canvas to the layout, the batch
 // shader program uniforms are reassigned.
 
-// TODO: handle elements.
+// TODO: get rid of elements in batch.
 
 // TODO: use sampler buffers for models,
 // should draw flags, projection and view indices.

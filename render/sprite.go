@@ -19,6 +19,8 @@ type Sprite struct {
 	glVertexBufferHandler             uint32
 	glTextureCoordinatesBufferHandler uint32
 	glColorMaskBufferHandler          uint32
+	colorMask                         [4]RGBA
+	targetArea                        geometry.Rect
 	texture                           *Texture
 	shaderProgram                     *ShaderProgram
 	drawMode                          DrawMode
@@ -26,6 +28,14 @@ type Sprite struct {
 	canvas                            *Canvas
 	batch                             *Batch
 	batchIndex                        int
+}
+
+func (sprite *Sprite) ColorMask() [4]RGBA {
+	return sprite.colorMask
+}
+
+func (sprite *Sprite) TargetArea() geometry.Rect {
+	return sprite.targetArea
 }
 
 func (sprite *Sprite) createVertexBuffer() {
@@ -120,6 +130,8 @@ func (sprite *Sprite) SetColorMask(colorMask [4]RGBA) error {
 		return err
 	}
 
+	sprite.colorMask = colorMask
+
 	return nil
 }
 
@@ -156,6 +168,8 @@ func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
 	if err != nil {
 		return err
 	}
+
+	sprite.targetArea = targetArea
 
 	return nil
 }
