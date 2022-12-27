@@ -97,3 +97,25 @@ func Clamp(x, min, max float64) float64 {
 
 	return x
 }
+
+func ComputeSpriteVertices(width, height int, targetArea Rect) []float32 {
+	texToScreenWidth := float32(targetArea.W() / float64(width))
+	texToscreenHeight := float32(targetArea.H() / float64(width))
+	vertices := []float32{
+		texToScreenWidth * -1.0, texToscreenHeight * -1.0, 0.0,
+		texToScreenWidth * -1.0, texToscreenHeight * 1.0, 0.0,
+		texToScreenWidth * 1.0, texToscreenHeight * 1.0, 0.0,
+		texToScreenWidth * 1.0, texToscreenHeight * -1.0, 0.0,
+	}
+
+	return vertices
+}
+
+func ComputeSpriteTextureCoordinates(imageWidth, imageHeight int, targetArea Rect) []float32 {
+	return []float32{
+		float32(targetArea.Min.X) / float32(imageWidth), float32(targetArea.Min.Y) / float32(imageHeight),
+		float32(targetArea.Min.X) / float32(imageWidth), float32(targetArea.Max.Y) / float32(imageHeight),
+		float32(targetArea.Max.X) / float32(imageWidth), float32(targetArea.Max.Y) / float32(imageHeight),
+		float32(targetArea.Max.X) / float32(imageWidth), float32(targetArea.Min.Y) / float32(imageHeight),
+	}
+}

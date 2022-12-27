@@ -2,8 +2,6 @@ package render
 
 import (
 	"fmt"
-	"reflect"
-	"unsafe"
 
 	"github.com/alacrity-engine/core/geometry"
 	"github.com/go-gl/gl/v4.6-core/gl"
@@ -108,23 +106,19 @@ func (sprite *Sprite) SetZ(z float32) {
 	sprite.drawZ = mgl32.Clamp(z, zMin, zMax)
 }
 
-func (sprite *Sprite) SetColorMask(colorMask [4]RGBA) error {
-	colorMaskSlice := colorMask[:]
-	header := *(*reflect.SliceHeader)(unsafe.Pointer(&colorMaskSlice))
-	header.Len *= 4
-	header.Cap *= 4
-	data := *(*[]float32)(unsafe.Pointer(&header))
+func (sprite *Sprite) SetColorMask(colorMask ColorMask) error {
+	data := colorMask.Data()
 
 	if sprite.batch == nil {
 		gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glColorMaskBufferHandler)
-		gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(colorMask)*4*4, gl.Ptr(data))
+		gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(colorMask)*4*4, gl.Ptr(data[:]))
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
 		return nil
 	}
 
 	err := sprite.batch.colorMasks.replaceElements(
-		sprite.batchIndex, header.Len, data)
+		sprite.batchIndex, len(data), data[:])
 
 	if err != nil {
 		return err
@@ -147,12 +141,8 @@ func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
 			"rectangle '%v' cannot serveS as a texture subarea for the sprite", targetArea)
 	}
 
-	textureCoordinates := []float32{
-		float32(targetArea.Min.X) / float32(sprite.texture.imageWidth), float32(targetArea.Min.Y) / float32(sprite.texture.imageHeight),
-		float32(targetArea.Min.X) / float32(sprite.texture.imageWidth), float32(targetArea.Max.Y) / float32(sprite.texture.imageHeight),
-		float32(targetArea.Max.X) / float32(sprite.texture.imageWidth), float32(targetArea.Max.Y) / float32(sprite.texture.imageHeight),
-		float32(targetArea.Max.X) / float32(sprite.texture.imageWidth), float32(targetArea.Min.Y) / float32(sprite.texture.imageHeight),
-	}
+	textureCoordinates := geometry.ComputeSpriteTextureCoordinates(
+		sprite.texture.imageWidth, sprite.texture.imageHeight, targetArea)
 
 	if sprite.batch == nil {
 		gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glTextureCoordinatesBufferHandler)
@@ -279,26 +269,11 @@ func NewSpriteFromTextureAndProgram(textureDrawMode, colorDrawMode DrawMode, tex
 		return nil, fmt.Errorf("no shader program")
 	}
 
-	texToScreenWidth := float32(targetArea.W() / float64(width))
-	texToscreenHeight := float32(targetArea.H() / float64(width))
-	vertices := []float32{
-		texToScreenWidth * -1.0, texToscreenHeight * -1.0, 0.0,
-		texToScreenWidth * -1.0, texToscreenHeight * 1.0, 0.0,
-		texToScreenWidth * 1.0, texToscreenHeight * 1.0, 0.0,
-		texToScreenWidth * 1.0, texToscreenHeight * -1.0, 0.0,
-	}
-	textureCoordinates := []float32{
-		float32(targetArea.Min.X) / float32(texture.imageWidth), float32(targetArea.Min.Y) / float32(texture.imageHeight),
-		float32(targetArea.Min.X) / float32(texture.imageWidth), float32(targetArea.Max.Y) / float32(texture.imageHeight),
-		float32(targetArea.Max.X) / float32(texture.imageWidth), float32(targetArea.Max.Y) / float32(texture.imageHeight),
-		float32(targetArea.Max.X) / float32(texture.imageWidth), float32(targetArea.Min.Y) / float32(texture.imageHeight),
-	}
-	colorMask := []float32{
-		1.0, 1.0, 1.0, 1.0,
-		1.0, 1.0, 1.0, 1.0,
-		1.0, 1.0, 1.0, 1.0,
-		1.0, 1.0, 1.0, 1.0,
-	}
+	vertices := geometry.ComputeSpriteVertices(width, height, targetArea)
+	textureCoordinates := geometry.ComputeSpriteTextureCoordinates(
+		texture.imageWidth, texture.imageHeight, targetArea)
+	colorMask := RGBAFullOpaque()
+	colorMaskData := colorMask.Data()
 
 	var handler uint32
 	gl.GenVertexArrays(1, &handler)
@@ -323,7 +298,7 @@ func NewSpriteFromTextureAndProgram(textureDrawMode, colorDrawMode DrawMode, tex
 	var colorMaskBufferHandler uint32
 	gl.GenBuffers(1, &colorMaskBufferHandler)
 	gl.BindBuffer(gl.ARRAY_BUFFER, colorMaskBufferHandler)
-	gl.BufferData(gl.ARRAY_BUFFER, len(colorMask)*4, gl.Ptr(colorMask), uint32(colorDrawMode))
+	gl.BufferData(gl.ARRAY_BUFFER, len(colorMaskData[:])*4, gl.Ptr(colorMaskData[:]), uint32(colorDrawMode))
 	colorAttrib := uint32(gl.GetAttribLocation(shaderProgram.glHandler, gl.Str("aColor\x00")))
 	gl.EnableVertexAttribArray(colorAttrib)
 	gl.VertexAttribPointer(colorAttrib, 4, gl.FLOAT, false, 4*4, gl.PtrOffset(0))

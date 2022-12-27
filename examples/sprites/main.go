@@ -76,7 +76,7 @@ func main() {
 	sakuyaSprite, err := render.NewSpriteFromTextureAndProgram(render.DrawModeStatic, render.DrawModeStatic,
 		sakuyaTexture, shaderProgram, geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
 	handleError(err)
-	sakuyaSprite.SetColorMask([4]render.RGBA{
+	sakuyaSprite.SetColorMask(render.ColorMask{
 		render.ToRGBA(colornames.Red),
 		render.ToRGBA(colornames.Green),
 		render.ToRGBA(colornames.Blue),

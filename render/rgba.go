@@ -1,6 +1,10 @@
 package render
 
-import "image/color"
+import (
+	"image/color"
+	"reflect"
+	"unsafe"
+)
 
 // RGBA represents an alpha-premultiplied RGBA color with components within range [0, 1].
 //
@@ -76,13 +80,30 @@ func (c RGBA) RGBA() (r, g, b, a uint32) {
 	return
 }
 
-func RGBARepeat4(_color RGBA) [4]RGBA {
-	return [4]RGBA{
+type ColorMask [4]RGBA
+
+func (mask ColorMask) Data() [16]float32 {
+	colorMaskSlice := mask[:]
+	header := *(*reflect.SliceHeader)(unsafe.Pointer(&colorMaskSlice))
+	header.Len *= 4
+	header.Cap *= 4
+	colorMaskData := *(*[16]float32)(unsafe.Pointer(header.Data))
+
+	return colorMaskData
+}
+
+func RGBARepeat4(_color RGBA) ColorMask {
+	return ColorMask{
 		_color,
 		_color,
 		_color,
 		_color,
 	}
+}
+
+func RGBAFullOpaque() ColorMask {
+	opaque := RGBA{R: 1.0, G: 1.0, B: 1.0, A: 1.0}
+	return RGBARepeat4(opaque)
 }
 
 // ToRGBA converts a color to RGBA format. Using this function is preferred to using RGBAModel, for
