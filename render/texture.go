@@ -22,7 +22,7 @@ type Texture struct {
 }
 
 func (texture *Texture) Use() {
-	gl.ActiveTexture(gl.TEXTURE0)
+	gl.ActiveTexture(uint32(SpriteTextureSlotMainTexture))
 	gl.BindTexture(gl.TEXTURE_2D, texture.glHandler)
 }
 
@@ -30,7 +30,7 @@ func NewTextureFromImage(img *image.RGBA, filter TextureFiltering) *Texture {
 	var handler uint32
 
 	gl.GenTextures(1, &handler)
-	gl.ActiveTexture(gl.TEXTURE0)
+	gl.ActiveTexture(uint32(SpriteTextureSlotMainTexture))
 	gl.BindTexture(gl.TEXTURE_2D, handler)
 
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, int32(filter))
@@ -56,7 +56,7 @@ func NewTextureFromPicture(picture *codec.Picture, filter TextureFiltering) *Tex
 	var handler uint32
 
 	gl.GenTextures(1, &handler)
-	gl.ActiveTexture(gl.TEXTURE0)
+	gl.ActiveTexture(uint32(SpriteTextureSlotMainTexture))
 	gl.BindTexture(gl.TEXTURE_2D, handler)
 
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, int32(filter))
@@ -82,7 +82,7 @@ func NewEmptyTexture(width, height int, filter TextureFiltering) *Texture {
 	var handler uint32
 
 	gl.GenTextures(1, &handler)
-	gl.ActiveTexture(gl.TEXTURE0)
+	gl.ActiveTexture(uint32(SpriteTextureSlotMainTexture))
 	gl.BindTexture(gl.TEXTURE_2D, handler)
 
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, int32(filter))

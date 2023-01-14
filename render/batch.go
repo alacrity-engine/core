@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"unsafe"
 
+	"github.com/alacrity-engine/core/geometry"
 	"github.com/go-gl/gl/v4.6-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 )
@@ -27,19 +28,15 @@ import (
 // adds a new canvas to the layout, the batch
 // shader program uniforms are reassigned.
 
-// TODO: get rid of elements in batch.
-
 // TODO: use sampler buffers for models,
 // should draw flags, projection and view indices.
 
-// TODO: add a separate texture buffer type.
-
 type Batch struct {
-	glHandler                            uint32 // glHandler is an OpenGL name for the underlying batch VAO.
-	glModelsTextureBufferHandler         uint32
-	glShouldDrawTextureBufferHandler     uint32
-	glProjectionsIdxTextureBufferHandler uint32
-	glViewsIdxTextureBufferHandler       uint32
+	glHandler                   uint32 // glHandler is an OpenGL name for the underlying batch VAO.
+	modelsTextureBuffer         *TextureBuffer
+	shouldDrawTextureBuffer     *TextureBuffer
+	projectionsIdxTextureBuffer *TextureBuffer
+	viewsIdxTextureBuffer       *TextureBuffer
 
 	sprites       []*Sprite
 	layout        *Layout
@@ -61,42 +58,6 @@ type Batch struct {
 	texCoords      *gpuList[float32]
 	colorMasks     *gpuList[float32]
 	shouldDraw     *gpuList[byte]
-}
-
-func (batch *Batch) rebindModelsTextureBuffer() {
-	gl.ActiveTexture(gl.TEXTURE1)
-	gl.BindTexture(gl.TEXTURE_BUFFER, batch.glModelsTextureBufferHandler)
-	gl.TexBuffer(gl.TEXTURE_BUFFER, gl.R32F, batch.models.glHandler)
-
-	gl.ActiveTexture(0)
-	gl.BindTexture(gl.TEXTURE_2D, 0)
-}
-
-func (batch *Batch) rebindShouldDrawTextureBuffer() {
-	gl.ActiveTexture(gl.TEXTURE2)
-	gl.BindTexture(gl.TEXTURE_BUFFER, batch.glShouldDrawTextureBufferHandler)
-	gl.TexBuffer(gl.TEXTURE_BUFFER, gl.R32F, batch.shouldDraw.glHandler)
-
-	gl.ActiveTexture(0)
-	gl.BindTexture(gl.TEXTURE_2D, 0)
-}
-
-func (batch *Batch) rebindProjectionsIdxTextureBuffer() {
-	gl.ActiveTexture(gl.TEXTURE3)
-	gl.BindTexture(gl.TEXTURE_BUFFER, batch.glProjectionsIdxTextureBufferHandler)
-	gl.TexBuffer(gl.TEXTURE_BUFFER, gl.R8, batch.projectionsIdx.glHandler)
-
-	gl.ActiveTexture(0)
-	gl.BindTexture(gl.TEXTURE_2D, 0)
-}
-
-func (batch *Batch) rebindViewsIdxTextureBuffer() {
-	gl.ActiveTexture(gl.TEXTURE4)
-	gl.BindTexture(gl.TEXTURE_BUFFER, batch.glViewsIdxTextureBufferHandler)
-	gl.TexBuffer(gl.TEXTURE_BUFFER, gl.R8, batch.viewsIdx.glHandler)
-
-	gl.ActiveTexture(0)
-	gl.BindTexture(gl.TEXTURE_2D, 0)
 }
 
 func (batch *Batch) setCanvasProjection(idx int, projection mgl32.Mat4) {
@@ -179,39 +140,52 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 
 	identMatrix := mgl32.Ident4()
 
-	batch.vertices.addDataFromBuffer(
-		sprite.glVertexBufferHandler, 8)
-	batch.texCoords.addDataFromBuffer(
-		sprite.glTextureCoordinatesBufferHandler, 8)
-	batch.colorMasks.addDataFromBuffer(
-		sprite.glColorMaskBufferHandler, 16)
+	vertices := make([]float32, 18)
+	geometry.ComputeSpriteVerticesNoElementsFill(
+		vertices, width, height, sprite.targetArea)
+	batch.vertices.addElements(vertices)
+
+	texCoords := make([]float32, 12)
+	geometry.ComputeSpriteTextureCoordinatesNoElementsFill(
+		texCoords, sprite.texture.imageWidth,
+		sprite.texture.imageHeight, sprite.targetArea)
+	batch.texCoords.addElements(texCoords)
+
+	colorMask := make([]float32, 24)
+	geometry.ColorMaskDataNoElementsFill(
+		colorMask, sprite.colorMask.Data())
+	batch.colorMasks.addElements(colorMask)
 
 	prevCapacity := batch.projectionsIdx.getCapacity()
 	batch.projectionsIdx.addElement(byte(sprite.canvas.index))
 
 	if batch.projectionsIdx.getCapacity() > prevCapacity {
-		batch.rebindProjectionsIdxTextureBuffer()
+		batch.projectionsIdxTextureBuffer.
+			rebind(batch.projectionsIdx.glHandler)
 	}
 
 	prevCapacity = batch.viewsIdx.getCapacity()
 	batch.viewsIdx.addElement(byte(sprite.canvas.index))
 
 	if batch.viewsIdx.getCapacity() > prevCapacity {
-		batch.rebindViewsIdxTextureBuffer()
+		batch.viewsIdxTextureBuffer.
+			rebind(batch.viewsIdx.glHandler)
 	}
 
 	prevCapacity = batch.models.getCapacity()
 	batch.models.addElements(identMatrix[:])
 
 	if batch.models.getCapacity() > prevCapacity {
-		batch.rebindModelsTextureBuffer()
+		batch.modelsTextureBuffer.
+			rebind(batch.models.glHandler)
 	}
 
 	prevCapacity = batch.shouldDraw.getCapacity()
 	batch.shouldDraw.addElement(0)
 
 	if batch.shouldDraw.getCapacity() > prevCapacity {
-		batch.rebindShouldDrawTextureBuffer()
+		batch.shouldDrawTextureBuffer.
+			rebind(batch.shouldDraw.glHandler)
 	}
 
 	sprite.deleteVertexBuffer()

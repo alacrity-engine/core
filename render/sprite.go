@@ -17,7 +17,7 @@ type Sprite struct {
 	glVertexBufferHandler             uint32
 	glTextureCoordinatesBufferHandler uint32
 	glColorMaskBufferHandler          uint32
-	colorMask                         [4]RGBA
+	colorMask                         ColorMask
 	targetArea                        geometry.Rect
 	texture                           *Texture
 	shaderProgram                     *ShaderProgram
@@ -28,7 +28,7 @@ type Sprite struct {
 	batchIndex                        int
 }
 
-func (sprite *Sprite) ColorMask() [4]RGBA {
+func (sprite *Sprite) ColorMask() ColorMask {
 	return sprite.colorMask
 }
 
@@ -138,7 +138,7 @@ func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
 		!textureRect.Contains(geometry.V(targetArea.Min.X, targetArea.Max.Y)) ||
 		!textureRect.Contains(geometry.V(targetArea.Max.X, targetArea.Min.Y)) {
 		return fmt.Errorf(
-			"rectangle '%v' cannot serveS as a texture subarea for the sprite", targetArea)
+			"rectangle '%v' cannot serve as a texture subarea for the sprite", targetArea)
 	}
 
 	textureCoordinates := geometry.ComputeSpriteTextureCoordinates(
