@@ -55,8 +55,10 @@ func main() {
 
 	// Create a texture and a sprite for Cirno.
 	cirnoTexture := render.NewTextureFromImage(imgRGBA, render.TextureFilteringLinear)
-	cirnoSprite, err := render.NewSpriteFromTextureAndProgram(render.DrawModeStatic, render.DrawModeStatic,
-		cirnoTexture, shaderProgram, geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
+	cirnoSprite, err := render.NewSpriteFromTextureAndProgram(
+		render.DrawModeStatic, render.DrawModeStatic,
+		render.DrawModeStatic, cirnoTexture, shaderProgram,
+		geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
 	handleError(err)
 	cirnoSprite.SetColorMask(render.RGBARepeat4(render.ToRGBA(colornames.Red)))
 
@@ -73,8 +75,10 @@ func main() {
 
 	// Create a texture and a sprite for Sakuya.
 	sakuyaTexture := render.NewTextureFromImage(imgRGBA, render.TextureFilteringLinear)
-	sakuyaSprite, err := render.NewSpriteFromTextureAndProgram(render.DrawModeStatic, render.DrawModeStatic,
-		sakuyaTexture, shaderProgram, geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
+	sakuyaSprite, err := render.NewSpriteFromTextureAndProgram(
+		render.DrawModeStatic, render.DrawModeStatic,
+		render.DrawModeStatic, sakuyaTexture, shaderProgram,
+		geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
 	handleError(err)
 	sakuyaSprite.SetColorMask(render.ColorMask{
 		render.ToRGBA(colornames.Red),

@@ -28,9 +28,6 @@ import (
 // adds a new canvas to the layout, the batch
 // shader program uniforms are reassigned.
 
-// TODO: use sampler buffers for models,
-// should draw flags, projection and view indices.
-
 type Batch struct {
 	glHandler                   uint32 // glHandler is an OpenGL name for the underlying batch VAO.
 	modelsTextureBuffer         *TextureBuffer

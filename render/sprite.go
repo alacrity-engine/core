@@ -283,7 +283,7 @@ func (sprite *Sprite) Draw(transform *geometry.Transform) error {
 	return nil
 }
 
-func NewSpriteFromTextureAndProgram(textureDrawMode, colorDrawMode DrawMode, texture *Texture, shaderProgram *ShaderProgram, targetArea geometry.Rect) (*Sprite, error) {
+func NewSpriteFromTextureAndProgram(vertexDrawMode, textureDrawMode, colorDrawMode DrawMode, texture *Texture, shaderProgram *ShaderProgram, targetArea geometry.Rect) (*Sprite, error) {
 	if texture == nil || texture.glHandler == 0 {
 		return nil, fmt.Errorf("no texture")
 	}
@@ -305,7 +305,7 @@ func NewSpriteFromTextureAndProgram(textureDrawMode, colorDrawMode DrawMode, tex
 	var vertexBufferHandler uint32
 	gl.GenBuffers(1, &vertexBufferHandler)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vertexBufferHandler)
-	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), uint32(vertexDrawMode))
 	vertAttrib := uint32(gl.GetAttribLocation(shaderProgram.glHandler, gl.Str("aPos\x00")))
 	gl.EnableVertexAttribArray(vertAttrib)
 	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
