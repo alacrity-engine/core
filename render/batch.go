@@ -97,13 +97,16 @@ func (batch *Batch) Draw() {
 	gl.BindVertexArray(batch.glHandler)
 	defer gl.BindVertexArray(0)
 
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, spriteIndexBufferHandler)
-	defer gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
-
 	batch.texture.Use()
+	batch.modelsTextureBuffer.Bind()
+	batch.shouldDrawTextureBuffer.Bind()
+	batch.projectionsIdxTextureBuffer.Bind()
+	batch.viewsIdxTextureBuffer.Bind()
+
 	defer func() {
 		gl.ActiveTexture(0)
 		gl.BindTexture(gl.TEXTURE_2D, 0)
+		gl.BindTexture(gl.TEXTURE_BUFFER, 0)
 	}()
 
 	// Send all the canvas views to the GPU.
@@ -118,9 +121,11 @@ func (batch *Batch) Draw() {
 	data := *(*[]float32)(unsafe.Pointer(&header))
 
 	batch.shaderProgram.SetFloat32Array("views", data)
+	batch.shaderProgram.SetInt("numSprites", len(batch.sprites))
 
-	gl.DrawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_INT,
-		gl.PtrOffset(0), int32(len(batch.sprites)))
+	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(batch.sprites)*6))
+
+	batch.shouldDraw.clear()
 }
 
 func (batch *Batch) AttachSprite(sprite *Sprite) error {
@@ -233,29 +238,34 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 	sprite.createTextureCoordinatesBuffer()
 	sprite.createColorMaskBuffer()
 
-	batch.vertices.copyDataToBuffer(sprite.
-		glVertexBufferHandler, batchIndex, 8)
-	batch.texCoords.copyDataToBuffer(sprite.
-		glTextureCoordinatesBufferHandler, batchIndex, 8)
-	batch.colorMasks.copyDataToBuffer(sprite.
-		glColorMaskBufferHandler, batchIndex, 16)
+	err := sprite.SetTargetArea(sprite.targetArea)
+
+	if err != nil {
+		return err
+	}
+
+	err = sprite.SetColorMask(sprite.colorMask)
+
+	if err != nil {
+		return err
+	}
 
 	sprite.createVertexArray()
 	sprite.assembleVertexArray()
 
-	err := batch.vertices.removeElements(batchIndex, 8)
+	err = batch.vertices.removeElements(batchIndex, 18)
 
 	if err != nil {
 		return err
 	}
 
-	err = batch.texCoords.removeElements(batchIndex, 8)
+	err = batch.texCoords.removeElements(batchIndex, 12)
 
 	if err != nil {
 		return err
 	}
 
-	err = batch.colorMasks.removeElements(batchIndex, 16)
+	err = batch.colorMasks.removeElements(batchIndex, 24)
 
 	if err != nil {
 		return err

@@ -1,6 +1,6 @@
 #version 460 core
 
-uniform sampler2D spriteTexture;
+layout(binding = 0) uniform sampler2D spriteTexture;
 
 in vec2 texCoord;
 in vec4 color;

@@ -117,8 +117,10 @@ func (sprite *Sprite) SetColorMask(colorMask ColorMask) error {
 		return nil
 	}
 
+	colorMaskData := make([]float32, 24)
+	geometry.ColorMaskDataNoElementsFill(colorMaskData, data)
 	err := sprite.batch.colorMasks.replaceElements(
-		sprite.batchIndex, len(data), data[:])
+		sprite.batchIndex, len(colorMaskData), colorMaskData)
 
 	if err != nil {
 		return err
@@ -141,19 +143,40 @@ func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
 			"rectangle '%v' cannot serve as a texture subarea for the sprite", targetArea)
 	}
 
-	textureCoordinates := geometry.ComputeSpriteTextureCoordinates(
-		sprite.texture.imageWidth, sprite.texture.imageHeight, targetArea)
-
 	if sprite.batch == nil {
+		textureCoordinates := make([]float32, 8)
+		geometry.ComputeSpriteTextureCoordinatesFill(textureCoordinates,
+			sprite.texture.imageWidth, sprite.texture.imageHeight, targetArea)
+
 		gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glTextureCoordinatesBufferHandler)
 		gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(textureCoordinates)*4, gl.Ptr(textureCoordinates))
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+
+		vertices := make([]float32, 12)
+		geometry.ComputeSpriteVerticesFill(vertices, width, height, targetArea)
+
+		gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glVertexBufferHandler)
+		gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(vertices)*4, gl.Ptr(vertices))
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
 		return nil
 	}
 
+	textureCoordinates := make([]float32, 12)
+	geometry.ComputeSpriteTextureCoordinatesNoElementsFill(textureCoordinates,
+		sprite.texture.imageWidth, sprite.texture.imageHeight, targetArea)
 	err := sprite.batch.texCoords.replaceElements(sprite.batchIndex,
 		len(textureCoordinates), textureCoordinates)
+
+	if err != nil {
+		return err
+	}
+
+	vertices := make([]float32, 18)
+	geometry.ComputeSpriteVerticesNoElementsFill(
+		vertices, width, height, targetArea)
+	err = sprite.batch.vertices.replaceElements(
+		sprite.batchIndex, len(vertices), vertices)
 
 	if err != nil {
 		return err

@@ -165,6 +165,13 @@ func (list *gpuList[T]) removeElement(idx int) error {
 	return nil
 }
 
+func (list *gpuList[T]) clear() {
+	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
+	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+	gl.ClearBufferData(gl.ARRAY_BUFFER, gl.R8UI,
+		gl.RED, gl.BYTE, gl.Ptr([]byte{0}))
+}
+
 func (list *gpuList[T]) removeElements(offset, count int) error {
 	var zeroVal T
 	dataSize := int(unsafe.Sizeof(zeroVal))

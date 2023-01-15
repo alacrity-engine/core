@@ -13,6 +13,19 @@ func ComputeSpriteVertices(width, height int, targetArea Rect) []float32 {
 	return vertices
 }
 
+func ComputeSpriteVerticesFill(buffer []float32, width, height int, targetArea Rect) {
+	texToScreenWidth := float32(targetArea.W() / float64(width))
+	texToscreenHeight := float32(targetArea.H() / float64(width))
+	vertices := []float32{
+		texToScreenWidth * -1.0, texToscreenHeight * -1.0, 0.0,
+		texToScreenWidth * -1.0, texToscreenHeight * 1.0, 0.0,
+		texToScreenWidth * 1.0, texToscreenHeight * 1.0, 0.0,
+		texToScreenWidth * 1.0, texToscreenHeight * -1.0, 0.0,
+	}
+
+	copy(buffer, vertices)
+}
+
 func ComputeSpriteTextureCoordinates(imageWidth, imageHeight int, targetArea Rect) []float32 {
 	return []float32{
 		float32(targetArea.Min.X) / float32(imageWidth), float32(targetArea.Min.Y) / float32(imageHeight),
@@ -20,6 +33,17 @@ func ComputeSpriteTextureCoordinates(imageWidth, imageHeight int, targetArea Rec
 		float32(targetArea.Max.X) / float32(imageWidth), float32(targetArea.Max.Y) / float32(imageHeight),
 		float32(targetArea.Max.X) / float32(imageWidth), float32(targetArea.Min.Y) / float32(imageHeight),
 	}
+}
+
+func ComputeSpriteTextureCoordinatesFill(buffer []float32, imageWidth, imageHeight int, targetArea Rect) {
+	texCoords := []float32{
+		float32(targetArea.Min.X) / float32(imageWidth), float32(targetArea.Min.Y) / float32(imageHeight),
+		float32(targetArea.Min.X) / float32(imageWidth), float32(targetArea.Max.Y) / float32(imageHeight),
+		float32(targetArea.Max.X) / float32(imageWidth), float32(targetArea.Max.Y) / float32(imageHeight),
+		float32(targetArea.Max.X) / float32(imageWidth), float32(targetArea.Min.Y) / float32(imageHeight),
+	}
+
+	copy(buffer, texCoords)
 }
 
 func ComputeSpriteVerticesNoElementsFill(buffer []float32, width, height int, targetArea Rect) {
