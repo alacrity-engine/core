@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"strings"
+	"text/template"
 
 	"github.com/go-gl/gl/v4.6-core/gl"
 )
@@ -13,13 +14,6 @@ type ShaderType uint32
 const (
 	ShaderTypeVertex   ShaderType = gl.VERTEX_SHADER
 	ShaderTypeFragment ShaderType = gl.FRAGMENT_SHADER
-)
-
-var (
-	//go:embed std-sprite-vert.glsl
-	standardSpriteVertexShaderSource string
-	//go:embed std-sprite-frag.glsl
-	standardSpriteFragmentShaderSource string
 )
 
 type Shader struct {
@@ -69,6 +63,85 @@ func NewStandardSpriteShader(typ ShaderType) (*Shader, error) {
 
 	case ShaderTypeFragment:
 		return NewShaderFromSource(standardSpriteFragmentShaderSource, typ)
+
+	default:
+		return nil, fmt.Errorf("incorrect shader type: '%v'", typ)
+	}
+}
+
+func NewStandardBatchShader(typ ShaderType, maxNumCanvases int) (*Shader, *template.Template, error) {
+	if maxNumCanvases <= 0 {
+		return nil, nil, fmt.Errorf(
+			"wrong maxNumCanvases value: '%d'", maxNumCanvases)
+	}
+
+	switch typ {
+	case ShaderTypeFragment:
+		shader, err := NewShaderFromSource(batchFragmentShaderSource, typ)
+		return shader, nil, err
+
+	case ShaderTypeVertex:
+		var strBuilder strings.Builder
+
+		err := batchVertexShaderTemplate.
+			Execute(&strBuilder, map[string]interface{}{
+				"maxNumCanvases": maxNumCanvases,
+			})
+
+		if err != nil {
+			return nil, nil, err
+		}
+
+		shaderSource := strBuilder.String()
+		vertexShader, err := NewShaderFromSource(
+			shaderSource, ShaderTypeVertex)
+
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return vertexShader, batchVertexShaderTemplate, nil
+
+	default:
+		return nil, nil, fmt.Errorf("incorrect shader type: '%v'", typ)
+	}
+}
+
+func NewBatchShaderWithTemplate(typ ShaderType, tmpl *template.Template, maxNumCanvases int) (*Shader, error) {
+	if maxNumCanvases <= 0 {
+		return nil, fmt.Errorf(
+			"wrong maxNumCanvases value: '%d'", maxNumCanvases)
+	}
+
+	if tmpl == nil {
+		return nil, fmt.Errorf("no shader template provided")
+	}
+
+	switch typ {
+	case ShaderTypeFragment:
+		shader, err := NewShaderFromSource(batchFragmentShaderSource, typ)
+		return shader, err
+
+	case ShaderTypeVertex:
+		var strBuilder strings.Builder
+
+		err := tmpl.Execute(&strBuilder, map[string]interface{}{
+			"maxNumCanvases": maxNumCanvases,
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		shaderSource := strBuilder.String()
+		vertexShader, err := NewShaderFromSource(
+			shaderSource, ShaderTypeVertex)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return vertexShader, nil
 
 	default:
 		return nil, fmt.Errorf("incorrect shader type: '%v'", typ)

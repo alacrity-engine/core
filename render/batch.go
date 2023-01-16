@@ -1,14 +1,26 @@
 package render
 
 import (
+	_ "embed"
 	"fmt"
 	"reflect"
+	"text/template"
 	"unsafe"
 
 	"github.com/alacrity-engine/core/geometry"
 	"github.com/go-gl/gl/v4.6-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 )
+
+var (
+	//go:embed std-batch-frag.glsl
+	batchFragmentShaderSource string
+)
+
+// TODO: create a cache for frequently used runtime
+// objects (for example, compiled standard shaders and programs)
+// so there is no need to create the same object many times.
+// Or maybe just create a global variable for each one of them.
 
 // TODO: collect views and projections
 // assigned to cameras and canvases of
@@ -28,6 +40,9 @@ import (
 // adds a new canvas to the layout, the batch
 // shader program uniforms are reassigned.
 
+// TODO: compute maxNumCanvases from the
+// current number of canvases on the layout.
+
 type Batch struct {
 	glHandler                   uint32 // glHandler is an OpenGL name for the underlying batch VAO.
 	modelsTextureBuffer         *TextureBuffer
@@ -35,10 +50,13 @@ type Batch struct {
 	projectionsIdxTextureBuffer *TextureBuffer
 	viewsIdxTextureBuffer       *TextureBuffer
 
-	sprites       []*Sprite
-	layout        *Layout
-	texture       *Texture
-	shaderProgram *ShaderProgram
+	sprites              []*Sprite
+	layout               *Layout
+	texture              *Texture
+	shaderProgram        *ShaderProgram
+	fragmentShader       *Shader
+	vertexShaderTemplate *template.Template
+	maxNumCanvases       int
 
 	viewsBuffer       []mgl32.Mat4
 	projectionsBuffer []mgl32.Mat4
@@ -55,6 +73,26 @@ type Batch struct {
 	texCoords      *gpuList[float32]
 	colorMasks     *gpuList[float32]
 	shouldDraw     *gpuList[byte]
+}
+
+func (batch *Batch) recompileShaderProgram() error {
+	vertexShader, err := NewBatchShaderWithTemplate(ShaderTypeVertex,
+		batch.vertexShaderTemplate, batch.maxNumCanvases)
+
+	if err != nil {
+		return err
+	}
+
+	shaderProgram, err := NewShaderProgramFromShaders(
+		vertexShader, batch.fragmentShader)
+
+	if err != nil {
+		return err
+	}
+
+	batch.shaderProgram = shaderProgram
+
+	return nil
 }
 
 func (batch *Batch) setCanvasProjection(idx int, projection mgl32.Mat4) {
@@ -83,9 +121,6 @@ func (batch *Batch) setCanvasView(idx int, view mgl32.Mat4) {
 
 	batch.shaderProgram.SetFloat32Array("views", data)
 }
-
-// TODO: bind all the texture buffers
-// as textures in slots in Draw().
 
 func (batch *Batch) Draw() {
 	batch.shaderProgram.Use()
@@ -293,4 +328,31 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 	}
 
 	return nil
+}
+
+func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch, error) {
+	var params batchParameters
+	var batch Batch
+
+	for i := 0; i < len(options); i++ {
+		option := options[i]
+		err := option(&batch, &params)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if batch.shaderProgram == nil {
+		err := batch.recompileShaderProgram()
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// TODO: instantiate GPU lists, texture
+	// buffers, everything else.
+
+	return &batch, nil
 }

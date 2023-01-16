@@ -26,6 +26,12 @@ func Initialize(_width, _height int, _zMin, _zMax float32) error {
 		return err
 	}
 
+	err = InitTemplates()
+
+	if err != nil {
+		return err
+	}
+
 	err = gl.Init()
 
 	if err != nil {

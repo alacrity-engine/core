@@ -1,6 +1,7 @@
 package render
 
 import (
+	_ "embed"
 	"fmt"
 
 	"github.com/alacrity-engine/core/geometry"
@@ -10,6 +11,11 @@ import (
 
 var (
 	spriteIndexBufferHandler uint32
+
+	//go:embed std-sprite-vert.glsl
+	standardSpriteVertexShaderSource string
+	//go:embed std-sprite-frag.glsl
+	standardSpriteFragmentShaderSource string
 )
 
 type Sprite struct {
@@ -282,6 +288,9 @@ func (sprite *Sprite) Draw(transform *geometry.Transform) error {
 
 	return nil
 }
+
+// TODO: encapsulate all the draw modes
+// and shader program into sprite options.
 
 func NewSpriteFromTextureAndProgram(vertexDrawMode, textureDrawMode, colorDrawMode DrawMode, texture *Texture, shaderProgram *ShaderProgram, targetArea geometry.Rect) (*Sprite, error) {
 	if texture == nil || texture.glHandler == 0 {

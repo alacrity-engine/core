@@ -13,6 +13,8 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+// TODO: load and cache shader sources.
+
 // ResourceLoader loads sprites,
 // animations, sound and text
 // from resource files.
