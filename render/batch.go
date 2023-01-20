@@ -331,7 +331,7 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 }
 
 func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch, error) {
-	var params batchParameters
+	params := batchParameters{initialObjectCapacity: 0}
 	var batch Batch
 
 	for i := 0; i < len(options); i++ {
@@ -351,8 +351,33 @@ func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch,
 		}
 	}
 
-	// TODO: instantiate GPU lists, texture
-	// buffers, everything else.
+	// Instantiate GPU lists.
+	batch.projectionsIdx = newGPUList(DrawModeDynamic,
+		make([]byte, params.initialObjectCapacity))
+	batch.models = newGPUList(DrawModeDynamic,
+		make([]float32, params.initialObjectCapacity))
+	batch.viewsIdx = newGPUList(DrawModeDynamic,
+		make([]byte, params.initialObjectCapacity))
+	batch.vertices = newGPUList(DrawModeDynamic,
+		make([]float32, params.initialObjectCapacity))
+	batch.texCoords = newGPUList(DrawModeDynamic,
+		make([]float32, params.initialObjectCapacity))
+	batch.colorMasks = newGPUList(DrawModeDynamic,
+		make([]float32, params.initialObjectCapacity))
+	batch.shouldDraw = newGPUList(DrawModeDynamic,
+		make([]byte, params.initialObjectCapacity))
+
+	// Instantiate texture buffers.
+	batch.modelsTextureBuffer = NewTextureBuffer(batch.models.glHandler,
+		TextureSlot(BatchTextureSlotModelsBuffer), FormatFloat32)
+	batch.shouldDrawTextureBuffer = NewTextureBuffer(batch.models.glHandler,
+		TextureSlot(BatchTextureSlotShouldDrawBuffer), FormatByte)
+	batch.projectionsIdxTextureBuffer = NewTextureBuffer(batch.models.glHandler,
+		TextureSlot(BatchTextureSlotProjectionsIdxBuffer), FormatByte)
+	batch.viewsIdxTextureBuffer = NewTextureBuffer(batch.models.glHandler,
+		TextureSlot(BatchTextureSlotViewsIdxBuffer), FormatByte)
+
+	batch.sprites = make([]*Sprite, 0, params.initialObjectCapacity)
 
 	return &batch, nil
 }
