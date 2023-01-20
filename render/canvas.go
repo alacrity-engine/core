@@ -8,6 +8,7 @@ import (
 
 type Canvas struct {
 	index      int
+	pos        byte
 	sprites    map[*Sprite]struct{}
 	layout     *Layout
 	camera     *Camera

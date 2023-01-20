@@ -23,6 +23,10 @@ func (layot *Layout) Range() (float32, float32) {
 }
 
 func (layout *Layout) AddCanvas(canvas *Canvas) error {
+	if len(layout.canvases) >= 256 {
+		return fmt.Errorf("max number of canvases exceeded")
+	}
+
 	if canvas == nil {
 		return fmt.Errorf("the canvas is nil")
 	}
@@ -64,6 +68,7 @@ func (layout *Layout) AddCanvas(canvas *Canvas) error {
 	}
 
 	canvas.layout = layout
+	canvas.pos = byte(ind)
 
 	for i := 0; i < len(layout.batches); i++ {
 		batch := layout.batches[i]

@@ -144,7 +144,7 @@ func (batch *Batch) Draw() {
 	// Send all the canvas views to the GPU.
 	for i := 0; i < len(batch.layout.canvases); i++ {
 		canvas := batch.layout.canvases[i]
-		batch.viewsBuffer[i] = canvas.camera.View()
+		batch.viewsBuffer[canvas.pos] = canvas.camera.View()
 	}
 
 	header := *(*reflect.SliceHeader)(unsafe.Pointer(&batch.viewsBuffer))
@@ -194,7 +194,7 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	batch.colorMasks.addElements(colorMask)
 
 	prevCapacity := batch.projectionsIdx.getCapacity()
-	batch.projectionsIdx.addElement(byte(sprite.canvas.index))
+	batch.projectionsIdx.addElement(sprite.canvas.pos)
 
 	if batch.projectionsIdx.getCapacity() > prevCapacity {
 		batch.projectionsIdxTextureBuffer.
@@ -202,7 +202,7 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	}
 
 	prevCapacity = batch.viewsIdx.getCapacity()
-	batch.viewsIdx.addElement(byte(sprite.canvas.index))
+	batch.viewsIdx.addElement(sprite.canvas.pos)
 
 	if batch.viewsIdx.getCapacity() > prevCapacity {
 		batch.viewsIdxTextureBuffer.
@@ -378,6 +378,27 @@ func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch,
 		TextureSlot(BatchTextureSlotViewsIdxBuffer), FormatByte)
 
 	batch.sprites = make([]*Sprite, 0, params.initialObjectCapacity)
+	batch.projectionsBuffer = make([]mgl32.Mat4, batch.maxNumCanvases)
+	batch.viewsBuffer = make([]mgl32.Mat4, batch.maxNumCanvases)
+	batch.maxNumCanvases = len(layout.canvases) + len(layout.canvases)/4
+
+	if batch.maxNumCanvases >= 256 {
+		batch.maxNumCanvases = 256
+	}
+
+	for i := 0; i < len(layout.canvases); i++ {
+		canvas := layout.canvases[i]
+		projection := canvas.projection
+		view := canvas.camera.View()
+
+		batch.projectionsBuffer[i] = projection
+		batch.viewsBuffer[i] = view
+
+		batch.viewsBuffer[canvas.pos] = view
+		batch.projectionsBuffer[canvas.pos] = projection
+	}
+
+	// TODO: send everything to the GPU.
 
 	return &batch, nil
 }
