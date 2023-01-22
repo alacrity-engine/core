@@ -61,11 +61,6 @@ type Batch struct {
 	viewsBuffer       []mgl32.Mat4
 	projectionsBuffer []mgl32.Mat4
 
-	// TODO: everytime we change a
-	// parameter of the sprite we
-	// should also change it in the
-	// corresponding GPU list by the
-	// batch index of the sprite.
 	projectionsIdx *gpuList[byte]
 	models         *gpuList[float32]
 	viewsIdx       *gpuList[byte]
@@ -114,12 +109,6 @@ func (batch *Batch) setCanvasView(idx int, view mgl32.Mat4) {
 	defer gl.UseProgram(0)
 
 	batch.viewsBuffer[idx] = view
-	header := *(*reflect.SliceHeader)(unsafe.Pointer(&batch.viewsBuffer))
-	header.Len *= 16
-	header.Cap *= 16
-	data := *(*[]float32)(unsafe.Pointer(&header))
-
-	batch.shaderProgram.SetFloat32Array("views", data)
 }
 
 func (batch *Batch) Draw() {
@@ -343,14 +332,6 @@ func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch,
 		}
 	}
 
-	if batch.shaderProgram == nil {
-		err := batch.recompileShaderProgram()
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	// Instantiate GPU lists.
 	batch.projectionsIdx = newGPUList(DrawModeDynamic,
 		make([]byte, params.initialObjectCapacity))
@@ -386,6 +367,46 @@ func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch,
 		batch.maxNumCanvases = 256
 	}
 
+	// Compile batch shaders.
+	if batch.shaderProgram == nil {
+		var err error
+
+		if batch.fragmentShader == nil {
+			batch.fragmentShader, _, err = NewStandardBatchShader(
+				ShaderTypeFragment, batch.maxNumCanvases)
+
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		var vertexShader *Shader
+
+		if batch.vertexShaderTemplate != nil {
+			vertexShader, err = NewBatchShaderWithTemplate(ShaderTypeVertex,
+				batchVertexShaderTemplate, batch.maxNumCanvases)
+
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			vertexShader, batch.vertexShaderTemplate, err = NewStandardBatchShader(
+				ShaderTypeVertex, batch.maxNumCanvases)
+
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		batch.shaderProgram, err = NewShaderProgramFromShaders(
+			vertexShader, batch.fragmentShader)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Collect views and projections.
 	for i := 0; i < len(layout.canvases); i++ {
 		canvas := layout.canvases[i]
 		projection := canvas.projection
@@ -398,7 +419,43 @@ func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch,
 		batch.projectionsBuffer[canvas.pos] = projection
 	}
 
-	// TODO: send everything to the GPU.
+	// Send everything to the GPU.
+	header := *(*reflect.SliceHeader)(unsafe.Pointer(&batch.projectionsBuffer))
+	header.Len *= 16
+	header.Cap *= 16
+	data := *(*[]float32)(unsafe.Pointer(&header))
+
+	batch.shaderProgram.SetFloat32Array("projections", data)
+
+	header = *(*reflect.SliceHeader)(unsafe.Pointer(&batch.viewsBuffer))
+	header.Len *= 16
+	header.Cap *= 16
+	data = *(*[]float32)(unsafe.Pointer(&header))
+
+	batch.shaderProgram.SetFloat32Array("views", data)
+
+	// Build a VAO.
+	var handler uint32
+	gl.GenVertexArrays(1, &handler)
+	gl.BindVertexArray(handler)
+	defer gl.BindVertexArray(0)
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, batch.vertices.glHandler)
+	vertAttrib := uint32(gl.GetAttribLocation(batch.shaderProgram.glHandler, gl.Str("aPos\x00")))
+	gl.EnableVertexAttribArray(vertAttrib)
+	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, batch.texCoords.glHandler)
+	texCoordAttrib := uint32(gl.GetAttribLocation(batch.shaderProgram.glHandler, gl.Str("aTexCoord\x00")))
+	gl.EnableVertexAttribArray(texCoordAttrib)
+	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 2*4, gl.PtrOffset(0))
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, batch.colorMasks.glHandler)
+	colorAttrib := uint32(gl.GetAttribLocation(batch.shaderProgram.glHandler, gl.Str("aColor\x00")))
+	gl.EnableVertexAttribArray(colorAttrib)
+	gl.VertexAttribPointer(colorAttrib, 4, gl.FLOAT, false, 4*4, gl.PtrOffset(0))
+
+	batch.glHandler = handler
 
 	return &batch, nil
 }

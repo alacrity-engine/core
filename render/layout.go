@@ -7,10 +7,6 @@ import (
 
 // TODO: add a remove canvas method.
 
-// TODO: change the global variables
-// for views and projections on all
-// the batches when a new canvas gets added.
-
 type Layout struct {
 	zMin     float32
 	zMax     float32
@@ -73,8 +69,8 @@ func (layout *Layout) AddCanvas(canvas *Canvas) error {
 	for i := 0; i < len(layout.batches); i++ {
 		batch := layout.batches[i]
 
-		batch.setCanvasProjection(canvas.index, canvas.projection)
-		batch.setCanvasView(canvas.index, canvas.camera.View())
+		batch.setCanvasProjection(int(canvas.pos), canvas.projection)
+		batch.setCanvasView(int(canvas.pos), canvas.camera.View())
 	}
 
 	return nil

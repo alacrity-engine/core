@@ -60,11 +60,23 @@ func (canvas *Canvas) RemoveSprite(sprite *Sprite) error {
 	return nil
 }
 
+func (canvas *Canvas) updateBatchViews() {
+	for i := 0; i < len(canvas.layout.batches); i++ {
+		batch := canvas.layout.batches[i]
+		batch.setCanvasView(int(canvas.pos), canvas.camera.View())
+	}
+}
+
 func NewCanvas(drawZ int, projection mgl32.Mat4) *Canvas {
-	return &Canvas{
+	camera := NewCamera()
+	canvas := &Canvas{
 		sprites:    map[*Sprite]struct{}{},
 		index:      drawZ,
 		camera:     NewCamera(),
 		projection: projection,
 	}
+
+	camera.canvas = canvas
+
+	return canvas
 }
