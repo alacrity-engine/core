@@ -40,7 +40,7 @@ mat4 assembleModel(int spriteIdx, samplerBuffer models) {
 }
 
 void main() {
-    int spriteIdx = gl_VertexID % numSprites;
+    int spriteIdx = mod(gl_VertexID, numSprites);
     mat4 projection = projections[texelFetch(projectionsIdx, spriteIdx).r];
     mat4 view = views[texelFetch(viewsIdx, spriteIdx).r];
     mat4 model = assembleModel(spriteIdx, models);

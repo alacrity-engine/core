@@ -80,9 +80,9 @@ func (list *gpuList[T]) addElement(elem T) {
 	}
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
-	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.BufferSubData(gl.ARRAY_BUFFER, list.length,
 		dataSize, gl.Ptr([]T{elem}))
+	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 }
 
 func (list *gpuList[T]) addElements(elems []T) {
@@ -94,9 +94,9 @@ func (list *gpuList[T]) addElements(elems []T) {
 	}
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
-	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.BufferSubData(gl.ARRAY_BUFFER, list.length,
 		len(elems)*dataSize, gl.Ptr(elems))
+	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 }
 
 func (list *gpuList[T]) replaceElement(idx int, elem T) error {
@@ -167,9 +167,9 @@ func (list *gpuList[T]) removeElement(idx int) error {
 
 func (list *gpuList[T]) clear() {
 	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
-	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.ClearBufferData(gl.ARRAY_BUFFER, gl.R8UI,
 		gl.RED, gl.BYTE, gl.Ptr([]byte{0}))
+	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 }
 
 func (list *gpuList[T]) removeElements(offset, count int) error {
@@ -202,6 +202,11 @@ func (list *gpuList[T]) removeElements(offset, count int) error {
 
 func (list *gpuList[T]) setData(data []T) {
 	var zeroVal T
+
+	if len(data) <= 0 {
+		data = []T{zeroVal}
+	}
+
 	dataSize := int(unsafe.Sizeof(zeroVal))
 	dataLength := len(data) * dataSize
 	defer func() {
@@ -229,13 +234,14 @@ func (list *gpuList[T]) setData(data []T) {
 	}
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
-	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.BufferSubData(gl.ARRAY_BUFFER, 0, dataLength, gl.Ptr(data))
 
 	if list.capacity-dataLength > 0 {
 		gl.BufferSubData(gl.ARRAY_BUFFER, dataLength,
 			list.capacity-dataLength, gl.Ptr(nil))
 	}
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 }
 
 func (list *gpuList[T]) addDataFromBuffer(buffer uint32, count int) {
