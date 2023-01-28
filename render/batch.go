@@ -358,10 +358,12 @@ func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch,
 	batch.viewsIdxTextureBuffer = NewTextureBuffer(batch.models.glHandler,
 		TextureSlot(BatchTextureSlotViewsIdxBuffer), FormatByte)
 
+	batch.maxNumCanvases = len(layout.canvases) + len(layout.canvases)/4
 	batch.sprites = make([]*Sprite, 0, params.initialObjectCapacity)
 	batch.projectionsBuffer = make([]mgl32.Mat4, batch.maxNumCanvases)
 	batch.viewsBuffer = make([]mgl32.Mat4, batch.maxNumCanvases)
-	batch.maxNumCanvases = len(layout.canvases) + len(layout.canvases)/4
+	batch.texture = texture
+	batch.layout = layout
 
 	if batch.maxNumCanvases >= 256 {
 		batch.maxNumCanvases = 256

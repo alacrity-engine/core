@@ -73,11 +73,20 @@ func (list *gpuList[T]) grow(targetCap int) {
 }
 
 func (list *gpuList[T]) addElement(elem T) {
+	if list.glHandler == 0 {
+		list.setData([]T{elem})
+		return
+	}
+
 	dataSize := int(unsafe.Sizeof(elem))
 
 	if list.length+dataSize > list.capacity {
 		list.grow(list.length + dataSize)
 	}
+
+	defer func() {
+		list.length += dataSize
+	}()
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
 	gl.BufferSubData(gl.ARRAY_BUFFER, list.length,
@@ -86,12 +95,21 @@ func (list *gpuList[T]) addElement(elem T) {
 }
 
 func (list *gpuList[T]) addElements(elems []T) {
+	if list.glHandler == 0 {
+		list.setData(elems)
+		return
+	}
+
 	var zeroVal T
 	dataSize := int(unsafe.Sizeof(zeroVal))
 
 	if list.length+len(elems)*dataSize > list.capacity {
 		list.grow(list.length + len(elems)*dataSize)
 	}
+
+	defer func() {
+		list.length += len(elems) * dataSize
+	}()
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
 	gl.BufferSubData(gl.ARRAY_BUFFER, list.length,
@@ -131,8 +149,6 @@ func (list *gpuList[T]) replaceElements(offset, count int, data []T) error {
 	gl.BufferSubData(gl.ARRAY_BUFFER, offset*dataSize,
 		count*dataSize, gl.Ptr(data))
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-
-	list.length -= dataSize
 
 	return nil
 }
@@ -202,11 +218,6 @@ func (list *gpuList[T]) removeElements(offset, count int) error {
 
 func (list *gpuList[T]) setData(data []T) {
 	var zeroVal T
-
-	if len(data) <= 0 {
-		data = []T{zeroVal}
-	}
-
 	dataSize := int(unsafe.Sizeof(zeroVal))
 	dataLength := len(data) * dataSize
 	defer func() {
@@ -216,6 +227,15 @@ func (list *gpuList[T]) setData(data []T) {
 	if dataLength > list.capacity && list.glHandler != 0 {
 		gl.DeleteBuffers(1, &list.glHandler)
 		list.glHandler = 0
+	}
+
+	if dataLength <= 0 {
+		if list.glHandler != 0 {
+			gl.DeleteBuffers(1, &list.glHandler)
+			list.glHandler = 0
+		}
+
+		return
 	}
 
 	if list.glHandler == 0 {

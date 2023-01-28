@@ -5,14 +5,15 @@ layout(binding = 2) uniform usamplerBuffer shouldDraw;
 
 uniform int numSprites;
 
+in flat int vertexID;
 in vec2 texCoord;
 in vec4 color;
 
 out vec4 FragColor;
 
 void main() {
-    int spriteIdx = mod(gl_VertexID, numSprites);
-    int shouldDrawFlag = texelFetch(shouldDraw, spriteIdx).r;
+    int spriteIdx = int(mod(float(vertexID), float(numSprites)));
+    uint shouldDrawFlag = texelFetch(shouldDraw, spriteIdx).r;
 
-    FragColor = texture(spriteTexture, texCoord) * color * shouldDrawFlag;
+    FragColor = texture(batchTexture, texCoord) * color * shouldDrawFlag;
 }
