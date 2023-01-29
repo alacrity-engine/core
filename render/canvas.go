@@ -6,6 +6,10 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
+// TODO: implement Z-sorting buffer
+// using a balanced binary tree
+// (AVL or RB) operating on an array.
+
 type Canvas struct {
 	index      int
 	pos        byte
