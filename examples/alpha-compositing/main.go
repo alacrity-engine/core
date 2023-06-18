@@ -122,13 +122,13 @@ func main() {
 		render.SetClearColor(render.ToRGBA(colornames.Aquamarine))
 		render.Clear(render.ClearBitColor | render.ClearBitDepth)
 
-		ballSprite2.SetZ(0)
-		ballTransform2.MoveTo(geometry.V(-float64(imgRGBA.Bounds().Dx()/2), -float64(imgRGBA.Bounds().Dy()/2)))
-		ballSprite2.Draw(ballTransform2)
-
 		ballSprite1.SetZ(0)
 		ballTransform1.MoveTo(geometry.V(float64(imgRGBA.Bounds().Dx()/2), float64(imgRGBA.Bounds().Dy()/2)))
 		ballSprite1.Draw(ballTransform1)
+
+		ballSprite2.SetZ(0)
+		ballTransform2.MoveTo(geometry.V(-float64(imgRGBA.Bounds().Dx()/2), -float64(imgRGBA.Bounds().Dy()/2)))
+		ballSprite2.Draw(ballTransform2)
 
 		err = layout.Draw()
 		handleError(err)
