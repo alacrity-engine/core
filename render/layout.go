@@ -18,6 +18,18 @@ func (layot *Layout) Range() (float32, float32) {
 	return layot.zMin, layot.zMax
 }
 
+func (layout *Layout) Draw() error {
+	for _, canvas := range layout.canvases {
+		err := canvas.draw()
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (layout *Layout) AddCanvas(canvas *Canvas) error {
 	if len(layout.canvases) >= 256 {
 		return fmt.Errorf("max number of canvases exceeded")

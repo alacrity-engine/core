@@ -11,6 +11,9 @@ import (
 	"github.com/alacrity-engine/core/geometry"
 	"github.com/alacrity-engine/core/render"
 	"github.com/alacrity-engine/core/system"
+	"github.com/alacrity-engine/core/system/collections"
+	"github.com/zergon321/go-avltree"
+	"github.com/zergon321/mempool"
 	"golang.org/x/image/colornames"
 )
 
@@ -90,13 +93,47 @@ func main() {
 	// Add canvases.
 	layout := render.NewLayout()
 
-	cirnoCanvas := render.NewCanvas(0, render.Ortho2DStandard())
+	zBufferDataNodePool, err := mempool.NewPool[*avltree.AVLNode[int64, *render.Sprite]](
+		func() *avltree.AVLNode[int64, *render.Sprite] {
+			return new(avltree.AVLNode[int64, *render.Sprite])
+		})
+	handleError(err)
+	zBufferNodePool, err := mempool.NewPool[*avltree.AVLNode[float32, render.ZBufferData]](
+		func() *avltree.AVLNode[float32, render.ZBufferData] {
+			return new(avltree.AVLNode[float32, render.ZBufferData])
+		})
+	handleError(err)
+	zBufferDataPool, err := mempool.NewPool[*collections.AVLTree[int64, *render.Sprite]](
+		func() *collections.AVLTree[int64, *render.Sprite] {
+			tree, _ := collections.NewAVLTree[int64, *render.Sprite]()
+			return tree
+		},
+	)
+	handleError(err)
+	zBufferPool, err := mempool.NewPool[*collections.AVLTree[float32, render.ZBufferData]](
+		func() *collections.AVLTree[float32, render.ZBufferData] {
+			tree, _ := collections.NewAVLTree[float32, render.ZBufferData]()
+			return tree
+		},
+	)
+	handleError(err)
+
+	zBufferDataProducer := collections.NewAVLProducer[int64, *render.Sprite](
+		zBufferDataPool, zBufferDataNodePool)
+	zBufferProducer := collections.NewAVLProducer[float32, render.ZBufferData](
+		zBufferPool, zBufferNodePool)
+
+	cirnoCanvas, err := render.NewCanvas(0, render.Ortho2DStandard(),
+		zBufferProducer, zBufferDataProducer)
+	handleError(err)
 	err = layout.AddCanvas(cirnoCanvas)
 	handleError(err)
 	err = cirnoCanvas.AddSprite(cirnoSprite)
 	handleError(err)
 
-	sakuyaCanvas := render.NewCanvas(2, render.Ortho2DStandard())
+	sakuyaCanvas, err := render.NewCanvas(2, render.Ortho2DStandard(),
+		zBufferProducer, zBufferDataProducer)
+	handleError(err)
 	err = layout.AddCanvas(sakuyaCanvas)
 	handleError(err)
 	err = sakuyaCanvas.AddSprite(sakuyaSprite)

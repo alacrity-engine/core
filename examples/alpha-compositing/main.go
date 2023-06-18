@@ -10,6 +10,9 @@ import (
 	"github.com/alacrity-engine/core/geometry"
 	"github.com/alacrity-engine/core/render"
 	"github.com/alacrity-engine/core/system"
+	"github.com/alacrity-engine/core/system/collections"
+	"github.com/zergon321/go-avltree"
+	"github.com/zergon321/mempool"
 	"golang.org/x/image/colornames"
 )
 
@@ -49,7 +52,12 @@ func main() {
 
 	// Create a texture and a sprite for the ball.
 	ballTexture := render.NewTextureFromImage(imgRGBA, render.TextureFilteringLinear)
-	ballSprite, err := render.NewSpriteFromTextureAndProgram(
+	ballSprite1, err := render.NewSpriteFromTextureAndProgram(
+		render.DrawModeStatic, render.DrawModeStatic,
+		render.DrawModeStatic, ballTexture, shaderProgram,
+		geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
+	handleError(err)
+	ballSprite2, err := render.NewSpriteFromTextureAndProgram(
 		render.DrawModeStatic, render.DrawModeStatic,
 		render.DrawModeStatic, ballTexture, shaderProgram,
 		geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
@@ -58,13 +66,49 @@ func main() {
 	// Add canvases.
 	layout := render.NewLayout()
 
-	ballCanvas := render.NewCanvas(0, render.Ortho2DStandard())
-	err = layout.AddCanvas(ballCanvas)
+	zBufferDataNodePool, err := mempool.NewPool[*avltree.AVLNode[int64, *render.Sprite]](
+		func() *avltree.AVLNode[int64, *render.Sprite] {
+			return new(avltree.AVLNode[int64, *render.Sprite])
+		})
 	handleError(err)
-	err = ballCanvas.AddSprite(ballSprite)
+	zBufferNodePool, err := mempool.NewPool[*avltree.AVLNode[float32, render.ZBufferData]](
+		func() *avltree.AVLNode[float32, render.ZBufferData] {
+			return new(avltree.AVLNode[float32, render.ZBufferData])
+		})
+	handleError(err)
+	zBufferDataPool, err := mempool.NewPool[*collections.AVLTree[int64, *render.Sprite]](
+		func() *collections.AVLTree[int64, *render.Sprite] {
+			tree, _ := collections.NewAVLTree[int64, *render.Sprite]()
+			return tree
+		},
+	)
+	handleError(err)
+	zBufferPool, err := mempool.NewPool[*collections.AVLTree[float32, render.ZBufferData]](
+		func() *collections.AVLTree[float32, render.ZBufferData] {
+			tree, _ := collections.NewAVLTree[float32, render.ZBufferData]()
+			return tree
+		},
+	)
 	handleError(err)
 
-	ballTransform := geometry.NewTransform(nil)
+	zBufferDataProducer := collections.NewAVLProducer[int64, *render.Sprite](
+		zBufferDataPool, zBufferDataNodePool)
+	zBufferProducer := collections.NewAVLProducer[float32, render.ZBufferData](
+		zBufferPool, zBufferNodePool)
+
+	ballCanvas, err := render.NewCanvas(0, render.Ortho2DStandard(),
+		zBufferProducer, zBufferDataProducer,
+	)
+	handleError(err)
+	err = layout.AddCanvas(ballCanvas)
+	handleError(err)
+	err = ballCanvas.AddSprite(ballSprite1)
+	handleError(err)
+	err = ballCanvas.AddSprite(ballSprite2)
+	handleError(err)
+
+	ballTransform1 := geometry.NewTransform(nil)
+	ballTransform2 := geometry.NewTransform(nil)
 
 	system.InitMetrics()
 
@@ -78,13 +122,16 @@ func main() {
 		render.SetClearColor(render.ToRGBA(colornames.Aquamarine))
 		render.Clear(render.ClearBitColor | render.ClearBitDepth)
 
-		ballSprite.SetZ(2)
-		ballSprite.Draw(ballTransform)
-		ballSprite.SetZ(0)
-		ballTransform.MoveTo(geometry.V(float64(imgRGBA.Bounds().Dx()/2), float64(imgRGBA.Bounds().Dy()/2)))
-		ballSprite.Draw(ballTransform)
-		ballTransform.MoveTo(geometry.V(-float64(imgRGBA.Bounds().Dx()/2), -float64(imgRGBA.Bounds().Dy()/2)))
-		ballSprite.SetZ(2)
+		ballSprite2.SetZ(0)
+		ballTransform2.MoveTo(geometry.V(-float64(imgRGBA.Bounds().Dx()/2), -float64(imgRGBA.Bounds().Dy()/2)))
+		ballSprite2.Draw(ballTransform2)
+
+		ballSprite1.SetZ(0)
+		ballTransform1.MoveTo(geometry.V(float64(imgRGBA.Bounds().Dx()/2), float64(imgRGBA.Bounds().Dy()/2)))
+		ballSprite1.Draw(ballTransform1)
+
+		err = layout.Draw()
+		handleError(err)
 
 		system.TickLoop()
 		system.UpdateFrameRate()

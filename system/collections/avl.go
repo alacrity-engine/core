@@ -2,6 +2,7 @@ package collections
 
 import (
 	avltree "github.com/zergon321/go-avltree"
+	"github.com/zergon321/mempool"
 	"golang.org/x/exp/constraints"
 )
 
@@ -9,15 +10,41 @@ type AVLTree[TKey constraints.Ordered, TValue any] struct {
 	tree *avltree.AVLTree[TKey, TValue]
 }
 
+func (avl *AVLTree[TKey, TValue]) Erase() error {
+	return avl.tree.Erase()
+}
+
+func (avl *AVLTree[TKey, TValue]) SetPool(pool *mempool.Pool[*avltree.AVLNode[TKey, TValue]]) {
+	avl.tree.SetPool(pool)
+}
+
 func (avl *AVLTree[TKey, TValue]) Add(key TKey, value TValue) error {
 	avl.tree.Add(key, value)
 	return nil
 }
 
-func (avl *AVLTree[TKey, TValue]) Update(key TKey, upd func(value TValue, found bool) TValue) error {
+func (avl *AVLTree[TKey, TValue]) AddOrUpdate(key TKey, value TValue, upd func(oldValue TValue) (TValue, error)) error {
+	return avl.tree.AddOrUpdate(key, value, upd)
+}
+
+func (avl *AVLTree[TKey, TValue]) Update(key TKey, upd func(value TValue, found bool) (TValue, error)) error {
 	node := avl.tree.Search(key)
-	newValue := upd(node.Value, node != nil)
-	node.Value = newValue
+
+	var value TValue
+
+	if node != nil {
+		value = node.Value
+	}
+
+	newValue, err := upd(value, node != nil)
+
+	if err != nil {
+		return err
+	}
+
+	if node != nil {
+		node.Value = newValue
+	}
 
 	return nil
 }
@@ -38,12 +65,10 @@ func (avl *AVLTree[TKey, TValue]) Search(key TKey) (TValue, bool, error) {
 	return node.Value, true, nil
 }
 
-func (avl *AVLTree[TKey, TValue]) VisitInOrder(visit func(key TKey, value TValue)) error {
+func (avl *AVLTree[TKey, TValue]) VisitInOrder(visit func(key TKey, value TValue)) {
 	avl.tree.VisitInOrder(func(node *avltree.AVLNode[TKey, TValue]) {
 		visit(node.Key(), node.Value)
 	})
-
-	return nil
 }
 
 func NewAVLTree[TKey constraints.Ordered, TValue any](options ...AVLTreeOption[TKey, TValue]) (*AVLTree[TKey, TValue], error) {

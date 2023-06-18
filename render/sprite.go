@@ -108,8 +108,19 @@ func (sprite *Sprite) assembleVertexArray() {
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 }
 
-func (sprite *Sprite) SetZ(z float32) {
+func (sprite *Sprite) SetZ(z float32) error {
+	oldZ := sprite.drawZ
 	sprite.drawZ = mgl32.Clamp(z, zMin, zMax)
+
+	if sprite.canvas != nil {
+		err := sprite.canvas.setSpriteZ(sprite, oldZ, sprite.drawZ)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (sprite *Sprite) SetColorMask(colorMask ColorMask) error {
@@ -283,8 +294,8 @@ func (sprite *Sprite) Draw(transform *geometry.Transform) error {
 		return sprite.drawToBatch(transform.Data())
 	}
 
-	sprite.draw(transform.Data(), sprite.canvas.
-		camera.View(), sprite.canvas.projection)
+	// Set the sprite to be drawn.
+	sprite.canvas.sprites[sprite] = transform
 
 	return nil
 }
