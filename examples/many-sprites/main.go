@@ -27,7 +27,7 @@ func init() {
 
 func main() {
 	// Initialize the engine.
-	err := system.InitializeWindow("Demo", width, height, false, false)
+	err := system.InitializeWindow("Demo", width, height, true, false)
 	handleError(err)
 	err = render.Initialize(width, height, -30, 30)
 	handleError(err)
@@ -52,11 +52,32 @@ func main() {
 
 	// Create a texture and a sprite for the ball.
 	ballTexture := render.NewTextureFromImage(imgRGBA, render.TextureFilteringLinear)
-	ballSprite, err := render.NewSpriteFromTextureAndProgram(
-		render.DrawModeStatic, render.DrawModeStatic,
-		render.DrawModeStatic, ballTexture, shaderProgram,
-		geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
-	handleError(err)
+	ballSprites := make([]*render.Sprite, 0, 1024)
+
+	for i := 0; i < cap(ballSprites); i++ {
+		ballSprite, err := render.NewSpriteFromTextureAndProgram(
+			render.DrawModeStatic, render.DrawModeStatic,
+			render.DrawModeStatic, ballTexture, shaderProgram,
+			geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
+		handleError(err)
+		ballSprites = append(ballSprites, ballSprite)
+	}
+
+	ballTransforms := make([]*geometry.Transform, 0, len(ballSprites))
+
+	for i := 0; i < 32; i++ {
+		for j := 0; j < 32; j++ {
+			x := float64(i) / 32.0 * width * 2
+			y := float64(j) / 32.0 * height * 2
+
+			x -= width
+			y -= height
+
+			ballTransform := geometry.NewTransform(nil)
+			ballTransform.MoveTo(geometry.V(x, y))
+			ballTransforms = append(ballTransforms, ballTransform)
+		}
+	}
 
 	// Add canvases.
 	layout := render.NewLayout()
@@ -96,10 +117,12 @@ func main() {
 	handleError(err)
 	err = layout.AddCanvas(ballCanvas)
 	handleError(err)
-	err = ballCanvas.AddSprite(ballSprite)
-	handleError(err)
 
-	ballTransform := geometry.NewTransform(nil)
+	for i := 0; i < len(ballSprites); i++ {
+		ballSprite := ballSprites[i]
+		err = ballCanvas.AddSprite(ballSprite)
+		handleError(err)
+	}
 
 	system.InitMetrics()
 
@@ -112,15 +135,14 @@ func main() {
 
 		render.SetClearColor(render.ToRGBA(colornames.Aquamarine))
 		render.Clear(render.ClearBitColor | render.ClearBitDepth)
-		ballSprite.Draw(ballTransform)
 
-		for i := -float64(width); i < width; i += float64(imgRGBA.Bounds().Dx()) * 2.0 {
-			for j := -float64(height); j < height; j += float64(imgRGBA.Bounds().Dy()) * 2.0 {
-				ballTransform.MoveTo(geometry.V(i, j))
-				ballSprite.Draw(ballTransform)
-				ballSprite.SetZ(float32(i+j) / 1000)
-			}
+		for i := 0; i < len(ballSprites); i++ {
+			err = ballSprites[i].Draw(ballTransforms[i])
+			handleError(err)
 		}
+
+		err = layout.Draw()
+		handleError(err)
 
 		system.TickLoop()
 		system.UpdateFrameRate()

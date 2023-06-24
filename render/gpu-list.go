@@ -174,9 +174,9 @@ func (list *gpuList[T]) removeElement(idx int) error {
 	list.length -= dataSize
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
-	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.BufferSubData(gl.ARRAY_BUFFER, originalLength-dataSize,
 		dataSize, gl.Ptr(nil))
+	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
 	return nil
 }
@@ -209,9 +209,9 @@ func (list *gpuList[T]) removeElements(offset, count int) error {
 	list.length -= count * dataSize
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
-	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.BufferSubData(gl.ARRAY_BUFFER, originalLength-count*dataSize,
 		count*dataSize, gl.Ptr(nil))
+	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
 	return nil
 }
