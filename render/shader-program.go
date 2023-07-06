@@ -2,7 +2,9 @@ package render
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
+	"unsafe"
 
 	"github.com/go-gl/gl/v4.6-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
@@ -31,6 +33,17 @@ func (program *ShaderProgram) SetFloat32(name string, value float32) {
 func (program *ShaderProgram) SetMatrix4(name string, value mgl32.Mat4) {
 	location := gl.GetUniformLocation(program.glHandler, gl.Str(name+"\x00"))
 	gl.UniformMatrix4fv(location, 1, false, &value[0])
+}
+
+func (program *ShaderProgram) SetMatrix4Array(name string, value []mgl32.Mat4) {
+	location := gl.GetUniformLocation(program.glHandler, gl.Str(name+"\x00"))
+
+	header := *(*reflect.SliceHeader)(unsafe.Pointer(&value))
+	header.Len *= 16
+	header.Cap *= 16
+	data := *(*[]float32)(unsafe.Pointer(&header))
+
+	gl.UniformMatrix4fv(location, int32(len(value)), false, &data[0])
 }
 
 func (program *ShaderProgram) SetFloat32Array(name string, value []float32) {

@@ -3,9 +3,7 @@ package render
 import (
 	_ "embed"
 	"fmt"
-	"reflect"
 	"text/template"
-	"unsafe"
 
 	"github.com/alacrity-engine/core/geometry"
 	"github.com/go-gl/gl/v4.6-core/gl"
@@ -95,13 +93,7 @@ func (batch *Batch) setCanvasProjection(idx int, projection mgl32.Mat4) {
 	defer gl.UseProgram(0)
 
 	batch.projectionsBuffer[idx] = projection
-
-	header := *(*reflect.SliceHeader)(unsafe.Pointer(&batch.projectionsBuffer))
-	header.Len *= 16
-	header.Cap *= 16
-	data := *(*[]float32)(unsafe.Pointer(&header))
-
-	batch.shaderProgram.SetFloat32Array("projections", data)
+	batch.shaderProgram.SetMatrix4Array("projections", batch.viewsBuffer)
 }
 
 func (batch *Batch) setCanvasView(idx int, view mgl32.Mat4) {
@@ -109,13 +101,7 @@ func (batch *Batch) setCanvasView(idx int, view mgl32.Mat4) {
 	defer gl.UseProgram(0)
 
 	batch.viewsBuffer[idx] = view
-
-	header := *(*reflect.SliceHeader)(unsafe.Pointer(&batch.viewsBuffer))
-	header.Len *= 16
-	header.Cap *= 16
-	data := *(*[]float32)(unsafe.Pointer(&header))
-
-	batch.shaderProgram.SetFloat32Array("views", data)
+	batch.shaderProgram.SetMatrix4Array("views", batch.viewsBuffer)
 }
 
 func (batch *Batch) Draw() {
@@ -143,12 +129,8 @@ func (batch *Batch) Draw() {
 		batch.viewsBuffer[canvas.pos] = canvas.camera.View()
 	}
 
-	header := *(*reflect.SliceHeader)(unsafe.Pointer(&batch.viewsBuffer))
-	header.Len *= 16
-	header.Cap *= 16
-	data := *(*[]float32)(unsafe.Pointer(&header))
-
-	batch.shaderProgram.SetFloat32Array("views", data)
+	batch.shaderProgram.SetMatrix4Array("views", batch.viewsBuffer)
+	batch.shaderProgram.SetMatrix4Array("projections", batch.projectionsBuffer)
 	batch.shaderProgram.SetInt("numSprites", len(batch.sprites))
 
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(batch.sprites)*6))
@@ -421,27 +403,13 @@ func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch,
 		projection := canvas.projection
 		view := canvas.camera.View()
 
-		batch.projectionsBuffer[i] = projection
-		batch.viewsBuffer[i] = view
-
 		batch.viewsBuffer[canvas.pos] = view
 		batch.projectionsBuffer[canvas.pos] = projection
 	}
 
 	// Send everything to the GPU.
-	header := *(*reflect.SliceHeader)(unsafe.Pointer(&batch.projectionsBuffer))
-	header.Len *= 16
-	header.Cap *= 16
-	data := *(*[]float32)(unsafe.Pointer(&header))
-
-	batch.shaderProgram.SetFloat32Array("projections", data)
-
-	header = *(*reflect.SliceHeader)(unsafe.Pointer(&batch.viewsBuffer))
-	header.Len *= 16
-	header.Cap *= 16
-	data = *(*[]float32)(unsafe.Pointer(&header))
-
-	batch.shaderProgram.SetFloat32Array("views", data)
+	batch.shaderProgram.SetMatrix4Array("projections", batch.projectionsBuffer)
+	batch.shaderProgram.SetMatrix4Array("views", batch.viewsBuffer)
 
 	// Build a VAO.
 	var handler uint32
