@@ -109,6 +109,13 @@ func (batch *Batch) setCanvasView(idx int, view mgl32.Mat4) {
 	defer gl.UseProgram(0)
 
 	batch.viewsBuffer[idx] = view
+
+	header := *(*reflect.SliceHeader)(unsafe.Pointer(&batch.viewsBuffer))
+	header.Len *= 16
+	header.Cap *= 16
+	data := *(*[]float32)(unsafe.Pointer(&header))
+
+	batch.shaderProgram.SetFloat32Array("views", data)
 }
 
 func (batch *Batch) Draw() {
