@@ -21,8 +21,8 @@ func (tb *TextureBuffer) Bind() {
 	gl.BindTexture(gl.TEXTURE_BUFFER, tb.glHandler)
 	gl.TexBuffer(gl.TEXTURE_BUFFER, uint32(tb.format), tb.glBufferHandler)
 
-	gl.ActiveTexture(0)
-	gl.BindTexture(gl.TEXTURE_BUFFER, 0)
+	//gl.ActiveTexture(0)
+	//gl.BindTexture(gl.TEXTURE_BUFFER, 0)
 }
 
 func (tb *TextureBuffer) setBuffer(glBufferHandler uint32) {

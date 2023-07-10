@@ -358,6 +358,8 @@ func NewSpriteFromTextureAndProgram(vertexDrawMode, textureDrawMode, colorDrawMo
 		glTextureCoordinatesBufferHandler: textureCoordinatesBufferHandler,
 		glColorMaskBufferHandler:          colorMaskBufferHandler,
 		texture:                           texture,
+		targetArea:                        targetArea,
+		colorMask:                         colorMask,
 		shaderProgram:                     shaderProgram,
 		drawMode:                          textureDrawMode,
 		batchIndex:                        -1,

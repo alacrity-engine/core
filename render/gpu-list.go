@@ -14,6 +14,7 @@ type numeric interface {
 
 type gpuList[T numeric] struct {
 	glHandler uint32
+	stride    int
 	length    int
 	capacity  int
 	drawMode  DrawMode
@@ -34,19 +35,28 @@ func (list *gpuList[T]) getCapacity() int {
 }
 
 func (list *gpuList[T]) grow(targetCap int) {
+	// TODO: come up with a better algorithm
+	// for GPU list growth (based on the stride).
+
 	var zeroVal T
 	dataSize := int(unsafe.Sizeof(zeroVal))
-	growFactor := 2
+	//growFactor := 2
 
 	if list.capacity > (1<<10)*dataSize {
-		growFactor = 4
+		//growFactor = 4
 	}
 
 	// Allocate a greater buffer for the GPU list.
-	newCapacity := list.capacity + list.capacity/growFactor
+	adjCap := list.capacity / list.stride
+	newCapacity := adjCap * 2
+	newCapacity *= list.stride
 
 	if targetCap > newCapacity {
 		newCapacity = targetCap
+	}
+
+	if newCapacity%list.stride != 0 {
+		_ = newCapacity
 	}
 
 	var glHandler uint32
@@ -248,7 +258,15 @@ func (list *gpuList[T]) setData(data []T) {
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
 		list.glHandler = glHandler
+		list.length = dataLength
 		list.capacity = dataLength
+
+		// Read.
+		//dbg := make([]T, list.length/dataSize)
+		//gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
+		//gl.GetBufferSubData(gl.ARRAY_BUFFER, 0, list.length, gl.Ptr(dbg))
+		//
+		//_ = dbg
 
 		return
 	}
@@ -300,9 +318,10 @@ func (list *gpuList[T]) copyDataToBuffer(buffer uint32, offset, count int) error
 	return nil
 }
 
-func newGPUList[T numeric](mode DrawMode, initData []T) *gpuList[T] {
+func newGPUList[T numeric](mode DrawMode, initData []T, stride int) *gpuList[T] {
 	list := &gpuList[T]{
 		drawMode: mode,
+		stride:   stride,
 	}
 
 	list.setData(initData)

@@ -41,8 +41,8 @@ func NewTextureFromImage(img *image.RGBA, filter TextureFiltering) *Texture {
 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(img.Rect.Size().X),
 		int32(img.Rect.Size().Y), 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(img.Pix))
 
-	gl.BindTexture(gl.TEXTURE_2D, 0)
-	gl.ActiveTexture(0)
+	//gl.BindTexture(gl.TEXTURE_2D, 0)
+	//gl.ActiveTexture(0)
 
 	return &Texture{
 		glHandler:   handler,

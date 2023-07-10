@@ -68,6 +68,26 @@ type Batch struct {
 	shouldDraw     *gpuList[byte]
 }
 
+func (batch *Batch) buildVAO() {
+	gl.BindVertexArray(batch.glHandler)
+	defer gl.BindVertexArray(0)
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, batch.vertices.glHandler)
+	vertAttrib := uint32(gl.GetAttribLocation(batch.shaderProgram.glHandler, gl.Str("aPos\x00")))
+	gl.EnableVertexAttribArray(vertAttrib)
+	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, batch.texCoords.glHandler)
+	texCoordAttrib := uint32(gl.GetAttribLocation(batch.shaderProgram.glHandler, gl.Str("aTexCoord\x00")))
+	gl.EnableVertexAttribArray(texCoordAttrib)
+	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 2*4, gl.PtrOffset(0))
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, batch.colorMasks.glHandler)
+	colorAttrib := uint32(gl.GetAttribLocation(batch.shaderProgram.glHandler, gl.Str("aColor\x00")))
+	gl.EnableVertexAttribArray(colorAttrib)
+	gl.VertexAttribPointer(colorAttrib, 4, gl.FLOAT, false, 4*4, gl.PtrOffset(0))
+}
+
 func (batch *Batch) recompileShaderProgram() error {
 	vertexShader, err := NewBatchShaderWithTemplate(ShaderTypeVertex,
 		batch.vertexShaderTemplate, batch.maxNumCanvases)
@@ -153,8 +173,6 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	sprite.batch = batch
 	batch.sprites = append(batch.sprites, sprite)
 
-	identMatrix := mgl32.Ident4()
-
 	vertices := make([]float32, 18)
 	geometry.ComputeSpriteVerticesNoElementsFill(
 		vertices, width, height, sprite.targetArea)
@@ -170,6 +188,18 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	geometry.ColorMaskDataNoElementsFill(
 		colorMask, sprite.colorMask.Data())
 	batch.colorMasks.addElements(colorMask)
+
+	// Check the proportion.
+	//a := batch.vertices.capacity / batch.vertices.stride
+	//b := batch.texCoords.capacity / batch.texCoords.stride
+	//c := batch.colorMasks.capacity / batch.colorMasks.stride
+	//
+	//if a != b && b != c && a != c {
+	//	_ = a
+	//}
+
+	// Rebind all the sprite data to the VAO.
+	batch.buildVAO()
 
 	prevCapacity := batch.projectionsIdx.getCapacity()
 	batch.projectionsIdx.addElement(sprite.canvas.pos)
@@ -188,6 +218,7 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	}
 
 	prevCapacity = batch.models.getCapacity()
+	identMatrix := mgl32.Ident4()
 	batch.models.addElements(identMatrix[:])
 
 	if batch.models.getCapacity() > prevCapacity {
@@ -323,19 +354,19 @@ func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch,
 
 	// Instantiate GPU lists.
 	batch.projectionsIdx = newGPUList(DrawModeDynamic,
-		make([]byte, params.initialObjectCapacity))
+		make([]byte, params.initialObjectCapacity), 1)
 	batch.models = newGPUList(DrawModeDynamic,
-		make([]float32, params.initialObjectCapacity))
+		make([]float32, params.initialObjectCapacity), 1)
 	batch.viewsIdx = newGPUList(DrawModeDynamic,
-		make([]byte, params.initialObjectCapacity))
+		make([]byte, params.initialObjectCapacity), 1)
 	batch.vertices = newGPUList(DrawModeDynamic,
-		make([]float32, params.initialObjectCapacity))
+		make([]float32, params.initialObjectCapacity), 3*4)
 	batch.texCoords = newGPUList(DrawModeDynamic,
-		make([]float32, params.initialObjectCapacity))
+		make([]float32, params.initialObjectCapacity), 2*4)
 	batch.colorMasks = newGPUList(DrawModeDynamic,
-		make([]float32, params.initialObjectCapacity))
+		make([]float32, params.initialObjectCapacity), 4*4)
 	batch.shouldDraw = newGPUList(DrawModeDynamic,
-		make([]byte, params.initialObjectCapacity))
+		make([]byte, params.initialObjectCapacity), 1)
 
 	// Instantiate texture buffers.
 	batch.modelsTextureBuffer = NewTextureBuffer(batch.models.glHandler,
@@ -414,25 +445,8 @@ func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch,
 	// Build a VAO.
 	var handler uint32
 	gl.GenVertexArrays(1, &handler)
-	gl.BindVertexArray(handler)
-	defer gl.BindVertexArray(0)
-
-	gl.BindBuffer(gl.ARRAY_BUFFER, batch.vertices.glHandler)
-	vertAttrib := uint32(gl.GetAttribLocation(batch.shaderProgram.glHandler, gl.Str("aPos\x00")))
-	gl.EnableVertexAttribArray(vertAttrib)
-	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
-
-	gl.BindBuffer(gl.ARRAY_BUFFER, batch.texCoords.glHandler)
-	texCoordAttrib := uint32(gl.GetAttribLocation(batch.shaderProgram.glHandler, gl.Str("aTexCoord\x00")))
-	gl.EnableVertexAttribArray(texCoordAttrib)
-	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 2*4, gl.PtrOffset(0))
-
-	gl.BindBuffer(gl.ARRAY_BUFFER, batch.colorMasks.glHandler)
-	colorAttrib := uint32(gl.GetAttribLocation(batch.shaderProgram.glHandler, gl.Str("aColor\x00")))
-	gl.EnableVertexAttribArray(colorAttrib)
-	gl.VertexAttribPointer(colorAttrib, 4, gl.FLOAT, false, 4*4, gl.PtrOffset(0))
-
 	batch.glHandler = handler
+	batch.buildVAO()
 
 	return &batch, nil
 }
