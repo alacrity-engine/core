@@ -117,6 +117,7 @@ func main() {
 			err = ballCanvas.AddSprite(ballSprite)
 			handleError(err)
 			ballTransform := geometry.NewTransform(nil)
+			ballTransform.MoveTo(geometry.V(i, j))
 
 			ball := &Ball{
 				Sprite:    ballSprite,
