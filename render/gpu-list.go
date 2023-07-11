@@ -261,13 +261,6 @@ func (list *gpuList[T]) setData(data []T) {
 		list.length = dataLength
 		list.capacity = dataLength
 
-		// Read.
-		//dbg := make([]T, list.length/dataSize)
-		//gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
-		//gl.GetBufferSubData(gl.ARRAY_BUFFER, 0, list.length, gl.Ptr(dbg))
-		//
-		//_ = dbg
-
 		return
 	}
 

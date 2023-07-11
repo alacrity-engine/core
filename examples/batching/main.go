@@ -158,12 +158,15 @@ func main() {
 
 	err = batch.AttachSprite(ballSprite1)
 	handleError(err)
-	//err = batch.AttachSprite(ballSprite2)
-	//handleError(err)
+	err = batch.AttachSprite(ballSprite2)
+	handleError(err)
 
 	balls = append(balls, &Ball{
 		Sprite:    ballSprite1,
 		Transform: ballTransform1,
+	}, &Ball{
+		Sprite:    ballSprite2,
+		Transform: ballTransform2,
 	})
 
 	system.InitMetrics()

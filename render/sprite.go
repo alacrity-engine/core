@@ -137,7 +137,7 @@ func (sprite *Sprite) SetColorMask(colorMask ColorMask) error {
 	colorMaskData := make([]float32, 24)
 	geometry.ColorMaskDataNoElementsFill(colorMaskData, data)
 	err := sprite.batch.colorMasks.replaceElements(
-		sprite.batchIndex, len(colorMaskData), colorMaskData)
+		sprite.batchIndex*len(colorMaskData), len(colorMaskData), colorMaskData)
 
 	if err != nil {
 		return err
@@ -182,7 +182,7 @@ func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
 	textureCoordinates := make([]float32, 12)
 	geometry.ComputeSpriteTextureCoordinatesNoElementsFill(textureCoordinates,
 		sprite.texture.imageWidth, sprite.texture.imageHeight, targetArea)
-	err := sprite.batch.texCoords.replaceElements(sprite.batchIndex,
+	err := sprite.batch.texCoords.replaceElements(sprite.batchIndex*len(textureCoordinates),
 		len(textureCoordinates), textureCoordinates)
 
 	if err != nil {
@@ -193,7 +193,7 @@ func (sprite *Sprite) SetTargetArea(targetArea geometry.Rect) error {
 	geometry.ComputeSpriteVerticesNoElementsFill(
 		vertices, width, height, targetArea)
 	err = sprite.batch.vertices.replaceElements(
-		sprite.batchIndex, len(vertices), vertices)
+		sprite.batchIndex*len(vertices), len(vertices), vertices)
 
 	if err != nil {
 		return err
@@ -268,7 +268,7 @@ func (sprite *Sprite) drawToBatch(model mgl32.Mat4) error {
 	model[14] += zModifier
 
 	err := sprite.batch.models.replaceElements(
-		sprite.batchIndex, len(model), model[:])
+		sprite.batchIndex*len(model), len(model), model[:])
 
 	if err != nil {
 		return err
