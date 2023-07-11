@@ -65,7 +65,7 @@ func ComputeSpriteTextureCoordinatesNoElementsFill(buffer []float32, imageWidth,
 	coords := []float32{
 		float32(targetArea.Min.X) / float32(imageWidth), float32(targetArea.Min.Y) / float32(imageHeight),
 		float32(targetArea.Min.X) / float32(imageWidth), float32(targetArea.Max.Y) / float32(imageHeight),
-		float32(targetArea.Max.X) / float32(imageWidth), float32(targetArea.Max.Y) / float32(imageHeight), // extraneous 3
+		float32(targetArea.Max.X) / float32(imageWidth), float32(targetArea.Min.Y) / float32(imageHeight), // extraneous 3
 		float32(targetArea.Min.X) / float32(imageWidth), float32(targetArea.Max.Y) / float32(imageHeight), // extraneous 1
 		float32(targetArea.Max.X) / float32(imageWidth), float32(targetArea.Max.Y) / float32(imageHeight),
 		float32(targetArea.Max.X) / float32(imageWidth), float32(targetArea.Min.Y) / float32(imageHeight),
