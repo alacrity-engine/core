@@ -125,6 +125,9 @@ func (batch *Batch) setCanvasView(idx int, view mgl32.Mat4) {
 }
 
 func (batch *Batch) Draw() {
+	//gl.Disable(gl.DEPTH_TEST)
+	//defer gl.Enable(gl.DEPTH_TEST)
+
 	batch.shaderProgram.Use()
 	defer gl.UseProgram(0)
 

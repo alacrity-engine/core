@@ -209,8 +209,8 @@ func (sprite *Sprite) draw(model, view, projection mgl32.Mat4) {
 		return
 	}
 
-	gl.Disable(gl.DEPTH_TEST)
-	defer gl.Enable(gl.DEPTH_TEST)
+	//gl.Disable(gl.DEPTH_TEST)
+	//defer gl.Enable(gl.DEPTH_TEST)
 
 	sprite.shaderProgram.Use()
 	defer gl.UseProgram(0)

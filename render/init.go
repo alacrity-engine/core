@@ -39,6 +39,7 @@ func Initialize(_width, _height int, _zMin, _zMax float32) error {
 	}
 
 	gl.Viewport(0, 0, int32(width), int32(height))
+	gl.DepthFunc(gl.LEQUAL)
 	gl.Enable(gl.DEPTH_TEST)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 	gl.BlendEquation(gl.FUNC_ADD)
