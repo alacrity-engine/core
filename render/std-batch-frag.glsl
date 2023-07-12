@@ -12,7 +12,7 @@ in vec4 color;
 out vec4 FragColor;
 
 void main() {
-    int spriteIdx = int(mod(float(vertexID), float(numSprites)));
+    int spriteIdx = vertexID / 6;
     uint shouldDrawFlag = texelFetch(shouldDraw, spriteIdx).r;
 
     FragColor = texture(batchTexture, texCoord) * color * shouldDrawFlag;
