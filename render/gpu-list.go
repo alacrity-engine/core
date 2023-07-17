@@ -163,6 +163,100 @@ func (list *gpuList[T]) replaceElements(offset, count int, data []T) error {
 	return nil
 }
 
+func (list *gpuList[T]) insertElement(idx int, elem T) error {
+	if list.glHandler == 0 {
+		list.setData([]T{elem})
+		return nil
+	}
+
+	var zeroVal T
+	dataSize := int(unsafe.Sizeof(zeroVal))
+
+	if idx*dataSize > list.length {
+		return fmt.Errorf(
+			"wrong index %d with data length %d",
+			idx, list.length)
+	}
+
+	if list.length+dataSize > list.capacity {
+		list.grow(list.length + dataSize)
+	}
+
+	defer func() {
+		list.length += dataSize
+	}()
+
+	if idx*dataSize == list.length {
+		gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
+		gl.BufferSubData(gl.ARRAY_BUFFER, list.length,
+			dataSize, gl.Ptr([]T{elem}))
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+	} else {
+		// Move the contents.
+		gl.BindBuffer(gl.COPY_READ_BUFFER, list.glHandler)
+		gl.BindBuffer(gl.COPY_WRITE_BUFFER, list.glHandler)
+		gl.CopyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER,
+			idx*dataSize, idx*dataSize+dataSize, list.length-idx*dataSize)
+		gl.BindBuffer(gl.COPY_READ_BUFFER, 0)
+		gl.BindBuffer(gl.COPY_WRITE_BUFFER, 0)
+
+		// Insert the element.
+		gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
+		gl.BufferSubData(gl.ARRAY_BUFFER, idx*dataSize,
+			dataSize, gl.Ptr([]T{elem}))
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+	}
+
+	return nil
+}
+
+func (list *gpuList[T]) insertElements(offset, count int, elems []T) error {
+	if list.glHandler == 0 {
+		list.setData(elems)
+		return nil
+	}
+
+	var zeroVal T
+	dataSize := int(unsafe.Sizeof(zeroVal))
+
+	if (offset+count-1)*dataSize > list.length-dataSize {
+		return fmt.Errorf(
+			"wrong offset %d and count %d with data length %d",
+			offset, count, list.length)
+	}
+
+	if list.length+count*dataSize > list.capacity {
+		list.grow(list.length + count*dataSize)
+	}
+
+	defer func() {
+		list.length += count * dataSize
+	}()
+
+	if offset*dataSize == list.length {
+		gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
+		gl.BufferSubData(gl.ARRAY_BUFFER, list.length,
+			len(elems)*dataSize, gl.Ptr(elems))
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+	} else {
+		// Move the contents.
+		gl.BindBuffer(gl.COPY_READ_BUFFER, list.glHandler)
+		gl.BindBuffer(gl.COPY_WRITE_BUFFER, list.glHandler)
+		gl.CopyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER,
+			offset*dataSize, offset*dataSize+count*dataSize, list.length-offset*dataSize)
+		gl.BindBuffer(gl.COPY_READ_BUFFER, 0)
+		gl.BindBuffer(gl.COPY_WRITE_BUFFER, 0)
+
+		// Insert the data.
+		gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
+		gl.BufferSubData(gl.ARRAY_BUFFER, offset*dataSize,
+			count*dataSize, gl.Ptr(elems))
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+	}
+
+	return nil
+}
+
 func (list *gpuList[T]) removeElement(idx int) error {
 	var zeroVal T
 	dataSize := int(unsafe.Sizeof(zeroVal))
