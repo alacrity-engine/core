@@ -156,7 +156,7 @@ func main() {
 	ballTransform1 := geometry.NewTransform(nil)
 	ballTransform2 := geometry.NewTransform(nil)
 
-	ballSprite1.SetZ(0)
+	ballSprite1.SetZ(2)
 	ballTransform1.MoveTo(geometry.V(float64(imgRGBA.Bounds().Dx()/2), float64(imgRGBA.Bounds().Dy()/2)))
 
 	ballSprite2.SetZ(1)

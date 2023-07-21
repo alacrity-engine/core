@@ -197,18 +197,33 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	vertices := make([]float32, 18)
 	geometry.ComputeSpriteVerticesNoElementsFill(
 		vertices, width, height, sprite.targetArea)
-	batch.vertices.insertElements(ind*len(vertices), len(vertices), vertices)
+	err := batch.vertices.insertElements(
+		ind*len(vertices), len(vertices), vertices)
+
+	if err != nil {
+		return err
+	}
 
 	texCoords := make([]float32, 12)
 	geometry.ComputeSpriteTextureCoordinatesNoElementsFill(
 		texCoords, sprite.texture.imageWidth,
 		sprite.texture.imageHeight, sprite.targetArea)
-	batch.texCoords.insertElements(ind*len(texCoords), len(texCoords), texCoords)
+	err = batch.texCoords.insertElements(
+		ind*len(texCoords), len(texCoords), texCoords)
+
+	if err != nil {
+		return err
+	}
 
 	colorMask := make([]float32, 24)
 	geometry.ColorMaskDataNoElementsFill(
 		colorMask, sprite.colorMask.Data())
-	batch.colorMasks.insertElements(ind*len(colorMask), len(colorMask), colorMask)
+	err = batch.colorMasks.insertElements(
+		ind*len(colorMask), len(colorMask), colorMask)
+
+	if err != nil {
+		return err
+	}
 
 	// Check the proportion.
 	//a := batch.vertices.capacity / batch.vertices.stride
@@ -223,7 +238,11 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	batch.buildVAO()
 
 	prevCapacity := batch.projectionsIdx.getCapacity()
-	batch.projectionsIdx.insertElement(ind, sprite.canvas.pos)
+	err = batch.projectionsIdx.insertElement(ind, sprite.canvas.pos)
+
+	if err != nil {
+		return err
+	}
 
 	if batch.projectionsIdx.getCapacity() > prevCapacity {
 		batch.projectionsIdxTextureBuffer.
@@ -231,7 +250,11 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	}
 
 	prevCapacity = batch.viewsIdx.getCapacity()
-	batch.viewsIdx.insertElement(ind, sprite.canvas.pos)
+	err = batch.viewsIdx.insertElement(ind, sprite.canvas.pos)
+
+	if err != nil {
+		return err
+	}
 
 	if batch.viewsIdx.getCapacity() > prevCapacity {
 		batch.viewsIdxTextureBuffer.
@@ -240,7 +263,12 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 
 	prevCapacity = batch.models.getCapacity()
 	identMatrix := mgl32.Ident4()
-	batch.models.insertElements(ind*len(identMatrix), len(identMatrix), identMatrix[:])
+	err = batch.models.insertElements(
+		ind*len(identMatrix), len(identMatrix), identMatrix[:])
+
+	if err != nil {
+		return err
+	}
 
 	if batch.models.getCapacity() > prevCapacity {
 		batch.modelsTextureBuffer.
@@ -259,7 +287,7 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	sprite.deleteTextureCoordinatesBuffer()
 	sprite.deleteColorMaskBuffer()
 	sprite.deleteVertexArray()
-	err := sprite.canvas.removeBatchedSprite(sprite)
+	err = sprite.canvas.removeBatchedSprite(sprite)
 
 	if err != nil {
 		return err

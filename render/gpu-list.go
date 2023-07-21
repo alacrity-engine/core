@@ -219,11 +219,11 @@ func (list *gpuList[T]) insertElements(offset, count int, elems []T) error {
 	var zeroVal T
 	dataSize := int(unsafe.Sizeof(zeroVal))
 
-	if (offset+count-1)*dataSize > list.length-dataSize {
-		return fmt.Errorf(
-			"wrong offset %d and count %d with data length %d",
-			offset, count, list.length)
-	}
+	//if (offset+count)*dataSize > list.length {
+	//	return fmt.Errorf(
+	//		"wrong offset %d and count %d with data length %d",
+	//		offset, count, list.length)
+	//}
 
 	if list.length+count*dataSize > list.capacity {
 		list.grow(list.length + count*dataSize)
