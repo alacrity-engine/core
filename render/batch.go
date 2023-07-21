@@ -3,6 +3,7 @@ package render
 import (
 	_ "embed"
 	"fmt"
+	"sort"
 	"text/template"
 
 	"github.com/alacrity-engine/core/geometry"
@@ -171,26 +172,43 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 			"the sprite should have the same texture as the batch")
 	}
 
-	ind := len(batch.sprites)
+	ind := sort.Search(len(batch.sprites), func(i int) bool {
+		return batch.sprites[i].drawZ >= sprite.drawZ
+	})
+
 	sprite.batchIndex = ind
 	sprite.batch = batch
-	batch.sprites = append(batch.sprites, sprite)
+
+	if ind <= 0 {
+		batch.sprites = append([]*Sprite{sprite}, batch.sprites...)
+	} else if ind >= len(batch.sprites) {
+		batch.sprites = append(batch.sprites, sprite)
+	} else {
+		batch.sprites = append(batch.sprites[:ind+1], batch.sprites[ind:]...)
+		batch.sprites[ind] = sprite
+	}
+
+	// Reindex all the sprites
+	// remaining on the batch.
+	for i := ind + 1; i < len(batch.sprites); i++ {
+		batch.sprites[i].batchIndex--
+	}
 
 	vertices := make([]float32, 18)
 	geometry.ComputeSpriteVerticesNoElementsFill(
 		vertices, width, height, sprite.targetArea)
-	batch.vertices.addElements(vertices)
+	batch.vertices.insertElements(ind*len(vertices), len(vertices), vertices)
 
 	texCoords := make([]float32, 12)
 	geometry.ComputeSpriteTextureCoordinatesNoElementsFill(
 		texCoords, sprite.texture.imageWidth,
 		sprite.texture.imageHeight, sprite.targetArea)
-	batch.texCoords.addElements(texCoords)
+	batch.texCoords.insertElements(ind*len(texCoords), len(texCoords), texCoords)
 
 	colorMask := make([]float32, 24)
 	geometry.ColorMaskDataNoElementsFill(
 		colorMask, sprite.colorMask.Data())
-	batch.colorMasks.addElements(colorMask)
+	batch.colorMasks.insertElements(ind*len(colorMask), len(colorMask), colorMask)
 
 	// Check the proportion.
 	//a := batch.vertices.capacity / batch.vertices.stride
@@ -205,7 +223,7 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	batch.buildVAO()
 
 	prevCapacity := batch.projectionsIdx.getCapacity()
-	batch.projectionsIdx.addElement(sprite.canvas.pos)
+	batch.projectionsIdx.insertElement(ind, sprite.canvas.pos)
 
 	if batch.projectionsIdx.getCapacity() > prevCapacity {
 		batch.projectionsIdxTextureBuffer.
@@ -213,7 +231,7 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	}
 
 	prevCapacity = batch.viewsIdx.getCapacity()
-	batch.viewsIdx.addElement(sprite.canvas.pos)
+	batch.viewsIdx.insertElement(ind, sprite.canvas.pos)
 
 	if batch.viewsIdx.getCapacity() > prevCapacity {
 		batch.viewsIdxTextureBuffer.
@@ -222,7 +240,7 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 
 	prevCapacity = batch.models.getCapacity()
 	identMatrix := mgl32.Ident4()
-	batch.models.addElements(identMatrix[:])
+	batch.models.insertElements(ind*len(identMatrix), len(identMatrix), identMatrix[:])
 
 	if batch.models.getCapacity() > prevCapacity {
 		batch.modelsTextureBuffer.
@@ -230,7 +248,7 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	}
 
 	prevCapacity = batch.shouldDraw.getCapacity()
-	batch.shouldDraw.addElement(0)
+	batch.shouldDraw.insertElement(ind, 0)
 
 	if batch.shouldDraw.getCapacity() > prevCapacity {
 		batch.shouldDrawTextureBuffer.
@@ -241,6 +259,11 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	sprite.deleteTextureCoordinatesBuffer()
 	sprite.deleteColorMaskBuffer()
 	sprite.deleteVertexArray()
+	err := sprite.canvas.removeBatchedSprite(sprite)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -334,6 +357,12 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 	}
 
 	err = batch.shouldDraw.removeElement(batchIndex)
+
+	if err != nil {
+		return err
+	}
+
+	err = sprite.canvas.addSpriteFromBatch(sprite)
 
 	if err != nil {
 		return err

@@ -159,7 +159,7 @@ func main() {
 	ballSprite1.SetZ(0)
 	ballTransform1.MoveTo(geometry.V(float64(imgRGBA.Bounds().Dx()/2), float64(imgRGBA.Bounds().Dy()/2)))
 
-	ballSprite2.SetZ(0)
+	ballSprite2.SetZ(1)
 	ballTransform2.MoveTo(geometry.V(-float64(imgRGBA.Bounds().Dx()/2), -float64(imgRGBA.Bounds().Dy()/2)))
 
 	err = batch.AttachSprite(ballSprite1)

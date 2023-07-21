@@ -145,6 +145,32 @@ func (canvas *Canvas) AddSprite(sprite *Sprite) error {
 	return nil
 }
 
+func (canvas *Canvas) addSpriteFromBatch(sprite *Sprite) error {
+	if _, ok := canvas.sprites[sprite]; ok {
+		return fmt.Errorf(
+			"the sprite already exists on the canvas")
+	}
+
+	canvas.sprites[sprite] = nil
+	//sprite.canvas = canvas
+
+	// Add the sprite to the Z buffer.
+	zData, err := canvas.newZBufferDataForSprite(sprite)
+
+	if err != nil {
+		return err
+	}
+
+	err = canvas.zBuffer.AddOrUpdate(sprite.drawZ, zData,
+		addSpriteToZBuffer(sprite))
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (canvas *Canvas) setSpriteZ(sprite *Sprite, oldZ, newZ float32) error {
 	err := canvas.zBuffer.Update(oldZ, removeSpriteFromZBuffer(sprite))
 
@@ -176,6 +202,24 @@ func (canvas *Canvas) RemoveSprite(sprite *Sprite) error {
 
 	delete(canvas.sprites, sprite)
 	sprite.canvas = nil
+
+	err := canvas.zBuffer.Update(sprite.drawZ, removeSpriteFromZBuffer(sprite))
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (canvas *Canvas) removeBatchedSprite(sprite *Sprite) error {
+	if _, ok := canvas.sprites[sprite]; !ok {
+		return fmt.Errorf(
+			"the sprite doesn't exist on the canvas")
+	}
+
+	delete(canvas.sprites, sprite)
+	//sprite.canvas = nil
 
 	err := canvas.zBuffer.Update(sprite.drawZ, removeSpriteFromZBuffer(sprite))
 

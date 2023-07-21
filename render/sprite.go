@@ -3,6 +3,7 @@ package render
 import (
 	_ "embed"
 	"fmt"
+	"sort"
 
 	"github.com/alacrity-engine/core/geometry"
 	"github.com/go-gl/gl/v4.6-core/gl"
@@ -111,6 +112,156 @@ func (sprite *Sprite) assembleVertexArray() {
 func (sprite *Sprite) SetZ(z float32) error {
 	oldZ := sprite.drawZ
 	sprite.drawZ = mgl32.Clamp(z, zMin, zMax)
+
+	if sprite.batch != nil {
+		// Remove sprite from the batch.
+		ind := sprite.batchIndex
+		batch := sprite.batch
+		length := len(batch.sprites)
+
+		// Reindex all the sprites
+		// remaining on the batch.
+		for i := ind + 1; i < length; i++ {
+			batch.sprites[i].batchIndex--
+		}
+
+		if ind == 0 {
+			batch.sprites = batch.sprites[1:]
+		} else if ind < length-1 {
+			batch.sprites = append(batch.sprites[:ind],
+				batch.sprites[ind+1:]...)
+		} else {
+			batch.sprites = batch.sprites[:length-1]
+		}
+
+		err := batch.vertices.removeElements(ind, 18)
+
+		if err != nil {
+			return err
+		}
+
+		err = batch.texCoords.removeElements(ind, 12)
+
+		if err != nil {
+			return err
+		}
+
+		err = batch.colorMasks.removeElements(ind, 24)
+
+		if err != nil {
+			return err
+		}
+
+		err = batch.projectionsIdx.removeElement(ind)
+
+		if err != nil {
+			return err
+		}
+
+		err = batch.viewsIdx.removeElement(ind)
+
+		if err != nil {
+			return err
+		}
+
+		err = batch.models.removeElements(ind, 16)
+
+		if err != nil {
+			return err
+		}
+
+		err = batch.shouldDraw.removeElement(ind)
+
+		if err != nil {
+			return err
+		}
+
+		// Attach sprite to the batch.
+		ind = sort.Search(len(batch.sprites), func(i int) bool {
+			return batch.sprites[i].drawZ >= sprite.drawZ
+		})
+
+		sprite.batchIndex = ind
+		sprite.batch = batch
+
+		if ind <= 0 {
+			batch.sprites = append([]*Sprite{sprite}, batch.sprites...)
+		} else if ind >= len(batch.sprites) {
+			batch.sprites = append(batch.sprites, sprite)
+		} else {
+			batch.sprites = append(batch.sprites[:ind+1], batch.sprites[ind:]...)
+			batch.sprites[ind] = sprite
+		}
+
+		// Reindex all the sprites
+		// remaining on the batch.
+		for i := ind + 1; i < len(batch.sprites); i++ {
+			batch.sprites[i].batchIndex--
+		}
+
+		vertices := make([]float32, 18)
+		geometry.ComputeSpriteVerticesNoElementsFill(
+			vertices, width, height, sprite.targetArea)
+		batch.vertices.insertElements(ind*len(vertices), len(vertices), vertices)
+
+		texCoords := make([]float32, 12)
+		geometry.ComputeSpriteTextureCoordinatesNoElementsFill(
+			texCoords, sprite.texture.imageWidth,
+			sprite.texture.imageHeight, sprite.targetArea)
+		batch.texCoords.insertElements(ind*len(texCoords), len(texCoords), texCoords)
+
+		colorMask := make([]float32, 24)
+		geometry.ColorMaskDataNoElementsFill(
+			colorMask, sprite.colorMask.Data())
+		batch.colorMasks.insertElements(ind*len(colorMask), len(colorMask), colorMask)
+
+		// Check the proportion.
+		//a := batch.vertices.capacity / batch.vertices.stride
+		//b := batch.texCoords.capacity / batch.texCoords.stride
+		//c := batch.colorMasks.capacity / batch.colorMasks.stride
+		//
+		//if a != b && b != c && a != c {
+		//	_ = a
+		//}
+
+		// Rebind all the sprite data to the VAO.
+		batch.buildVAO()
+
+		prevCapacity := batch.projectionsIdx.getCapacity()
+		batch.projectionsIdx.insertElement(ind, sprite.canvas.pos)
+
+		if batch.projectionsIdx.getCapacity() > prevCapacity {
+			batch.projectionsIdxTextureBuffer.
+				rebind(batch.projectionsIdx.glHandler)
+		}
+
+		prevCapacity = batch.viewsIdx.getCapacity()
+		batch.viewsIdx.insertElement(ind, sprite.canvas.pos)
+
+		if batch.viewsIdx.getCapacity() > prevCapacity {
+			batch.viewsIdxTextureBuffer.
+				rebind(batch.viewsIdx.glHandler)
+		}
+
+		prevCapacity = batch.models.getCapacity()
+		identMatrix := mgl32.Ident4()
+		batch.models.insertElements(ind*len(identMatrix), len(identMatrix), identMatrix[:])
+
+		if batch.models.getCapacity() > prevCapacity {
+			batch.modelsTextureBuffer.
+				rebind(batch.models.glHandler)
+		}
+
+		prevCapacity = batch.shouldDraw.getCapacity()
+		batch.shouldDraw.insertElement(ind, 0)
+
+		if batch.shouldDraw.getCapacity() > prevCapacity {
+			batch.shouldDrawTextureBuffer.
+				rebind(batch.shouldDraw.glHandler)
+		}
+
+		return nil
+	}
 
 	if sprite.canvas != nil {
 		err := sprite.canvas.setSpriteZ(sprite, oldZ, sprite.drawZ)
