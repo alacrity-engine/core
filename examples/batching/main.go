@@ -32,9 +32,9 @@ func init() {
 
 func main() {
 	// Initialize the engine.
-	err := system.InitializeWindow("Demo", width, height, false, false)
+	err := system.InitializeWindow("Demo", width, height, true, false)
 	handleError(err)
-	err = render.Initialize(width, height, -5000, 5000)
+	err = render.Initialize(width, height, -30, 30)
 	handleError(err)
 
 	// Load the ball picture.
@@ -104,20 +104,10 @@ func main() {
 
 	// Instantiate all the objects and
 	// attach them to the batch.
-	zCounter := 0
-	shouldBreak := false
+	/*zCounter := 0
 
 	for i := 0; i < 32; i++ {
-		if shouldBreak {
-			break
-		}
-
 		for j := 0; j < 32; j++ {
-			if zCounter == 3 {
-				shouldBreak = true
-				break
-			}
-
 			x := float64(i) / 32.0 * width * 2
 			y := float64(j) / 32.0 * height * 2
 
@@ -129,7 +119,7 @@ func main() {
 				render.DrawModeStatic, ballTexture, shaderProgram,
 				geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
 			handleError(err)
-			ballSprite.SetZ(float32(0))
+			ballSprite.SetZ(float32(zCounter))
 			err = ballCanvas.AddSprite(ballSprite)
 			handleError(err)
 			ballTransform := geometry.NewTransform(nil)
@@ -146,9 +136,9 @@ func main() {
 
 			zCounter++
 		}
-	}
+	}*/
 
-	/*ballSprite1, err := render.NewSpriteFromTextureAndProgram(
+	ballSprite1, err := render.NewSpriteFromTextureAndProgram(
 		render.DrawModeStatic, render.DrawModeStatic,
 		render.DrawModeStatic, ballTexture, shaderProgram,
 		geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
@@ -171,7 +161,7 @@ func main() {
 	ballTransform1.MoveTo(geometry.V(float64(imgRGBA.Bounds().Dx()/2), float64(imgRGBA.Bounds().Dy()/2)))
 
 	// Lower left.
-	ballSprite2.SetZ(-1)
+	ballSprite2.SetZ(0)
 	ballTransform2.MoveTo(geometry.V(-float64(imgRGBA.Bounds().Dx()/2), -float64(imgRGBA.Bounds().Dy()/2)))
 
 	err = batch.AttachSprite(ballSprite1)
@@ -185,7 +175,7 @@ func main() {
 	}, &Ball{
 		Sprite:    ballSprite2,
 		Transform: ballTransform2,
-	})*/
+	})
 
 	system.InitMetrics()
 

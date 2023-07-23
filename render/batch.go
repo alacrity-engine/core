@@ -415,7 +415,7 @@ func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch,
 	// Instantiate GPU lists.
 	batch.projectionsIdx = newGPUList(DrawModeDynamic,
 		make([]byte, params.initialObjectCapacity), 1)
-	batch.models = newGPUList(DrawModeDynamic,
+	batch.models = newGPUList(DrawModeStream,
 		make([]float32, params.initialObjectCapacity), 1)
 	batch.viewsIdx = newGPUList(DrawModeDynamic,
 		make([]byte, params.initialObjectCapacity), 1)
@@ -425,7 +425,7 @@ func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch,
 		make([]float32, params.initialObjectCapacity), 2*4)
 	batch.colorMasks = newGPUList(DrawModeDynamic,
 		make([]float32, params.initialObjectCapacity), 4*4)
-	batch.shouldDraw = newGPUList(DrawModeDynamic,
+	batch.shouldDraw = newGPUList(DrawModeStream,
 		make([]byte, params.initialObjectCapacity), 1)
 
 	// Instantiate texture buffers.

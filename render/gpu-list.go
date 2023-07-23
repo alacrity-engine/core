@@ -13,11 +13,12 @@ type numeric interface {
 }
 
 type gpuList[T numeric] struct {
-	glHandler uint32
-	stride    int
-	length    int
-	capacity  int
-	drawMode  DrawMode
+	glHandler           uint32
+	copyBufferGLHandler uint32
+	stride              int
+	length              int
+	capacity            int
+	drawMode            DrawMode
 }
 
 func (list *gpuList[T]) getLength() int {
@@ -82,6 +83,18 @@ func (list *gpuList[T]) grow(targetCap int) {
 	gl.DeleteBuffers(1, &oldBuffer)
 }
 
+func (list *gpuList[T]) growCopyBuffer(targetCap int) {
+	var copyBufferGLHandler uint32
+	gl.GenBuffers(1, &copyBufferGLHandler)
+	gl.BindBuffer(gl.ARRAY_BUFFER, copyBufferGLHandler)
+	gl.BufferData(gl.ARRAY_BUFFER, targetCap, gl.Ptr(nil), uint32(DrawModeDynamic))
+	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+
+	oldCopyBuffer := list.copyBufferGLHandler
+	list.copyBufferGLHandler = copyBufferGLHandler
+	gl.DeleteBuffers(1, &oldCopyBuffer)
+}
+
 func (list *gpuList[T]) addElement(elem T) {
 	if list.glHandler == 0 {
 		list.setData([]T{elem})
@@ -96,6 +109,7 @@ func (list *gpuList[T]) addElement(elem T) {
 
 	defer func() {
 		list.length += dataSize
+		list.growCopyBuffer(list.length)
 	}()
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
@@ -119,6 +133,7 @@ func (list *gpuList[T]) addElements(elems []T) {
 
 	defer func() {
 		list.length += len(elems) * dataSize
+		list.growCopyBuffer(list.length)
 	}()
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
@@ -163,6 +178,21 @@ func (list *gpuList[T]) replaceElements(offset, count int, data []T) error {
 	return nil
 }
 
+func (list *gpuList[T]) shift(readOffset, writeOffset, length int) {
+	gl.BindBuffer(gl.COPY_READ_BUFFER, list.glHandler)
+	gl.BindBuffer(gl.COPY_WRITE_BUFFER, list.copyBufferGLHandler)
+	gl.CopyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER,
+		readOffset, 0, length)
+
+	gl.BindBuffer(gl.COPY_READ_BUFFER, list.copyBufferGLHandler)
+	gl.BindBuffer(gl.COPY_WRITE_BUFFER, list.glHandler)
+	gl.CopyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER,
+		0, writeOffset, length)
+
+	gl.BindBuffer(gl.COPY_READ_BUFFER, 0)
+	gl.BindBuffer(gl.COPY_WRITE_BUFFER, 0)
+}
+
 func (list *gpuList[T]) insertElement(idx int, elem T) error {
 	if list.glHandler == 0 {
 		list.setData([]T{elem})
@@ -184,6 +214,7 @@ func (list *gpuList[T]) insertElement(idx int, elem T) error {
 
 	defer func() {
 		list.length += dataSize
+		list.growCopyBuffer(list.length)
 	}()
 
 	if idx*dataSize == list.length {
@@ -193,12 +224,8 @@ func (list *gpuList[T]) insertElement(idx int, elem T) error {
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	} else {
 		// Move the contents.
-		gl.BindBuffer(gl.COPY_READ_BUFFER, list.glHandler)
-		gl.BindBuffer(gl.COPY_WRITE_BUFFER, list.glHandler)
-		gl.CopyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER,
-			idx*dataSize, idx*dataSize+dataSize, list.length-idx*dataSize)
-		gl.BindBuffer(gl.COPY_READ_BUFFER, 0)
-		gl.BindBuffer(gl.COPY_WRITE_BUFFER, 0)
+		list.shift(idx*dataSize, idx*dataSize+dataSize,
+			list.length-idx*dataSize)
 
 		// Insert the element.
 		gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
@@ -235,6 +262,7 @@ func (list *gpuList[T]) insertElements(offset, count int, elems []T) error {
 
 	defer func() {
 		list.length += count * dataSize
+		list.growCopyBuffer(list.length)
 	}()
 
 	if offset*dataSize == list.length {
@@ -243,36 +271,9 @@ func (list *gpuList[T]) insertElements(offset, count int, elems []T) error {
 			len(elems)*dataSize, gl.Ptr(elems))
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	} else {
-		// Read.
-		dbg := make([]T, list.length/dataSize+count)
-		var size int32
-		gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
-		gl.GetBufferSubData(gl.ARRAY_BUFFER, 0, list.length+count*dataSize, gl.Ptr(dbg))
-		gl.GetBufferParameteriv(gl.ARRAY_BUFFER, gl.BUFFER_SIZE, &size)
-
-		_ = dbg
-
-		errNum := gl.GetError()
-		_ = errNum
-
 		// Move the contents.
-		gl.BindBuffer(gl.COPY_READ_BUFFER, list.glHandler)
-		gl.BindBuffer(gl.COPY_WRITE_BUFFER, list.glHandler)
-		gl.CopyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER,
-			offset*dataSize, offset*dataSize+count*dataSize, list.length-offset*dataSize)
-		gl.BindBuffer(gl.COPY_READ_BUFFER, 0)
-		gl.BindBuffer(gl.COPY_WRITE_BUFFER, 0)
-
-		errNum = gl.GetError()
-		_ = errNum
-
-		// Read.
-		dbg = make([]T, list.length/dataSize+count)
-		gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
-		gl.GetBufferSubData(gl.ARRAY_BUFFER, 0, list.length+count*dataSize, gl.Ptr(dbg))
-		gl.GetBufferParameteriv(gl.ARRAY_BUFFER, gl.BUFFER_SIZE, &size)
-
-		_ = dbg
+		list.shift(offset*dataSize, offset*dataSize+count*dataSize,
+			list.length-offset*dataSize)
 
 		// Insert the data.
 		gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
@@ -294,12 +295,7 @@ func (list *gpuList[T]) removeElement(idx int) error {
 			idx, list.length)
 	}
 
-	gl.BindBuffer(gl.COPY_READ_BUFFER, list.glHandler)
-	gl.BindBuffer(gl.COPY_WRITE_BUFFER, list.glHandler)
-	gl.CopyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER,
-		(idx+1)*dataSize, idx*dataSize, dataSize)
-	gl.BindBuffer(gl.COPY_READ_BUFFER, 0)
-	gl.BindBuffer(gl.COPY_WRITE_BUFFER, 0)
+	list.shift((idx+1)*dataSize, idx*dataSize, dataSize)
 
 	originalLength := list.length
 	list.length -= dataSize
@@ -329,12 +325,7 @@ func (list *gpuList[T]) removeElements(offset, count int) error {
 			offset, count, list.length)
 	}
 
-	gl.BindBuffer(gl.COPY_READ_BUFFER, list.glHandler)
-	gl.BindBuffer(gl.COPY_WRITE_BUFFER, list.glHandler)
-	gl.CopyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER,
-		(offset+1)*dataSize, offset*dataSize, count*dataSize)
-	gl.BindBuffer(gl.COPY_READ_BUFFER, 0)
-	gl.BindBuffer(gl.COPY_WRITE_BUFFER, 0)
+	list.shift((offset+1)*dataSize, offset*dataSize, count*dataSize)
 
 	originalLength := list.length
 	list.length -= count * dataSize
@@ -378,9 +369,18 @@ func (list *gpuList[T]) setData(data []T) {
 			uint32(list.drawMode))
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
+		var copyBufferGLHandler uint32
+		gl.GenBuffers(1, &copyBufferGLHandler)
+		gl.BindBuffer(gl.ARRAY_BUFFER, copyBufferGLHandler)
+		gl.BufferData(gl.ARRAY_BUFFER, len(data)*
+			dataSize, gl.Ptr(data),
+			uint32(DrawModeDynamic))
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+
 		list.glHandler = glHandler
 		list.length = dataLength
 		list.capacity = dataLength
+		list.copyBufferGLHandler = copyBufferGLHandler
 
 		return
 	}
