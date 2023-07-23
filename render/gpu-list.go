@@ -210,6 +210,10 @@ func (list *gpuList[T]) insertElement(idx int, elem T) error {
 	return nil
 }
 
+// TODO: create a copy buffer for
+// each GPU list because copy ranges
+// cannot overlap while shifting.
+
 func (list *gpuList[T]) insertElements(offset, count int, elems []T) error {
 	if list.glHandler == 0 {
 		list.setData(elems)
@@ -239,6 +243,18 @@ func (list *gpuList[T]) insertElements(offset, count int, elems []T) error {
 			len(elems)*dataSize, gl.Ptr(elems))
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	} else {
+		// Read.
+		dbg := make([]T, list.length/dataSize+count)
+		var size int32
+		gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
+		gl.GetBufferSubData(gl.ARRAY_BUFFER, 0, list.length+count*dataSize, gl.Ptr(dbg))
+		gl.GetBufferParameteriv(gl.ARRAY_BUFFER, gl.BUFFER_SIZE, &size)
+
+		_ = dbg
+
+		errNum := gl.GetError()
+		_ = errNum
+
 		// Move the contents.
 		gl.BindBuffer(gl.COPY_READ_BUFFER, list.glHandler)
 		gl.BindBuffer(gl.COPY_WRITE_BUFFER, list.glHandler)
@@ -246,6 +262,17 @@ func (list *gpuList[T]) insertElements(offset, count int, elems []T) error {
 			offset*dataSize, offset*dataSize+count*dataSize, list.length-offset*dataSize)
 		gl.BindBuffer(gl.COPY_READ_BUFFER, 0)
 		gl.BindBuffer(gl.COPY_WRITE_BUFFER, 0)
+
+		errNum = gl.GetError()
+		_ = errNum
+
+		// Read.
+		dbg = make([]T, list.length/dataSize+count)
+		gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)
+		gl.GetBufferSubData(gl.ARRAY_BUFFER, 0, list.length+count*dataSize, gl.Ptr(dbg))
+		gl.GetBufferParameteriv(gl.ARRAY_BUFFER, gl.BUFFER_SIZE, &size)
+
+		_ = dbg
 
 		// Insert the data.
 		gl.BindBuffer(gl.ARRAY_BUFFER, list.glHandler)

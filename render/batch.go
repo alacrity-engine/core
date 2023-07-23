@@ -191,7 +191,7 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	// Reindex all the sprites
 	// remaining on the batch.
 	for i := ind + 1; i < len(batch.sprites); i++ {
-		batch.sprites[i].batchIndex--
+		batch.sprites[i].batchIndex++
 	}
 
 	vertices := make([]float32, 18)
@@ -312,7 +312,7 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 
 	// Reindex all the sprites
 	// remaining on the batch.
-	for i := ind + 1; i < length; i++ {
+	for i := ind; i < length; i++ {
 		batch.sprites[i].batchIndex--
 	}
 
