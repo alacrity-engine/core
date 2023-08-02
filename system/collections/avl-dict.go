@@ -6,28 +6,28 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-type AVLTree[TKey constraints.Ordered, TValue any] struct {
+type AVLDictionary[TKey constraints.Ordered, TValue any] struct {
 	tree *avltree.AVLTree[TKey, TValue]
 }
 
-func (avl *AVLTree[TKey, TValue]) Erase() error {
+func (avl *AVLDictionary[TKey, TValue]) Erase() error {
 	return avl.tree.Erase()
 }
 
-func (avl *AVLTree[TKey, TValue]) SetPool(pool *mempool.Pool[*avltree.AVLNode[TKey, TValue]]) {
+func (avl *AVLDictionary[TKey, TValue]) SetPool(pool *mempool.Pool[*avltree.AVLNode[TKey, TValue]]) {
 	avl.tree.SetPool(pool)
 }
 
-func (avl *AVLTree[TKey, TValue]) Add(key TKey, value TValue) error {
+func (avl *AVLDictionary[TKey, TValue]) Add(key TKey, value TValue) error {
 	avl.tree.Add(key, value)
 	return nil
 }
 
-func (avl *AVLTree[TKey, TValue]) AddOrUpdate(key TKey, value TValue, upd func(oldValue TValue) (TValue, error)) error {
+func (avl *AVLDictionary[TKey, TValue]) AddOrUpdate(key TKey, value TValue, upd func(oldValue TValue) (TValue, error)) error {
 	return avl.tree.AddOrUpdate(key, value, upd)
 }
 
-func (avl *AVLTree[TKey, TValue]) Update(key TKey, upd func(value TValue, found bool) (TValue, error)) error {
+func (avl *AVLDictionary[TKey, TValue]) Update(key TKey, upd func(value TValue, found bool) (TValue, error)) error {
 	node := avl.tree.Search(key)
 
 	var value TValue
@@ -49,12 +49,12 @@ func (avl *AVLTree[TKey, TValue]) Update(key TKey, upd func(value TValue, found 
 	return nil
 }
 
-func (avl *AVLTree[TKey, TValue]) Remove(key TKey) error {
+func (avl *AVLDictionary[TKey, TValue]) Remove(key TKey) error {
 	avl.tree.Remove(key)
 	return nil
 }
 
-func (avl *AVLTree[TKey, TValue]) Search(key TKey) (TValue, bool, error) {
+func (avl *AVLDictionary[TKey, TValue]) Search(key TKey) (TValue, bool, error) {
 	var zeroVal TValue
 	node := avl.tree.Search(key)
 
@@ -65,15 +65,15 @@ func (avl *AVLTree[TKey, TValue]) Search(key TKey) (TValue, bool, error) {
 	return node.Value, true, nil
 }
 
-func (avl *AVLTree[TKey, TValue]) VisitInOrder(visit func(key TKey, value TValue)) {
+func (avl *AVLDictionary[TKey, TValue]) VisitInOrder(visit func(key TKey, value TValue)) {
 	avl.tree.VisitInOrder(func(node *avltree.AVLNode[TKey, TValue]) {
 		visit(node.Key(), node.Value)
 	})
 }
 
-func NewAVLTree[TKey constraints.Ordered, TValue any](options ...AVLTreeOption[TKey, TValue]) (*AVLTree[TKey, TValue], error) {
-	avl := &AVLTree[TKey, TValue]{}
-	params := avlTreeParams[TKey, TValue]{}
+func NewAVLDictionary[TKey constraints.Ordered, TValue any](options ...AVLDictionaryOption[TKey, TValue]) (*AVLDictionary[TKey, TValue], error) {
+	avl := &AVLDictionary[TKey, TValue]{}
+	params := avlDictionaryParams[TKey, TValue]{}
 
 	for i := 0; i < len(options); i++ {
 		option := options[i]

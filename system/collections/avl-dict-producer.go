@@ -9,7 +9,7 @@ import (
 )
 
 type AVLTreePooledProducer[TKey constraints.Ordered, TValue any] struct {
-	pool     *mempool.Pool[*AVLTree[TKey, TValue]]
+	pool     *mempool.Pool[*AVLDictionary[TKey, TValue]]
 	nodePool *mempool.Pool[*avltree.AVLNode[TKey, TValue]]
 }
 
@@ -21,7 +21,7 @@ func (prod *AVLTreePooledProducer[TKey, TValue]) Produce() (SortedDictionary[TKe
 }
 
 func (prod *AVLTreePooledProducer[TKey, TValue]) Dispose(dict SortedDictionary[TKey, TValue]) error {
-	tree, ok := dict.(*AVLTree[TKey, TValue])
+	tree, ok := dict.(*AVLDictionary[TKey, TValue])
 
 	if !ok {
 		return errors.New("incorrect type")
@@ -30,8 +30,8 @@ func (prod *AVLTreePooledProducer[TKey, TValue]) Dispose(dict SortedDictionary[T
 	return prod.pool.Put(tree)
 }
 
-func NewAVLProducer[TKey constraints.Ordered, TValue any](
-	pool *mempool.Pool[*AVLTree[TKey, TValue]],
+func NewAVLSortedDictionaryProducer[TKey constraints.Ordered, TValue any](
+	pool *mempool.Pool[*AVLDictionary[TKey, TValue]],
 	nodePool *mempool.Pool[*avltree.AVLNode[TKey, TValue]],
 ) *AVLTreePooledProducer[TKey, TValue] {
 	return &AVLTreePooledProducer[TKey, TValue]{

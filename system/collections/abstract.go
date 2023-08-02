@@ -2,7 +2,13 @@ package collections
 
 import "golang.org/x/exp/constraints"
 
-// TODO: add enumerators; AddOrUpdate method.
+// TODO: add enumerators.
+
+type Comparable interface {
+	Less(Comparable) bool
+	Greater(Comparable) bool
+	Equal(Comparable) bool
+}
 
 type SortedDictionary[TKey constraints.Ordered, TValue any] interface {
 	// Add doesn't return an error if the key already exists;
@@ -19,4 +25,13 @@ type SortedDictionary[TKey constraints.Ordered, TValue any] interface {
 type SortedDictionaryProducer[TKey constraints.Ordered, TValue any] interface {
 	Produce() (SortedDictionary[TKey, TValue], error)
 	Dispose(dict SortedDictionary[TKey, TValue]) error
+}
+
+type UnrestrictedSortedSet[TKey Comparable] interface {
+	// Add doesn't return an error if the key already exists.
+	Add(key TKey) error
+	// Remove doesn't return an error if the key doesn't exist.
+	Remove(key TKey) error
+	Search(key TKey) (bool, error)
+	VisitInOrder(func(key TKey))
 }

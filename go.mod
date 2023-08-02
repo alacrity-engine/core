@@ -10,7 +10,7 @@ require (
 	github.com/go-gl/mathgl v1.0.0
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
 	github.com/zergon321/cirno v0.0.0-20210828194350-f13a757fd188
-	github.com/zergon321/go-avltree v0.0.0-20230730150018-58c17d418590
+	github.com/zergon321/go-avltree v0.0.0-20230730214820-a6f087864d44
 	github.com/zergon321/mempool v0.0.0-20230726205854-b5bbc976b81f
 	go.etcd.io/bbolt v1.3.7
 	golang.org/x/exp v0.0.0-20230728194245-b0cb94b80691

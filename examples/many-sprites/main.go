@@ -92,24 +92,24 @@ func main() {
 			return new(avltree.AVLNode[float32, render.ZBufferData])
 		})
 	handleError(err)
-	zBufferDataPool, err := mempool.NewPool[*collections.AVLTree[int64, *render.Sprite]](
-		func() *collections.AVLTree[int64, *render.Sprite] {
-			tree, _ := collections.NewAVLTree[int64, *render.Sprite]()
+	zBufferDataPool, err := mempool.NewPool[*collections.AVLDictionary[int64, *render.Sprite]](
+		func() *collections.AVLDictionary[int64, *render.Sprite] {
+			tree, _ := collections.NewAVLDictionary[int64, *render.Sprite]()
 			return tree
 		},
 	)
 	handleError(err)
-	zBufferPool, err := mempool.NewPool[*collections.AVLTree[float32, render.ZBufferData]](
-		func() *collections.AVLTree[float32, render.ZBufferData] {
-			tree, _ := collections.NewAVLTree[float32, render.ZBufferData]()
+	zBufferPool, err := mempool.NewPool[*collections.AVLDictionary[float32, render.ZBufferData]](
+		func() *collections.AVLDictionary[float32, render.ZBufferData] {
+			tree, _ := collections.NewAVLDictionary[float32, render.ZBufferData]()
 			return tree
 		},
 	)
 	handleError(err)
 
-	zBufferDataProducer := collections.NewAVLProducer[int64, *render.Sprite](
+	zBufferDataProducer := collections.NewAVLSortedDictionaryProducer[int64, *render.Sprite](
 		zBufferDataPool, zBufferDataNodePool)
-	zBufferProducer := collections.NewAVLProducer[float32, render.ZBufferData](
+	zBufferProducer := collections.NewAVLSortedDictionaryProducer[float32, render.ZBufferData](
 		zBufferPool, zBufferNodePool)
 
 	ballCanvas, err := render.NewCanvas(0, render.Ortho2DStandard(),
