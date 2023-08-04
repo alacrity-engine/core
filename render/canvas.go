@@ -8,9 +8,14 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-// TODO: implement Z-sorting buffer
-// using a balanced binary tree
-// (AVL or RB) operating on an array.
+// TODO: when we add a new batch to the canvas,
+// it should have its own Z range. All the batch
+// sprites should fall within its range with
+// their Z coordinates. When we add a new batch,
+// we should check that its range doesn't intersect
+// with other sprites and batches. When we add a
+// new sprite, we should check if it doesn't intersect
+// with existing batches.
 
 type Canvas struct {
 	index                   int
@@ -21,6 +26,7 @@ type Canvas struct {
 	camera                  *Camera
 	projection              mgl32.Mat4
 	zBufferDataDictProducer collections.SortedDictionaryProducer[int64, *Sprite]
+	batchRanges             collections.UnrestrictedSortedSet[Range]
 }
 
 type ZBufferData struct {
