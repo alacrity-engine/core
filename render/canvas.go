@@ -17,6 +17,9 @@ import (
 // new sprite, we should check if it doesn't intersect
 // with existing batches.
 
+// TODO: the key of the zBuffer should be geometric,
+// i.e. Point for sprites and Range for batches.
+
 type Canvas struct {
 	index                   int
 	pos                     byte
@@ -26,7 +29,6 @@ type Canvas struct {
 	camera                  *Camera
 	projection              mgl32.Mat4
 	zBufferDataDictProducer collections.SortedDictionaryProducer[int64, *Sprite]
-	batchRanges             collections.UnrestrictedSortedSet[Range]
 }
 
 type ZBufferData struct {

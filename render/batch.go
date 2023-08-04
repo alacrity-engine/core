@@ -16,15 +16,15 @@ var (
 	batchFragmentShaderSource string
 )
 
+// TODO: a batch should have its own canvas
+// and accept only the sprites that belong to it
+// because canvases are drawn sequentially and
+// they may have other sprites besides batched ones.
+
 // TODO: create a cache for frequently used runtime
 // objects (for example, compiled standard shaders and programs)
 // so there is no need to create the same object many times.
 // Or maybe just create a global variable for each one of them.
-
-// TODO: collect views and projections
-// assigned to cameras and canvases of
-// the batched sprites. Pass a view
-// and a projection index for each sprite.
 
 // TODO: add a shader program field to batch.
 // The projections and views should be
