@@ -5,12 +5,10 @@ layout (location = 1) in vec2 aTexCoord;
 layout (location = 2) in vec4 aColor;
 
 layout(binding = 1) uniform samplerBuffer models;
-layout(binding = 3) uniform usamplerBuffer projectionsIdx;
-layout(binding = 4) uniform usamplerBuffer viewsIdx;
 
 uniform int numSprites;
-uniform mat4 projections[{{ .maxNumCanvases }}];
-uniform mat4 views[{{ .maxNumCanvases }}];
+uniform mat4 projection;
+uniform mat4 view;
 
 out int vertexID;
 out vec2 texCoord;
@@ -44,8 +42,6 @@ mat4 assembleModel(int spriteIdx, samplerBuffer models) {
 
 void main() {
     int spriteIdx = gl_VertexID / 6;
-    mat4 projection = projections[texelFetch(projectionsIdx, spriteIdx).r];
-    mat4 view = views[texelFetch(viewsIdx, spriteIdx).r];
     mat4 model = assembleModel(spriteIdx, models);
 
     gl_Position = projection * view * model * vec4(aPos.xyz, 1.0);

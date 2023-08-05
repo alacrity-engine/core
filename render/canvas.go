@@ -238,13 +238,6 @@ func (canvas *Canvas) removeBatchedSprite(sprite *Sprite) error {
 	return nil
 }
 
-func (canvas *Canvas) updateBatchViews() {
-	for i := 0; i < len(canvas.layout.batches); i++ {
-		batch := canvas.layout.batches[i]
-		batch.setCanvasView(int(canvas.pos), canvas.camera.View())
-	}
-}
-
 func NewCanvas(
 	drawZ int, projection mgl32.Mat4,
 	zBufferDictProducer collections.SortedDictionaryProducer[float32, ZBufferData],

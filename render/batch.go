@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 	"sort"
-	"text/template"
 
 	"github.com/alacrity-engine/core/geometry"
 	"github.com/go-gl/gl/v4.6-core/gl"
@@ -14,6 +13,8 @@ import (
 var (
 	//go:embed std-batch-frag.glsl
 	batchFragmentShaderSource string
+	//go:embed std-batch-vert.glsl
+	batchVertexShaderSource string
 )
 
 // TODO: a batch should have its own canvas
@@ -49,24 +50,16 @@ type Batch struct {
 	projectionsIdxTextureBuffer *TextureBuffer
 	viewsIdxTextureBuffer       *TextureBuffer
 
-	sprites              []*Sprite
-	layout               *Layout
-	texture              *Texture
-	shaderProgram        *ShaderProgram
-	fragmentShader       *Shader
-	vertexShaderTemplate *template.Template
-	maxNumCanvases       int
+	sprites       []*Sprite
+	canvas        *Canvas
+	texture       *Texture
+	shaderProgram *ShaderProgram
 
-	viewsBuffer       []mgl32.Mat4
-	projectionsBuffer []mgl32.Mat4
-
-	projectionsIdx *gpuList[byte]
-	models         *gpuList[float32]
-	viewsIdx       *gpuList[byte]
-	vertices       *gpuList[float32]
-	texCoords      *gpuList[float32]
-	colorMasks     *gpuList[float32]
-	shouldDraw     *gpuList[byte]
+	models     *gpuList[float32]
+	vertices   *gpuList[float32]
+	texCoords  *gpuList[float32]
+	colorMasks *gpuList[float32]
+	shouldDraw *gpuList[byte]
 }
 
 func (batch *Batch) buildVAO() {
@@ -87,42 +80,6 @@ func (batch *Batch) buildVAO() {
 	colorAttrib := uint32(gl.GetAttribLocation(batch.shaderProgram.glHandler, gl.Str("aColor\x00")))
 	gl.EnableVertexAttribArray(colorAttrib)
 	gl.VertexAttribPointer(colorAttrib, 4, gl.FLOAT, false, 4*4, gl.PtrOffset(0))
-}
-
-func (batch *Batch) recompileShaderProgram() error {
-	vertexShader, err := NewBatchShaderWithTemplate(ShaderTypeVertex,
-		batch.vertexShaderTemplate, batch.maxNumCanvases)
-
-	if err != nil {
-		return err
-	}
-
-	shaderProgram, err := NewShaderProgramFromShaders(
-		vertexShader, batch.fragmentShader)
-
-	if err != nil {
-		return err
-	}
-
-	batch.shaderProgram = shaderProgram
-
-	return nil
-}
-
-func (batch *Batch) setCanvasProjection(idx int, projection mgl32.Mat4) {
-	batch.shaderProgram.Use()
-	defer gl.UseProgram(0)
-
-	batch.projectionsBuffer[idx] = projection
-	batch.shaderProgram.SetMatrix4Array("projections", batch.viewsBuffer)
-}
-
-func (batch *Batch) setCanvasView(idx int, view mgl32.Mat4) {
-	batch.shaderProgram.Use()
-	defer gl.UseProgram(0)
-
-	batch.viewsBuffer[idx] = view
-	batch.shaderProgram.SetMatrix4Array("views", batch.viewsBuffer)
 }
 
 func (batch *Batch) Draw() {
@@ -147,15 +104,8 @@ func (batch *Batch) Draw() {
 		gl.BindTexture(gl.TEXTURE_BUFFER, 0)
 	}()
 
-	// Send all the canvas views to the GPU.
-	for i := 0; i < len(batch.layout.canvases); i++ {
-		canvas := batch.layout.canvases[i]
-		batch.viewsBuffer[canvas.pos] = canvas.camera.View()
-	}
-
-	batch.shaderProgram.SetMatrix4Array("views", batch.viewsBuffer)
-	batch.shaderProgram.SetMatrix4Array("projections", batch.projectionsBuffer)
-	batch.shaderProgram.SetInt("numSprites", len(batch.sprites))
+	batch.shaderProgram.SetMatrix4("view", batch.canvas.camera.View())
+	batch.shaderProgram.SetMatrix4("projection", batch.canvas.projection)
 
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(batch.sprites)*6))
 
@@ -237,31 +187,7 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	// Rebind all the sprite data to the VAO.
 	batch.buildVAO()
 
-	prevCapacity := batch.projectionsIdx.getCapacity()
-	err = batch.projectionsIdx.insertElement(ind, sprite.canvas.pos)
-
-	if err != nil {
-		return err
-	}
-
-	if batch.projectionsIdx.getCapacity() > prevCapacity {
-		batch.projectionsIdxTextureBuffer.
-			rebind(batch.projectionsIdx.glHandler)
-	}
-
-	prevCapacity = batch.viewsIdx.getCapacity()
-	err = batch.viewsIdx.insertElement(ind, sprite.canvas.pos)
-
-	if err != nil {
-		return err
-	}
-
-	if batch.viewsIdx.getCapacity() > prevCapacity {
-		batch.viewsIdxTextureBuffer.
-			rebind(batch.viewsIdx.glHandler)
-	}
-
-	prevCapacity = batch.models.getCapacity()
+	prevCapacity := batch.models.getCapacity()
 	identMatrix := mgl32.Ident4()
 	err = batch.models.insertElements(
 		ind*len(identMatrix), len(identMatrix), identMatrix[:])
@@ -366,18 +292,6 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 		return err
 	}
 
-	err = batch.projectionsIdx.removeElement(batchIndex)
-
-	if err != nil {
-		return err
-	}
-
-	err = batch.viewsIdx.removeElement(batchIndex)
-
-	if err != nil {
-		return err
-	}
-
 	err = batch.models.removeElements(batchIndex, 16)
 
 	if err != nil {
@@ -399,7 +313,7 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 	return nil
 }
 
-func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch, error) {
+func NewBatch(texture *Texture, canvas *Canvas, options ...BatchOption) (*Batch, error) {
 	params := batchParameters{initialObjectCapacity: 0}
 	var batch Batch
 
@@ -413,12 +327,8 @@ func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch,
 	}
 
 	// Instantiate GPU lists.
-	batch.projectionsIdx = newGPUList(DrawModeDynamic,
-		make([]byte, params.initialObjectCapacity), 1)
 	batch.models = newGPUList(DrawModeStream,
 		make([]float32, params.initialObjectCapacity), 1)
-	batch.viewsIdx = newGPUList(DrawModeDynamic,
-		make([]byte, params.initialObjectCapacity), 1)
 	batch.vertices = newGPUList(DrawModeDynamic,
 		make([]float32, params.initialObjectCapacity), 3*4)
 	batch.texCoords = newGPUList(DrawModeDynamic,
@@ -438,69 +348,31 @@ func NewBatch(texture *Texture, layout *Layout, options ...BatchOption) (*Batch,
 	batch.viewsIdxTextureBuffer = NewTextureBuffer(batch.models.glHandler,
 		TextureSlot(BatchTextureSlotViewsIdxBuffer), FormatByte)
 
-	batch.maxNumCanvases = len(layout.canvases) + len(layout.canvases)/4
 	batch.sprites = make([]*Sprite, 0, params.initialObjectCapacity)
-	batch.projectionsBuffer = make([]mgl32.Mat4, batch.maxNumCanvases)
-	batch.viewsBuffer = make([]mgl32.Mat4, batch.maxNumCanvases)
 	batch.texture = texture
-	batch.layout = layout
-
-	if batch.maxNumCanvases >= 256 {
-		batch.maxNumCanvases = 256
-	}
+	batch.canvas = canvas
 
 	// Compile batch shaders.
-	if batch.shaderProgram == nil {
-		var err error
+	vertexShader, _, err := NewStandardBatchShader(
+		ShaderTypeVertex)
 
-		if batch.fragmentShader == nil {
-			batch.fragmentShader, _, err = NewStandardBatchShader(
-				ShaderTypeFragment, batch.maxNumCanvases)
-
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		var vertexShader *Shader
-
-		if batch.vertexShaderTemplate != nil {
-			vertexShader, err = NewBatchShaderWithTemplate(ShaderTypeVertex,
-				batchVertexShaderTemplate, batch.maxNumCanvases)
-
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			vertexShader, batch.vertexShaderTemplate, err = NewStandardBatchShader(
-				ShaderTypeVertex, batch.maxNumCanvases)
-
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		batch.shaderProgram, err = NewShaderProgramFromShaders(
-			vertexShader, batch.fragmentShader)
-
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	// Collect views and projections.
-	for i := 0; i < len(layout.canvases); i++ {
-		canvas := layout.canvases[i]
-		projection := canvas.projection
-		view := canvas.camera.View()
+	fragmentShader, _, err := NewStandardBatchShader(
+		ShaderTypeFragment)
 
-		batch.viewsBuffer[canvas.pos] = view
-		batch.projectionsBuffer[canvas.pos] = projection
+	if err != nil {
+		return nil, err
 	}
 
-	// Send everything to the GPU.
-	batch.shaderProgram.SetMatrix4Array("projections", batch.projectionsBuffer)
-	batch.shaderProgram.SetMatrix4Array("views", batch.viewsBuffer)
+	batch.shaderProgram, err = NewShaderProgramFromShaders(
+		vertexShader, fragmentShader)
+
+	if err != nil {
+		return nil, err
+	}
 
 	// Build a VAO.
 	var handler uint32

@@ -69,38 +69,15 @@ func NewStandardSpriteShader(typ ShaderType) (*Shader, error) {
 	}
 }
 
-func NewStandardBatchShader(typ ShaderType, maxNumCanvases int) (*Shader, *template.Template, error) {
-	if maxNumCanvases <= 0 {
-		return nil, nil, fmt.Errorf(
-			"wrong maxNumCanvases value: '%d'", maxNumCanvases)
-	}
-
+func NewStandardBatchShader(typ ShaderType) (*Shader, *template.Template, error) {
 	switch typ {
 	case ShaderTypeFragment:
 		shader, err := NewShaderFromSource(batchFragmentShaderSource, typ)
 		return shader, nil, err
 
 	case ShaderTypeVertex:
-		var strBuilder strings.Builder
-
-		err := batchVertexShaderTemplate.
-			Execute(&strBuilder, map[string]interface{}{
-				"maxNumCanvases": maxNumCanvases,
-			})
-
-		if err != nil {
-			return nil, nil, err
-		}
-
-		shaderSource := strBuilder.String()
-		vertexShader, err := NewShaderFromSource(
-			shaderSource, ShaderTypeVertex)
-
-		if err != nil {
-			return nil, nil, err
-		}
-
-		return vertexShader, batchVertexShaderTemplate, nil
+		shader, err := NewShaderFromSource(batchVertexShaderSource, typ)
+		return shader, nil, err
 
 	default:
 		return nil, nil, fmt.Errorf("incorrect shader type: '%v'", typ)

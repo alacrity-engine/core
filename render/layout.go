@@ -11,7 +11,6 @@ type Layout struct {
 	zMin     float32
 	zMax     float32
 	canvases []*Canvas
-	batches  []*Batch
 }
 
 func (layot *Layout) Range() (float32, float32) {
@@ -77,13 +76,6 @@ func (layout *Layout) AddCanvas(canvas *Canvas) error {
 
 	canvas.layout = layout
 	canvas.pos = byte(ind)
-
-	for i := 0; i < len(layout.batches); i++ {
-		batch := layout.batches[i]
-
-		batch.setCanvasProjection(int(canvas.pos), canvas.projection)
-		batch.setCanvasView(int(canvas.pos), canvas.camera.View())
-	}
 
 	return nil
 }

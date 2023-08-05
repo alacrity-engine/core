@@ -32,7 +32,7 @@ func init() {
 
 func main() {
 	// Initialize the engine.
-	err := system.InitializeWindow("Demo", width, height, true, false)
+	err := system.InitializeWindow("Demo", width, height, false, false)
 	handleError(err)
 	err = render.Initialize(width, height, -30, 30)
 	handleError(err)
@@ -97,7 +97,7 @@ func main() {
 	handleError(err)
 
 	// Create batch.
-	batch, err := render.NewBatch(ballTexture, layout)
+	batch, err := render.NewBatch(ballTexture, ballCanvas)
 	handleError(err)
 	balls := make([]*Ball, 0, width*height/
 		(imgRGBA.Bounds().Dx()*imgRGBA.Bounds().Dy()))
@@ -161,7 +161,7 @@ func main() {
 	ballTransform1.MoveTo(geometry.V(float64(imgRGBA.Bounds().Dx()/2), float64(imgRGBA.Bounds().Dy()/2)))
 
 	// Lower left.
-	ballSprite2.SetZ(-2)
+	ballSprite2.SetZ(1)
 	ballTransform2.MoveTo(geometry.V(-float64(imgRGBA.Bounds().Dx()/2), -float64(imgRGBA.Bounds().Dy()/2)))
 
 	err = batch.AttachSprite(ballSprite1)

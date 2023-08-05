@@ -2,41 +2,33 @@ package render
 
 import (
 	"fmt"
-	"text/template"
 )
 
 type BatchOption func(batch *Batch, params *batchParameters) error
 
 type batchParameters struct {
+	vertexShader          *Shader
+	fragmentShader        *Shader
 	initialObjectCapacity int
 }
 
-func BatchOptionWithVertexShaderTemplate(tmpl *template.Template) BatchOption {
+func BatchOptionWithVertexShader(vertexShader *Shader) BatchOption {
 	return func(batch *Batch, params *batchParameters) error {
-		batch.vertexShaderTemplate = tmpl
+		params.vertexShader = vertexShader
 		return nil
 	}
 }
 
 func BatchOptionWithFragmentShader(fragmentShader *Shader) BatchOption {
 	return func(batch *Batch, params *batchParameters) error {
-		batch.fragmentShader = fragmentShader
+		params.fragmentShader = fragmentShader
 		return nil
 	}
 }
 
-func BatchOptionWithShaderProgram(shaderProgram *ShaderProgram, tmpl *template.Template) BatchOption {
+func BatchOptionWithShaderProgram(shaderProgram *ShaderProgram) BatchOption {
 	return func(batch *Batch, params *batchParameters) error {
 		batch.shaderProgram = shaderProgram
-		batch.vertexShaderTemplate = tmpl
-
-		return nil
-	}
-}
-
-func BatchOptionWithMaxNumCanvases(maxNumCanvases int) BatchOption {
-	return func(batch *Batch, params *batchParameters) error {
-		batch.maxNumCanvases = maxNumCanvases
 		return nil
 	}
 }

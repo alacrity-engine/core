@@ -17,19 +17,11 @@ func (camera *Camera) View() mgl32.Mat4 {
 func (camera *Camera) Move(direction geometry.Vec) *Camera {
 	camera.transform.Move(direction)
 
-	if camera.canvas != nil {
-		camera.canvas.updateBatchViews()
-	}
-
 	return camera
 }
 
 func (camera *Camera) MoveTo(destination geometry.Vec) *Camera {
 	camera.transform.MoveTo(destination)
-
-	if camera.canvas != nil {
-		camera.canvas.updateBatchViews()
-	}
 
 	return camera
 }

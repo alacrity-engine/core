@@ -152,18 +152,6 @@ func (sprite *Sprite) SetZ(z float32) error {
 			return err
 		}
 
-		err = batch.projectionsIdx.removeElement(ind)
-
-		if err != nil {
-			return err
-		}
-
-		err = batch.viewsIdx.removeElement(ind)
-
-		if err != nil {
-			return err
-		}
-
 		err = batch.models.removeElements(ind, 16)
 
 		if err != nil {
@@ -227,23 +215,7 @@ func (sprite *Sprite) SetZ(z float32) error {
 		// Rebind all the sprite data to the VAO.
 		batch.buildVAO()
 
-		prevCapacity := batch.projectionsIdx.getCapacity()
-		batch.projectionsIdx.insertElement(ind, sprite.canvas.pos)
-
-		if batch.projectionsIdx.getCapacity() > prevCapacity {
-			batch.projectionsIdxTextureBuffer.
-				rebind(batch.projectionsIdx.glHandler)
-		}
-
-		prevCapacity = batch.viewsIdx.getCapacity()
-		batch.viewsIdx.insertElement(ind, sprite.canvas.pos)
-
-		if batch.viewsIdx.getCapacity() > prevCapacity {
-			batch.viewsIdxTextureBuffer.
-				rebind(batch.viewsIdx.glHandler)
-		}
-
-		prevCapacity = batch.models.getCapacity()
+		prevCapacity := batch.models.getCapacity()
 		identMatrix := mgl32.Ident4()
 		batch.models.insertElements(ind*len(identMatrix), len(identMatrix), identMatrix[:])
 
