@@ -122,6 +122,11 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 			"the sprite should have the same texture as the batch")
 	}
 
+	if sprite.canvas != batch.canvas {
+		return fmt.Errorf(
+			"the sprite should belong to the same canvas as the batch")
+	}
+
 	ind := sort.Search(len(batch.sprites), func(i int) bool {
 		return batch.sprites[i].drawZ >= sprite.drawZ
 	})
