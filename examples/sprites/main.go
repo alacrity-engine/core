@@ -166,6 +166,9 @@ func main() {
 		cirnoSprite.Draw(cirnoTransform)
 		sakuyaSprite.Draw(sakuyaTransform)
 
+		err = layout.Draw()
+		handleError(err)
+
 		system.TickLoop()
 		system.UpdateFrameRate()
 	}

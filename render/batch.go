@@ -69,17 +69,17 @@ func (batch *Batch) buildVAO() {
 	gl.BindBuffer(gl.ARRAY_BUFFER, batch.vertices.glHandler)
 	vertAttrib := uint32(gl.GetAttribLocation(batch.shaderProgram.glHandler, gl.Str("aPos\x00")))
 	gl.EnableVertexAttribArray(vertAttrib)
-	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
+	gl.VertexAttribPointerWithOffset(vertAttrib, 3, gl.FLOAT, false, 3*4, 0)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, batch.texCoords.glHandler)
 	texCoordAttrib := uint32(gl.GetAttribLocation(batch.shaderProgram.glHandler, gl.Str("aTexCoord\x00")))
 	gl.EnableVertexAttribArray(texCoordAttrib)
-	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 2*4, gl.PtrOffset(0))
+	gl.VertexAttribPointerWithOffset(texCoordAttrib, 2, gl.FLOAT, false, 2*4, 0)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, batch.colorMasks.glHandler)
 	colorAttrib := uint32(gl.GetAttribLocation(batch.shaderProgram.glHandler, gl.Str("aColor\x00")))
 	gl.EnableVertexAttribArray(colorAttrib)
-	gl.VertexAttribPointer(colorAttrib, 4, gl.FLOAT, false, 4*4, gl.PtrOffset(0))
+	gl.VertexAttribPointerWithOffset(colorAttrib, 4, gl.FLOAT, false, 4*4, 0)
 }
 
 func (batch *Batch) Draw() {

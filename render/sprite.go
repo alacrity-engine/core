@@ -93,17 +93,17 @@ func (sprite *Sprite) assembleVertexArray() {
 	gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glVertexBufferHandler)
 	vertAttrib := uint32(gl.GetAttribLocation(sprite.shaderProgram.glHandler, gl.Str("aPos\x00")))
 	gl.EnableVertexAttribArray(vertAttrib)
-	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
+	gl.VertexAttribPointerWithOffset(vertAttrib, 3, gl.FLOAT, false, 3*4, 0)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glTextureCoordinatesBufferHandler)
 	texCoordAttrib := uint32(gl.GetAttribLocation(sprite.shaderProgram.glHandler, gl.Str("aTexCoord\x00")))
 	gl.EnableVertexAttribArray(texCoordAttrib)
-	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 2*4, gl.PtrOffset(0))
+	gl.VertexAttribPointerWithOffset(texCoordAttrib, 2, gl.FLOAT, false, 2*4, 0)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, sprite.glColorMaskBufferHandler)
 	colorAttrib := uint32(gl.GetAttribLocation(sprite.shaderProgram.glHandler, gl.Str("aColor\x00")))
 	gl.EnableVertexAttribArray(colorAttrib)
-	gl.VertexAttribPointer(colorAttrib, 4, gl.FLOAT, false, 4*4, gl.PtrOffset(0))
+	gl.VertexAttribPointerWithOffset(colorAttrib, 4, gl.FLOAT, false, 4*4, 0)
 
 	gl.BindVertexArray(0)
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
@@ -373,7 +373,7 @@ func (sprite *Sprite) draw(model, view, projection mgl32.Mat4) {
 	sprite.shaderProgram.SetMatrix4("view", view)
 	sprite.shaderProgram.SetMatrix4("projection", projection)
 
-	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
+	gl.DrawElementsWithOffset(gl.TRIANGLES, 6, gl.UNSIGNED_INT, 0)
 }
 
 func (sprite *Sprite) drawToBatch(model mgl32.Mat4) error {
@@ -454,7 +454,7 @@ func NewSpriteFromTextureAndProgram(vertexDrawMode, textureDrawMode, colorDrawMo
 	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), uint32(vertexDrawMode))
 	vertAttrib := uint32(gl.GetAttribLocation(shaderProgram.glHandler, gl.Str("aPos\x00")))
 	gl.EnableVertexAttribArray(vertAttrib)
-	gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
+	gl.VertexAttribPointerWithOffset(vertAttrib, 3, gl.FLOAT, false, 3*4, 0)
 
 	var textureCoordinatesBufferHandler uint32
 	gl.GenBuffers(1, &textureCoordinatesBufferHandler)
@@ -462,7 +462,7 @@ func NewSpriteFromTextureAndProgram(vertexDrawMode, textureDrawMode, colorDrawMo
 	gl.BufferData(gl.ARRAY_BUFFER, len(textureCoordinates)*4, gl.Ptr(textureCoordinates), uint32(textureDrawMode))
 	texCoordAttrib := uint32(gl.GetAttribLocation(shaderProgram.glHandler, gl.Str("aTexCoord\x00")))
 	gl.EnableVertexAttribArray(texCoordAttrib)
-	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 2*4, gl.PtrOffset(0))
+	gl.VertexAttribPointerWithOffset(texCoordAttrib, 2, gl.FLOAT, false, 2*4, 0)
 
 	var colorMaskBufferHandler uint32
 	gl.GenBuffers(1, &colorMaskBufferHandler)
@@ -470,7 +470,7 @@ func NewSpriteFromTextureAndProgram(vertexDrawMode, textureDrawMode, colorDrawMo
 	gl.BufferData(gl.ARRAY_BUFFER, len(colorMaskData[:])*4, gl.Ptr(colorMaskData[:]), uint32(colorDrawMode))
 	colorAttrib := uint32(gl.GetAttribLocation(shaderProgram.glHandler, gl.Str("aColor\x00")))
 	gl.EnableVertexAttribArray(colorAttrib)
-	gl.VertexAttribPointer(colorAttrib, 4, gl.FLOAT, false, 4*4, gl.PtrOffset(0))
+	gl.VertexAttribPointerWithOffset(colorAttrib, 4, gl.FLOAT, false, 4*4, 0)
 
 	gl.BindVertexArray(0)
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
