@@ -7,7 +7,7 @@ import (
 )
 
 type AVLUnrestrictedSetPooledProducer[TKey Comparable] struct {
-	pool     *mempool.Pool[*AVLUnrestrictedSet[TKey]]
+	pool     *mempool.Pool[*AVLUnrestrictedSortedSet[TKey]]
 	nodePool *mempool.Pool[*UnrestrictedAVLNode[TKey, TKey]]
 }
 
@@ -19,7 +19,7 @@ func (prod *AVLUnrestrictedSetPooledProducer[TKey]) Produce() (UnrestrictedSorte
 }
 
 func (prod *AVLUnrestrictedSetPooledProducer[TKey]) Dispose(dict UnrestrictedSortedSet[TKey]) error {
-	tree, ok := dict.(*AVLUnrestrictedSet[TKey])
+	tree, ok := dict.(*AVLUnrestrictedSortedSet[TKey])
 
 	if !ok {
 		return errors.New("incorrect type")
@@ -29,7 +29,7 @@ func (prod *AVLUnrestrictedSetPooledProducer[TKey]) Dispose(dict UnrestrictedSor
 }
 
 func NewAVLUnrestrictedSetPooledProducer[TKey Comparable](
-	pool *mempool.Pool[*AVLUnrestrictedSet[TKey]],
+	pool *mempool.Pool[*AVLUnrestrictedSortedSet[TKey]],
 	nodePool *mempool.Pool[*UnrestrictedAVLNode[TKey, TKey]],
 ) *AVLUnrestrictedSetPooledProducer[TKey] {
 	return &AVLUnrestrictedSetPooledProducer[TKey]{

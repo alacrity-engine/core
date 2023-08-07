@@ -6,23 +6,23 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-type AVLDictionaryOption[
+type AVLSortedDictionaryOption[
 	TKey constraints.Ordered, TValue any,
 ] func(
-	tree *AVLDictionary[TKey, TValue],
-	params *avlDictionaryParams[TKey, TValue],
+	tree *AVLSortedDictionary[TKey, TValue],
+	params *avlSortedDictionaryParams[TKey, TValue],
 ) error
 
-type avlDictionaryParams[TKey constraints.Ordered, TValue any] struct {
+type avlSortedDictionaryParams[TKey constraints.Ordered, TValue any] struct {
 	innerTreeOptions []avltree.AVLTreeOption[TKey, TValue]
 }
 
-func AVLDictionaryOptionWithMemoryPool[
+func AVLSortedDictionaryOptionWithMemoryPool[
 	TKey constraints.Ordered, TValue any,
 ](
 	pool *mempool.Pool[*avltree.AVLNode[TKey, TValue]],
-) AVLDictionaryOption[TKey, TValue] {
-	return func(tree *AVLDictionary[TKey, TValue], params *avlDictionaryParams[TKey, TValue]) error {
+) AVLSortedDictionaryOption[TKey, TValue] {
+	return func(tree *AVLSortedDictionary[TKey, TValue], params *avlSortedDictionaryParams[TKey, TValue]) error {
 		params.innerTreeOptions = append(params.innerTreeOptions,
 			avltree.AVLTreeOptionWithMemoryPool(pool))
 

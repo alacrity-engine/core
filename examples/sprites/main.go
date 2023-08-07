@@ -103,16 +103,16 @@ func main() {
 			return new(avltree.AVLNode[float32, render.ZBufferData])
 		})
 	handleError(err)
-	zBufferDataPool, err := mempool.NewPool[*collections.AVLDictionary[int64, *render.Sprite]](
-		func() *collections.AVLDictionary[int64, *render.Sprite] {
-			tree, _ := collections.NewAVLDictionary[int64, *render.Sprite]()
+	zBufferDataPool, err := mempool.NewPool[*collections.AVLSortedDictionary[int64, *render.Sprite]](
+		func() *collections.AVLSortedDictionary[int64, *render.Sprite] {
+			tree, _ := collections.NewAVLSortedDictionary[int64, *render.Sprite]()
 			return tree
 		},
 	)
 	handleError(err)
-	zBufferPool, err := mempool.NewPool[*collections.AVLDictionary[float32, render.ZBufferData]](
-		func() *collections.AVLDictionary[float32, render.ZBufferData] {
-			tree, _ := collections.NewAVLDictionary[float32, render.ZBufferData]()
+	zBufferPool, err := mempool.NewPool[*collections.AVLSortedDictionary[float32, render.ZBufferData]](
+		func() *collections.AVLSortedDictionary[float32, render.ZBufferData] {
+			tree, _ := collections.NewAVLSortedDictionary[float32, render.ZBufferData]()
 			return tree
 		},
 	)

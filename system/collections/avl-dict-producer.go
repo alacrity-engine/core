@@ -8,20 +8,20 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-type AVLTreePooledProducer[TKey constraints.Ordered, TValue any] struct {
-	pool     *mempool.Pool[*AVLDictionary[TKey, TValue]]
+type AVLSortedDictionaryPooledProducer[TKey constraints.Ordered, TValue any] struct {
+	pool     *mempool.Pool[*AVLSortedDictionary[TKey, TValue]]
 	nodePool *mempool.Pool[*avltree.AVLNode[TKey, TValue]]
 }
 
-func (prod *AVLTreePooledProducer[TKey, TValue]) Produce() (SortedDictionary[TKey, TValue], error) {
+func (prod *AVLSortedDictionaryPooledProducer[TKey, TValue]) Produce() (SortedDictionary[TKey, TValue], error) {
 	tree := prod.pool.Get()
 	tree.SetPool(prod.nodePool)
 
 	return tree, nil
 }
 
-func (prod *AVLTreePooledProducer[TKey, TValue]) Dispose(dict SortedDictionary[TKey, TValue]) error {
-	tree, ok := dict.(*AVLDictionary[TKey, TValue])
+func (prod *AVLSortedDictionaryPooledProducer[TKey, TValue]) Dispose(dict SortedDictionary[TKey, TValue]) error {
+	tree, ok := dict.(*AVLSortedDictionary[TKey, TValue])
 
 	if !ok {
 		return errors.New("incorrect type")
@@ -31,10 +31,10 @@ func (prod *AVLTreePooledProducer[TKey, TValue]) Dispose(dict SortedDictionary[T
 }
 
 func NewAVLSortedDictionaryProducer[TKey constraints.Ordered, TValue any](
-	pool *mempool.Pool[*AVLDictionary[TKey, TValue]],
+	pool *mempool.Pool[*AVLSortedDictionary[TKey, TValue]],
 	nodePool *mempool.Pool[*avltree.AVLNode[TKey, TValue]],
-) *AVLTreePooledProducer[TKey, TValue] {
-	return &AVLTreePooledProducer[TKey, TValue]{
+) *AVLSortedDictionaryPooledProducer[TKey, TValue] {
+	return &AVLSortedDictionaryPooledProducer[TKey, TValue]{
 		pool:     pool,
 		nodePool: nodePool,
 	}
