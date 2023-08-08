@@ -71,9 +71,9 @@ func main() {
 			return new(avltree.AVLNode[int64, *render.Sprite])
 		})
 	handleError(err)
-	zBufferNodePool, err := mempool.NewPool[*avltree.AVLNode[float32, render.ZBufferData]](
-		func() *avltree.AVLNode[float32, render.ZBufferData] {
-			return new(avltree.AVLNode[float32, render.ZBufferData])
+	zBufferNodePool, err := mempool.NewPool[*collections.UnrestrictedAVLNode[render.Geometric, render.ZBufferData]](
+		func() *collections.UnrestrictedAVLNode[render.Geometric, render.ZBufferData] {
+			return new(collections.UnrestrictedAVLNode[render.Geometric, render.ZBufferData])
 		})
 	handleError(err)
 	zBufferDataPool, err := mempool.NewPool[*collections.AVLSortedDictionary[int64, *render.Sprite]](
@@ -83,9 +83,9 @@ func main() {
 		},
 	)
 	handleError(err)
-	zBufferPool, err := mempool.NewPool[*collections.AVLSortedDictionary[float32, render.ZBufferData]](
-		func() *collections.AVLSortedDictionary[float32, render.ZBufferData] {
-			tree, _ := collections.NewAVLSortedDictionary[float32, render.ZBufferData]()
+	zBufferPool, err := mempool.NewPool[*collections.AVLUnrestrictedSortedDictionary[render.Geometric, render.ZBufferData]](
+		func() *collections.AVLUnrestrictedSortedDictionary[render.Geometric, render.ZBufferData] {
+			tree, _ := collections.NewAVLUnrestrictedSortedDictionary[render.Geometric, render.ZBufferData]()
 			return tree
 		},
 	)
@@ -93,7 +93,7 @@ func main() {
 
 	zBufferDataProducer := collections.NewAVLSortedDictionaryProducer[int64, *render.Sprite](
 		zBufferDataPool, zBufferDataNodePool)
-	zBufferProducer := collections.NewAVLSortedDictionaryProducer[float32, render.ZBufferData](
+	zBufferProducer := collections.NewAVLUnrestrictedSortedDictionaryProducer[render.Geometric, render.ZBufferData](
 		zBufferPool, zBufferNodePool)
 
 	ballCanvas, err := render.NewCanvas(0, render.Ortho2DStandard(),

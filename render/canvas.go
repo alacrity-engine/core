@@ -24,7 +24,7 @@ type Canvas struct {
 	index                   int
 	pos                     byte
 	sprites                 map[*Sprite]*geometry.Transform
-	zBuffer                 collections.SortedDictionary[float32, ZBufferData] // zBuffer is used to draw all the sprites in the order of their Z coordinates.
+	zBuffer                 collections.UnrestrictedSortedDictionary[Geometric, ZBufferData] // zBuffer is used to draw all the sprites in the order of their Z coordinates.
 	layout                  *Layout
 	camera                  *Camera
 	projection              mgl32.Mat4
@@ -35,6 +35,7 @@ type ZBufferData struct {
 	lastTimestamp int64
 	sprites       map[*Sprite]int64
 	timestamps    collections.SortedDictionary[int64, *Sprite]
+	batch         *Batch
 }
 
 func addSpriteToZBuffer(sprite *Sprite) func(data ZBufferData) (ZBufferData, error) {
@@ -90,17 +91,21 @@ func (canvas *Canvas) newZBufferDataForSprite(sprite *Sprite) (ZBufferData, erro
 }
 
 func (canvas *Canvas) draw() error {
-	canvas.zBuffer.VisitInOrder(func(key float32, data ZBufferData) {
-		data.timestamps.VisitInOrder(func(key int64, sprite *Sprite) {
-			transform := canvas.sprites[sprite]
+	canvas.zBuffer.VisitInOrder(func(key Geometric, data ZBufferData) {
+		if len(data.sprites) > 0 {
+			data.timestamps.VisitInOrder(func(key int64, sprite *Sprite) {
+				transform := canvas.sprites[sprite]
 
-			if transform != nil {
-				sprite.draw(transform.Data(), canvas.
-					camera.View(), canvas.projection)
+				if transform != nil {
+					sprite.draw(transform.Data(), canvas.
+						camera.View(), canvas.projection)
 
-				canvas.sprites[sprite] = nil
-			}
-		})
+					canvas.sprites[sprite] = nil
+				}
+			})
+		} else if data.batch != nil {
+			data.batch.Draw()
+		}
 	})
 
 	return nil
@@ -143,7 +148,7 @@ func (canvas *Canvas) AddSprite(sprite *Sprite) error {
 		return err
 	}
 
-	err = canvas.zBuffer.AddOrUpdate(sprite.drawZ, zData,
+	err = canvas.zBuffer.AddOrUpdate(Point{Z: sprite.drawZ}, zData,
 		addSpriteToZBuffer(sprite))
 
 	if err != nil {
@@ -169,7 +174,7 @@ func (canvas *Canvas) addSpriteFromBatch(sprite *Sprite) error {
 		return err
 	}
 
-	err = canvas.zBuffer.AddOrUpdate(sprite.drawZ, zData,
+	err = canvas.zBuffer.AddOrUpdate(Point{Z: sprite.drawZ}, zData,
 		addSpriteToZBuffer(sprite))
 
 	if err != nil {
@@ -180,7 +185,7 @@ func (canvas *Canvas) addSpriteFromBatch(sprite *Sprite) error {
 }
 
 func (canvas *Canvas) setSpriteZ(sprite *Sprite, oldZ, newZ float32) error {
-	err := canvas.zBuffer.Update(oldZ, removeSpriteFromZBuffer(sprite))
+	err := canvas.zBuffer.Update(Point{Z: oldZ}, removeSpriteFromZBuffer(sprite))
 
 	if err != nil {
 		return err
@@ -192,7 +197,7 @@ func (canvas *Canvas) setSpriteZ(sprite *Sprite, oldZ, newZ float32) error {
 		return err
 	}
 
-	err = canvas.zBuffer.AddOrUpdate(newZ, zData,
+	err = canvas.zBuffer.AddOrUpdate(Point{Z: newZ}, zData,
 		addSpriteToZBuffer(sprite))
 
 	if err != nil {
@@ -211,7 +216,8 @@ func (canvas *Canvas) RemoveSprite(sprite *Sprite) error {
 	delete(canvas.sprites, sprite)
 	sprite.canvas = nil
 
-	err := canvas.zBuffer.Update(sprite.drawZ, removeSpriteFromZBuffer(sprite))
+	err := canvas.zBuffer.Update(Point{Z: sprite.drawZ},
+		removeSpriteFromZBuffer(sprite))
 
 	if err != nil {
 		return err
@@ -229,7 +235,7 @@ func (canvas *Canvas) removeBatchedSprite(sprite *Sprite) error {
 	delete(canvas.sprites, sprite)
 	//sprite.canvas = nil
 
-	err := canvas.zBuffer.Update(sprite.drawZ, removeSpriteFromZBuffer(sprite))
+	err := canvas.zBuffer.Update(Point{Z: sprite.drawZ}, removeSpriteFromZBuffer(sprite))
 
 	if err != nil {
 		return err
@@ -240,7 +246,7 @@ func (canvas *Canvas) removeBatchedSprite(sprite *Sprite) error {
 
 func NewCanvas(
 	drawZ int, projection mgl32.Mat4,
-	zBufferDictProducer collections.SortedDictionaryProducer[float32, ZBufferData],
+	zBufferDictProducer collections.UnrestrictedSortedDictionaryProducer[Geometric, ZBufferData],
 	zBufferDataDictProducer collections.SortedDictionaryProducer[int64, *Sprite],
 ) (*Canvas, error) {
 	camera := NewCamera()

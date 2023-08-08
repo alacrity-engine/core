@@ -41,6 +41,13 @@ type UnrestrictedSortedDictionary[TKey Comparable, TValue any] interface {
 	VisitInOrder(func(key TKey, value TValue))
 }
 
+type UnrestrictedSortedDictionaryProducer[TKey Comparable, TValue any] interface {
+	Produce() (UnrestrictedSortedDictionary[TKey, TValue], error)
+	Dispose(dict UnrestrictedSortedDictionary[TKey, TValue]) error
+}
+
+/******************************************************************************************/
+
 type UnrestrictedSortedSet[TKey Comparable] interface {
 	// Add doesn't return an error if the key already exists.
 	Add(key TKey) error

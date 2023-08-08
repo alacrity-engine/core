@@ -6,19 +6,19 @@ import (
 	"github.com/zergon321/mempool"
 )
 
-type AVLunrestrictedSortedDictionaryPooledProducer[TKey Comparable, TValue any] struct {
+type AVLUnrestrictedSortedDictionaryPooledProducer[TKey Comparable, TValue any] struct {
 	pool     *mempool.Pool[*AVLUnrestrictedSortedDictionary[TKey, TValue]]
 	nodePool *mempool.Pool[*UnrestrictedAVLNode[TKey, TValue]]
 }
 
-func (prod *AVLunrestrictedSortedDictionaryPooledProducer[TKey, TValue]) Produce() (UnrestrictedSortedDictionary[TKey, TValue], error) {
+func (prod *AVLUnrestrictedSortedDictionaryPooledProducer[TKey, TValue]) Produce() (UnrestrictedSortedDictionary[TKey, TValue], error) {
 	tree := prod.pool.Get()
 	tree.SetPool(prod.nodePool)
 
 	return tree, nil
 }
 
-func (prod *AVLunrestrictedSortedDictionaryPooledProducer[TKey, TValue]) Dispose(dict UnrestrictedSortedDictionary[TKey, TValue]) error {
+func (prod *AVLUnrestrictedSortedDictionaryPooledProducer[TKey, TValue]) Dispose(dict UnrestrictedSortedDictionary[TKey, TValue]) error {
 	tree, ok := dict.(*AVLUnrestrictedSortedDictionary[TKey, TValue])
 
 	if !ok {
@@ -31,8 +31,8 @@ func (prod *AVLunrestrictedSortedDictionaryPooledProducer[TKey, TValue]) Dispose
 func NewAVLUnrestrictedSortedDictionaryProducer[TKey Comparable, TValue any](
 	pool *mempool.Pool[*AVLUnrestrictedSortedDictionary[TKey, TValue]],
 	nodePool *mempool.Pool[*UnrestrictedAVLNode[TKey, TValue]],
-) *AVLunrestrictedSortedDictionaryPooledProducer[TKey, TValue] {
-	return &AVLunrestrictedSortedDictionaryPooledProducer[TKey, TValue]{
+) *AVLUnrestrictedSortedDictionaryPooledProducer[TKey, TValue] {
+	return &AVLUnrestrictedSortedDictionaryPooledProducer[TKey, TValue]{
 		pool:     pool,
 		nodePool: nodePool,
 	}
