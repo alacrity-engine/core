@@ -99,7 +99,7 @@ func main() {
 	// Create batch.
 	batch, err := render.NewBatch(ballTexture)
 	handleError(err)
-	err = ballCanvas.AddBatch(batch, -30, 30)
+	err = ballCanvas.AddBatch(batch, -15, 15)
 	handleError(err)
 	balls := make([]*Ball, 0, width*height/
 		(imgRGBA.Bounds().Dx()*imgRGBA.Bounds().Dy()))
@@ -176,6 +176,31 @@ func main() {
 		Transform: ballTransform2,
 	})*/
 
+	// Load the Cirno picture.
+	/*file, err = os.Open("cirno.png")
+	handleError(err)
+	img, _, err = image.Decode(file)
+	handleError(err)
+	imgRGBA = img.(*image.RGBA)
+	reversePix(imgRGBA.Pix)
+	mirror(imgRGBA)
+	err = file.Close()
+	handleError(err)
+
+	// Create a texture and a sprite for Cirno.
+	cirnoTexture := render.NewTextureFromImage(imgRGBA, render.TextureFilteringLinear)
+	cirnoSprite, err := render.NewSpriteFromTextureAndProgram(
+		render.DrawModeStatic, render.DrawModeStatic,
+		render.DrawModeStatic, cirnoTexture, shaderProgram,
+		geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
+	handleError(err)
+	cirnoSprite.SetColorMask(render.RGBARepeat4(render.ToRGBA(colornames.Red)))
+	cirnoTransform := geometry.NewTransform(nil)
+
+	cirnoSprite.SetZ(16)
+	err = ballCanvas.AddSprite(cirnoSprite)
+	handleError(err)*/
+
 	system.InitMetrics()
 
 	for !system.ShouldClose() {
@@ -193,6 +218,9 @@ func main() {
 			err = ball.Sprite.Draw(ball.Transform)
 			handleError(err)
 		}
+
+		//cirnoTransform.Move(geometry.V(400, 400).Scaled(system.DeltaTime()))
+		//cirnoSprite.Draw(cirnoTransform)
 
 		batch.Draw()
 		layout.Draw()
