@@ -359,8 +359,8 @@ func (sprite *Sprite) draw(model, view, projection mgl32.Mat4) {
 			(globalZMax-globalZMin) + zMin
 	}
 
-	model[12] /= float32(width)
-	model[13] /= float32(width)
+	model[12] /= float32(width / 2)
+	model[13] /= float32(width / 2)
 	model[14] += zModifier
 
 	view[12] /= -float32(width)
@@ -386,8 +386,8 @@ func (sprite *Sprite) drawToBatch(model mgl32.Mat4) error {
 			(globalZMax-globalZMin) + zMin
 	}
 
-	model[12] /= float32(width)
-	model[13] /= float32(width)
+	model[12] /= float32(width / 2)
+	model[13] /= float32(width / 2)
 	model[14] += zModifier
 
 	err := sprite.batch.models.replaceElements(

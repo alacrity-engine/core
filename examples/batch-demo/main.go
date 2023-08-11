@@ -29,7 +29,7 @@ const (
 	dAngle    = 20
 	radius    = 60
 	numPoints = 10
-	speed     = 2
+	speed     = 1
 )
 
 func init() {
@@ -157,10 +157,10 @@ func main() {
 		ballsToRemove := map[*Ball]struct{}{}
 
 		for ball := range balls {
-			if ball.Transform.Position().X < -width ||
-				ball.Transform.Position().X > width ||
-				ball.Transform.Position().Y < -height ||
-				ball.Transform.Position().Y > height {
+			if ball.Transform.Position().X < -width/2 ||
+				ball.Transform.Position().X > width/2 ||
+				ball.Transform.Position().Y < -height/2 ||
+				ball.Transform.Position().Y > height/2 {
 				ballsToRemove[ball] = struct{}{}
 
 				continue

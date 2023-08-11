@@ -67,11 +67,11 @@ func main() {
 
 	for i := 0; i < 32; i++ {
 		for j := 0; j < 32; j++ {
-			x := float64(i) / 32.0 * width * 2
-			y := float64(j) / 32.0 * height * 2
+			x := float64(i) / 32.0 * width
+			y := float64(j) / 32.0 * height
 
-			x -= width
-			y -= height
+			x -= width / 2
+			y -= height / 2
 
 			ballTransform := geometry.NewTransform(nil)
 			ballTransform.MoveTo(geometry.V(x, y))
