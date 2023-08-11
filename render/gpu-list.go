@@ -56,9 +56,9 @@ func (list *gpuList[T]) grow(targetCap int) {
 		newCapacity = targetCap
 	}
 
-	if newCapacity%list.stride != 0 {
-		_ = newCapacity
-	}
+	//if newCapacity%list.stride != 0 {
+	//	_ = newCapacity
+	//}
 
 	var glHandler uint32
 	gl.GenBuffers(1, &glHandler)
@@ -236,10 +236,6 @@ func (list *gpuList[T]) insertElement(idx int, elem T) error {
 
 	return nil
 }
-
-// TODO: create a copy buffer for
-// each GPU list because copy ranges
-// cannot overlap while shifting.
 
 func (list *gpuList[T]) insertElements(offset, count int, elems []T) error {
 	if list.glHandler == 0 {

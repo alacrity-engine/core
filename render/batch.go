@@ -27,22 +27,6 @@ var (
 // so there is no need to create the same object many times.
 // Or maybe just create a global variable for each one of them.
 
-// TODO: add a shader program field to batch.
-// The projections and views should be
-// uniform arrays of predefined sizes.
-// The user can assign the initial size
-// to the shader program, and if he needs
-// to go beyond it, the shader program must
-// be recompiled. The absolute max uniform
-// array size cannot go past 256 because the
-// projection index number for a vertice
-// is only 1 byte long. Everytime the user
-// adds a new canvas to the layout, the batch
-// shader program uniforms are reassigned.
-
-// TODO: compute maxNumCanvases from the
-// current number of canvases on the layout.
-
 type Batch struct {
 	glHandler                   uint32 // glHandler is an OpenGL name for the underlying batch VAO.
 	modelsTextureBuffer         *TextureBuffer
@@ -60,6 +44,8 @@ type Batch struct {
 	texCoords  *gpuList[float32]
 	colorMasks *gpuList[float32]
 	shouldDraw *gpuList[byte]
+
+	z1, z2 float32
 }
 
 func (batch *Batch) buildVAO() {
@@ -83,6 +69,14 @@ func (batch *Batch) buildVAO() {
 }
 
 func (batch *Batch) Draw() {
+	if batch.canvas == nil {
+		return
+	}
+
+	batch.canvas.batches[batch] = true
+}
+
+func (batch *Batch) draw() {
 	//gl.Disable(gl.DEPTH_TEST)
 	//defer gl.Enable(gl.DEPTH_TEST)
 
@@ -112,7 +106,7 @@ func (batch *Batch) Draw() {
 	batch.shouldDraw.clear()
 }
 
-func (batch *Batch) AttachSprite(sprite *Sprite) error {
+func (batch *Batch) attachSprite(sprite *Sprite) error {
 	if sprite == nil {
 		return fmt.Errorf("the sprite is nil")
 	}
@@ -218,11 +212,6 @@ func (batch *Batch) AttachSprite(sprite *Sprite) error {
 	sprite.deleteTextureCoordinatesBuffer()
 	sprite.deleteColorMaskBuffer()
 	sprite.deleteVertexArray()
-	err = sprite.canvas.removeBatchedSprite(sprite)
-
-	if err != nil {
-		return err
-	}
 
 	return nil
 }
@@ -309,16 +298,10 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 		return err
 	}
 
-	err = sprite.canvas.addSpriteFromBatch(sprite)
-
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func NewBatch(texture *Texture, canvas *Canvas, options ...BatchOption) (*Batch, error) {
+func NewBatch(texture *Texture, options ...BatchOption) (*Batch, error) {
 	params := batchParameters{initialObjectCapacity: 0}
 	var batch Batch
 
@@ -355,7 +338,6 @@ func NewBatch(texture *Texture, canvas *Canvas, options ...BatchOption) (*Batch,
 
 	batch.sprites = make([]*Sprite, 0, params.initialObjectCapacity)
 	batch.texture = texture
-	batch.canvas = canvas
 
 	// Compile batch shaders.
 	vertexShader, _, err := NewStandardBatchShader(

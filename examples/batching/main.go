@@ -32,7 +32,7 @@ func init() {
 
 func main() {
 	// Initialize the engine.
-	err := system.InitializeWindow("Demo", width, height, false, false)
+	err := system.InitializeWindow("Demo", width, height, true, false)
 	handleError(err)
 	err = render.Initialize(width, height, -30, 30)
 	handleError(err)
@@ -97,7 +97,9 @@ func main() {
 	handleError(err)
 
 	// Create batch.
-	batch, err := render.NewBatch(ballTexture, ballCanvas)
+	batch, err := render.NewBatch(ballTexture)
+	handleError(err)
+	err = ballCanvas.AddBatch(batch, -30, 30)
 	handleError(err)
 	balls := make([]*Ball, 0, width*height/
 		(imgRGBA.Bounds().Dx()*imgRGBA.Bounds().Dy()))
@@ -120,7 +122,7 @@ func main() {
 				geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
 			handleError(err)
 			ballSprite.SetZ(float32(zCounter))
-			err = ballCanvas.AddSprite(ballSprite)
+			err = ballCanvas.AttachSpriteToBatch(batch, ballSprite)
 			handleError(err)
 			ballTransform := geometry.NewTransform(nil)
 			ballTransform.MoveTo(geometry.V(x, y))
@@ -130,9 +132,6 @@ func main() {
 				Transform: ballTransform,
 			}
 			balls = append(balls, ball)
-
-			err = batch.AttachSprite(ball.Sprite)
-			handleError(err)
 
 			zCounter++
 		}
@@ -196,6 +195,7 @@ func main() {
 		}
 
 		batch.Draw()
+		layout.Draw()
 
 		system.TickLoop()
 		system.UpdateFrameRate()

@@ -24,6 +24,7 @@ type Canvas struct {
 	index                   int
 	pos                     byte
 	sprites                 map[*Sprite]*geometry.Transform
+	batches                 map[*Batch]bool
 	zBuffer                 collections.UnrestrictedSortedDictionary[Geometric, ZBufferData] // zBuffer is used to draw all the sprites in the order of their Z coordinates.
 	layout                  *Layout
 	camera                  *Camera
@@ -103,8 +104,9 @@ func (canvas *Canvas) draw() error {
 					canvas.sprites[sprite] = nil
 				}
 			})
-		} else if data.batch != nil {
-			data.batch.Draw()
+		} else if data.batch != nil && canvas.batches[data.batch] {
+			data.batch.draw()
+			canvas.batches[data.batch] = false
 		}
 	})
 
@@ -158,30 +160,44 @@ func (canvas *Canvas) AddSprite(sprite *Sprite) error {
 	return nil
 }
 
-func (canvas *Canvas) addSpriteFromBatch(sprite *Sprite) error {
-	if _, ok := canvas.sprites[sprite]; ok {
-		return fmt.Errorf(
-			"the sprite already exists on the canvas")
+func (canvas *Canvas) AddBatch(batch *Batch, z1, z2 float32) error {
+	if z1 < zMin {
+		return fmt.Errorf("the Z1=%f is less than %f", z1, zMin)
 	}
 
-	canvas.sprites[sprite] = nil
-	//sprite.canvas = canvas
-
-	// Add the sprite to the Z buffer.
-	zData, err := canvas.newZBufferDataForSprite(sprite)
-
-	if err != nil {
-		return err
+	if z2 > zMax {
+		return fmt.Errorf("the Z2=%f is less than %f", z2, zMax)
 	}
 
-	err = canvas.zBuffer.AddOrUpdate(Point{Z: sprite.drawZ}, zData,
-		addSpriteToZBuffer(sprite))
+	if _, ok := canvas.batches[batch]; ok {
+		return fmt.Errorf("the batch already exists on the canvas")
+	}
+
+	batch.canvas = canvas
+	canvas.batches[batch] = false
+	batch.z1 = z1
+	batch.z2 = z2
+
+	data := ZBufferData{
+		batch: batch,
+	}
+
+	err := canvas.zBuffer.AddOrUpdate(Range{Z1: z1, Z2: z2}, data,
+		func(oldValue ZBufferData) (ZBufferData, error) {
+			return ZBufferData{}, fmt.Errorf(
+				"the batch intersects with existing objects")
+		})
 
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (canvas *Canvas) AttachSpriteToBatch(batch *Batch, sprite *Sprite) error {
+	sprite.canvas = canvas
+	return batch.attachSprite(sprite)
 }
 
 func (canvas *Canvas) setSpriteZ(sprite *Sprite, oldZ, newZ float32) error {
@@ -226,16 +242,20 @@ func (canvas *Canvas) RemoveSprite(sprite *Sprite) error {
 	return nil
 }
 
-func (canvas *Canvas) removeBatchedSprite(sprite *Sprite) error {
-	if _, ok := canvas.sprites[sprite]; !ok {
-		return fmt.Errorf(
-			"the sprite doesn't exist on the canvas")
+func (canvas *Canvas) RemoveBatch(batch *Batch) error {
+	if _, ok := canvas.batches[batch]; !ok {
+		return fmt.Errorf("the batch doesn't exist on the canvas")
 	}
 
-	delete(canvas.sprites, sprite)
-	//sprite.canvas = nil
+	z1 := batch.z1
+	z2 := batch.z2
 
-	err := canvas.zBuffer.Update(Point{Z: sprite.drawZ}, removeSpriteFromZBuffer(sprite))
+	batch.canvas = nil
+	delete(canvas.batches, batch)
+	batch.z1 = 0
+	batch.z2 = 0
+
+	err := canvas.zBuffer.Remove(Range{Z1: z1, Z2: z2})
 
 	if err != nil {
 		return err
@@ -252,6 +272,7 @@ func NewCanvas(
 	camera := NewCamera()
 	canvas := &Canvas{
 		sprites:                 map[*Sprite]*geometry.Transform{},
+		batches:                 map[*Batch]bool{},
 		index:                   drawZ,
 		camera:                  NewCamera(),
 		projection:              projection,
