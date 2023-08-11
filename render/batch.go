@@ -17,11 +17,6 @@ var (
 	batchVertexShaderSource string
 )
 
-// TODO: a batch should have its own canvas
-// and accept only the sprites that belong to it
-// because canvases are drawn sequentially and
-// they may have other sprites besides batched ones.
-
 // TODO: create a cache for frequently used runtime
 // objects (for example, compiled standard shaders and programs)
 // so there is no need to create the same object many times.
