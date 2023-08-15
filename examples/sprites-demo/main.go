@@ -166,11 +166,11 @@ func main() {
 			ball.Transform.Move(ball.MoveVector.Scaled(speed * system.DeltaTime()))
 		}
 
+		layout.Draw()
+
 		for ball := range ballsToRemove {
 			delete(balls, ball)
 		}
-
-		layout.Draw()
 
 		system.TickLoop()
 		system.UpdateFrameRate()
