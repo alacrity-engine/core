@@ -32,7 +32,7 @@ func init() {
 
 func main() {
 	// Initialize the engine.
-	err := system.InitializeWindow("Demo", width, height, true, false)
+	err := system.InitializeWindow("Demo", width, height, false, false)
 	handleError(err)
 	err = render.Initialize(width, height, -30, 30)
 	handleError(err)
@@ -106,7 +106,7 @@ func main() {
 
 	// Instantiate all the objects and
 	// attach them to the batch.
-	zCounter := 0
+	/*zCounter := 0
 
 	for i := 0; i < 32; i++ {
 		for j := 0; j < 32; j++ {
@@ -135,9 +135,9 @@ func main() {
 
 			zCounter++
 		}
-	}
+	}*/
 
-	/*ballSprite1, err := render.NewSpriteFromTextureAndProgram(
+	ballSprite1, err := render.NewSpriteFromTextureAndProgram(
 		render.DrawModeStatic, render.DrawModeStatic,
 		render.DrawModeStatic, ballTexture, shaderProgram,
 		geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
@@ -147,25 +147,29 @@ func main() {
 		render.DrawModeStatic, ballTexture, shaderProgram,
 		geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
 	handleError(err)
-	err = ballCanvas.AddSprite(ballSprite1)
-	handleError(err)
-	err = ballCanvas.AddSprite(ballSprite2)
+	ballSprite3, err := render.NewSpriteFromTextureAndProgram(
+		render.DrawModeStatic, render.DrawModeStatic,
+		render.DrawModeStatic, ballTexture, shaderProgram,
+		geometry.R(0, 0, float64(imgRGBA.Rect.Dx()), float64(imgRGBA.Rect.Dy())))
 	handleError(err)
 
 	ballTransform1 := geometry.NewTransform(nil)
 	ballTransform2 := geometry.NewTransform(nil)
+	ballTransform3 := geometry.NewTransform(nil)
 
 	// Upper right.
 	ballSprite1.SetZ(-1)
-	ballTransform1.MoveTo(geometry.V(float64(imgRGBA.Bounds().Dx()/2), float64(imgRGBA.Bounds().Dy()/2)))
+	ballTransform1.MoveTo(geometry.V(float64(imgRGBA.Bounds().Dx()/4), float64(imgRGBA.Bounds().Dy()/4)))
 
 	// Lower left.
 	ballSprite2.SetZ(1)
-	ballTransform2.MoveTo(geometry.V(-float64(imgRGBA.Bounds().Dx()/2), -float64(imgRGBA.Bounds().Dy()/2)))
+	ballTransform2.MoveTo(geometry.V(-float64(imgRGBA.Bounds().Dx()/4), -float64(imgRGBA.Bounds().Dy()/4)))
 
-	err = batch.AttachSprite(ballSprite1)
+	err = ballCanvas.AttachSpriteToBatch(batch, ballSprite1)
 	handleError(err)
-	err = batch.AttachSprite(ballSprite2)
+	err = ballCanvas.AttachSpriteToBatch(batch, ballSprite2)
+	handleError(err)
+	err = ballCanvas.AttachSpriteToBatch(batch, ballSprite3)
 	handleError(err)
 
 	balls = append(balls, &Ball{
@@ -174,7 +178,12 @@ func main() {
 	}, &Ball{
 		Sprite:    ballSprite2,
 		Transform: ballTransform2,
-	})*/
+	}, &Ball{
+		Sprite:    ballSprite3,
+		Transform: ballTransform3,
+	})
+
+	var upperRemoved, middleRemoved, lowerRemoved bool
 
 	// Load the Cirno picture.
 	/*file, err = os.Open("cirno.png")
@@ -208,6 +217,60 @@ func main() {
 
 		if system.ButtonPressed(system.KeyEscape) {
 			return
+		}
+
+		if system.ButtonPressed(system.KeyA) && !upperRemoved {
+			err = batch.DetachSprite(ballSprite1)
+			handleError(err)
+
+			balls = []*Ball{
+				{
+					Sprite:    ballSprite2,
+					Transform: ballTransform2,
+				},
+				{
+					Sprite:    ballSprite3,
+					Transform: ballTransform3,
+				},
+			}
+
+			upperRemoved = true
+		}
+
+		if system.ButtonPressed(system.KeyD) && !lowerRemoved {
+			err = batch.DetachSprite(ballSprite2)
+			handleError(err)
+
+			balls = []*Ball{
+				{
+					Sprite:    ballSprite1,
+					Transform: ballTransform1,
+				},
+				{
+					Sprite:    ballSprite3,
+					Transform: ballTransform3,
+				},
+			}
+
+			lowerRemoved = true
+		}
+
+		if system.ButtonPressed(system.KeyS) && !middleRemoved {
+			err = batch.DetachSprite(ballSprite3)
+			handleError(err)
+
+			balls = []*Ball{
+				{
+					Sprite:    ballSprite1,
+					Transform: ballTransform1,
+				},
+				{
+					Sprite:    ballSprite2,
+					Transform: ballTransform2,
+				},
+			}
+
+			middleRemoved = true
 		}
 
 		render.SetClearColor(render.ToRGBA(colornames.Aquamarine))

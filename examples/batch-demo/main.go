@@ -170,12 +170,14 @@ func main() {
 			ball.Transform.Move(ball.MoveVector.Scaled(speed * system.DeltaTime()))
 		}
 
-		for ball := range ballsToRemove {
-			delete(balls, ball)
-		}
-
 		batch.Draw()
 		layout.Draw()
+
+		for ball := range ballsToRemove {
+			delete(balls, ball)
+			err = batch.DetachSprite(ball.Sprite)
+			handleError(err)
+		}
 
 		system.TickLoop()
 		system.UpdateFrameRate()

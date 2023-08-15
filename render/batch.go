@@ -227,7 +227,7 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 
 	// Reindex all the sprites
 	// remaining on the batch.
-	for i := ind; i < length; i++ {
+	for i := ind + 1; i < length; i++ {
 		batch.sprites[i].batchIndex--
 	}
 

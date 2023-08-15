@@ -321,7 +321,7 @@ func (list *gpuList[T]) removeElements(offset, count int) error {
 			offset, count, list.length)
 	}
 
-	list.shift((offset+1)*dataSize, offset*dataSize, count*dataSize)
+	list.shift((offset+1)*count*dataSize, offset*count*dataSize, count*dataSize)
 
 	originalLength := list.length
 	list.length -= count * dataSize
