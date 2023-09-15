@@ -39,3 +39,12 @@ type SpriteDefinition struct {
 	ShaderProgramID string
 	TextureID       string
 }
+
+type GameObjectPointer struct {
+	Name string
+}
+
+type ComponentPointer struct {
+	GmobName string
+	CompType string
+}

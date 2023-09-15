@@ -15,9 +15,14 @@ type Component interface {
 	SetActive(bool)
 }
 
+type RegisteredComponent interface {
+	TypeID() string
+}
+
 // BaseComponent is the base type
 // to be included into any component.
 type BaseComponent struct {
+	typeID string
 	name   string
 	gmob   *GameObject
 	active bool
