@@ -9,6 +9,7 @@ require (
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20221017161538-93cebf72946b
 	github.com/go-gl/mathgl v1.0.0
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
+	github.com/yuin/gopher-lua v1.1.0
 	github.com/zergon321/cirno v0.0.0-20210828194350-f13a757fd188
 	github.com/zergon321/go-avltree v0.0.0-20230730214820-a6f087864d44
 	github.com/zergon321/mempool v0.0.0-20230726205854-b5bbc976b81f
@@ -17,6 +18,7 @@ require (
 	golang.org/x/image v0.9.0
 	gonum.org/v1/plot v0.13.0
 	gopkg.in/go-ini/ini.v1 v1.67.0
+	layeh.com/gopher-luar v1.0.11
 )
 
 require (
