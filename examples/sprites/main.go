@@ -123,7 +123,7 @@ func main() {
 	zBufferProducer := collections.NewAVLUnrestrictedSortedDictionaryProducer[render.Geometric, render.ZBufferData](
 		zBufferPool, zBufferNodePool)
 
-	cirnoCanvas, err := render.NewCanvas(4, render.Ortho2DStandard(),
+	cirnoCanvas, err := render.NewCanvas("cirno", 4, render.Ortho2DStandard(),
 		zBufferProducer, zBufferDataProducer)
 	handleError(err)
 	err = layout.AddCanvas(cirnoCanvas)
@@ -131,7 +131,7 @@ func main() {
 	err = cirnoCanvas.AddSprite(cirnoSprite)
 	handleError(err)
 
-	sakuyaCanvas, err := render.NewCanvas(2, render.Ortho2DStandard(),
+	sakuyaCanvas, err := render.NewCanvas("sakuya", 2, render.Ortho2DStandard(),
 		zBufferProducer, zBufferDataProducer)
 	handleError(err)
 	err = layout.AddCanvas(sakuyaCanvas)

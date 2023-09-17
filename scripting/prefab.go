@@ -38,6 +38,8 @@ type SpriteDefinition struct {
 	DrawMode        render.DrawMode
 	ShaderProgramID string
 	TextureID       string
+	CanvasID        string
+	BatchID         string
 }
 
 type GameObjectPointer struct {

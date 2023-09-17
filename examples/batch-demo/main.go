@@ -97,7 +97,7 @@ func main() {
 	zBufferProducer := collections.NewAVLUnrestrictedSortedDictionaryProducer[render.Geometric, render.ZBufferData](
 		zBufferPool, zBufferNodePool)
 
-	ballCanvas, err := render.NewCanvas(0, render.Ortho2DStandard(), zBufferProducer, zBufferDataProducer)
+	ballCanvas, err := render.NewCanvas("balls", 0, render.Ortho2DStandard(), zBufferProducer, zBufferDataProducer)
 	handleError(err)
 	err = layout.AddCanvas(ballCanvas)
 	handleError(err)

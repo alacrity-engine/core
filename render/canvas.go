@@ -23,6 +23,7 @@ import (
 type Canvas struct {
 	index                   int
 	pos                     byte
+	name                    string
 	sprites                 map[*Sprite]*geometry.Transform
 	batches                 map[*Batch]bool
 	zBuffer                 collections.UnrestrictedSortedDictionary[Geometric, ZBufferData] // zBuffer is used to draw all the sprites in the order of their Z coordinates.
@@ -111,6 +112,10 @@ func (canvas *Canvas) draw() error {
 	})
 
 	return nil
+}
+
+func (canvas *Canvas) Name() string {
+	return canvas.name
 }
 
 func (canvas *Canvas) Camera() *Camera {
@@ -265,12 +270,13 @@ func (canvas *Canvas) RemoveBatch(batch *Batch) error {
 }
 
 func NewCanvas(
-	drawZ int, projection mgl32.Mat4,
+	name string, drawZ int, projection mgl32.Mat4,
 	zBufferDictProducer collections.UnrestrictedSortedDictionaryProducer[Geometric, ZBufferData],
 	zBufferDataDictProducer collections.SortedDictionaryProducer[int64, *Sprite],
 ) (*Canvas, error) {
 	camera := NewCamera()
 	canvas := &Canvas{
+		name:                    name,
 		sprites:                 map[*Sprite]*geometry.Transform{},
 		batches:                 map[*Batch]bool{},
 		index:                   drawZ,

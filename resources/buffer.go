@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"github.com/alacrity-engine/core/render"
 	codec "github.com/alacrity-engine/resource-codec"
 )
 
@@ -13,7 +14,10 @@ type resourceBuffer struct {
 	pictures   map[string]*codec.Picture
 	animations map[string]*codec.AnimationData
 	//fonts      map[string]*truetype.Font
-	audio map[string][]byte
+	audio          map[string][]byte
+	textures       map[string]*render.Texture
+	shaders        map[string]*render.Shader
+	shaderPrograms map[string]*render.ShaderProgram
 }
 
 // putPicture puts the picture in the buffer.
