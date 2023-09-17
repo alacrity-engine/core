@@ -97,7 +97,7 @@ func main() {
 	handleError(err)
 
 	// Create batch.
-	batch, err := render.NewBatch(ballTexture)
+	batch, err := render.NewBatch("balls", ballTexture)
 	handleError(err)
 	err = ballCanvas.AddBatch(batch, -15, 15)
 	handleError(err)

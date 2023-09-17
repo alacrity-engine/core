@@ -23,6 +23,7 @@ var (
 // Or maybe just create a global variable for each one of them.
 
 type Batch struct {
+	name                        string
 	glHandler                   uint32 // glHandler is an OpenGL name for the underlying batch VAO.
 	modelsTextureBuffer         *TextureBuffer
 	shouldDrawTextureBuffer     *TextureBuffer
@@ -41,6 +42,10 @@ type Batch struct {
 	shouldDraw *gpuList[byte]
 
 	z1, z2 float32
+}
+
+func (batch *Batch) Name() string {
+	return batch.name
 }
 
 func (batch *Batch) buildVAO() {
@@ -296,9 +301,10 @@ func (batch *Batch) DetachSprite(sprite *Sprite) error {
 	return nil
 }
 
-func NewBatch(texture *Texture, options ...BatchOption) (*Batch, error) {
+func NewBatch(name string, texture *Texture, options ...BatchOption) (*Batch, error) {
 	params := batchParameters{initialObjectCapacity: 0}
 	var batch Batch
+	batch.name = name
 
 	for i := 0; i < len(options); i++ {
 		option := options[i]
