@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/alacrity-engine/core/render"
 	"github.com/alacrity-engine/core/resources"
 	"github.com/alacrity-engine/core/tasking"
 )
@@ -21,7 +22,7 @@ type (
 		cache             map[string]record
 		systems           map[string]System
 		taskMgr           *tasking.TaskManager
-		layout            *DrawLayout
+		layout            *render.Layout
 		resourceLoaders   map[string]*resources.ResourceLoader
 	}
 
@@ -52,7 +53,7 @@ func (scene *Scene) TaskManager() *tasking.TaskManager {
 }
 
 // DrawLayout returns the draw layout og the scene.
-func (scene *Scene) DrawLayout() *DrawLayout {
+func (scene *Scene) DrawLayout() *render.Layout {
 	return scene.layout
 }
 
@@ -562,7 +563,7 @@ func NewScene(name string) *Scene {
 		cache:             map[string]record{},
 		systems:           map[string]System{},
 		taskMgr:           tasking.NewTaskManager(),
-		layout:            NewLayout(),
+		layout:            render.NewLayout(),
 		resourceLoaders:   map[string]*resources.ResourceLoader{},
 	}
 }

@@ -4,8 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alacrity-engine/core/geometry"
-
-	"github.com/faiface/pixel"
+	"github.com/alacrity-engine/core/render"
 )
 
 // GameObject represents a single object
@@ -15,13 +14,11 @@ type GameObject struct {
 	name       string
 	components []Component
 	transform  *geometry.Transform
-	sprite     *pixel.Sprite
-	colorMask  pixel.RGBA
+	sprite     *render.Sprite
 	scene      *Scene
 	draw       bool
 	destroyed  bool
 	zUpdate    float64
-	zDraw      float64
 	started    bool
 }
 
@@ -93,33 +90,22 @@ func (gmob *GameObject) Update() error {
 
 // Sprite returns the graphical sprite of the
 // game object.
-func (gmob *GameObject) Sprite() *pixel.Sprite {
+func (gmob *GameObject) Sprite() *render.Sprite {
 	return gmob.sprite
 }
 
 // SetSprite sets the sprite for the current game object.
-func (gmob *GameObject) SetSprite(sprite *pixel.Sprite) {
+func (gmob *GameObject) SetSprite(sprite *render.Sprite) {
 	gmob.sprite = sprite
 }
 
-// ColorMask returns the value of the color mask
-// which is used in drawing sprites.
-func (gmob *GameObject) ColorMask() pixel.RGBA {
-	return gmob.colorMask
-}
-
-// SetColorMask sets of the color mask which is used
-// in drawing sprites.
-func (gmob *GameObject) SetColorMask(mask pixel.RGBA) {
-	gmob.colorMask = mask
-}
-
 // Draw the game object onto the target.
-func (gmob *GameObject) Draw(target pixel.Target) {
+func (gmob *GameObject) Draw() error {
 	if gmob.draw && gmob.sprite != nil {
-		gmob.sprite.DrawColorMask(target,
-			gmob.transform.Data(), gmob.colorMask)
+		return gmob.sprite.Draw(gmob.transform)
 	}
+
+	return nil
 }
 
 // FindComponent searches for the component with the specified name
@@ -216,13 +202,12 @@ func (gmob *GameObject) ComponentCount() int {
 }
 
 // NewGameObject creates a new game object with no components.
-func NewGameObject(parent *geometry.Transform, name string, sprite *pixel.Sprite) *GameObject {
+func NewGameObject(parent *geometry.Transform, name string, sprite *render.Sprite) *GameObject {
 	return &GameObject{
 		name:       name,
 		components: []Component{},
-		transform:  geometry.NewTransform(parent, pixel.IM),
+		transform:  geometry.NewTransform(parent),
 		sprite:     sprite,
 		draw:       false,
-		colorMask:  pixel.Alpha(1.0),
 	}
 }
