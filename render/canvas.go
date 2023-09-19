@@ -26,6 +26,7 @@ type Canvas struct {
 	name                    string
 	sprites                 map[*Sprite]*geometry.Transform
 	batches                 map[*Batch]bool
+	batchNameIndex          map[string]*Batch
 	zBuffer                 collections.UnrestrictedSortedDictionary[Geometric, ZBufferData] // zBuffer is used to draw all the sprites in the order of their Z coordinates.
 	layout                  *Layout
 	camera                  *Camera
@@ -166,6 +167,11 @@ func (canvas *Canvas) AddSprite(sprite *Sprite) error {
 }
 
 func (canvas *Canvas) AddBatch(batch *Batch, z1, z2 float32) error {
+	if _, ok := canvas.batchNameIndex[batch.name]; ok {
+		return fmt.Errorf(
+			"a batch named '%s' already exists on the canvas", batch.name)
+	}
+
 	if z1 < zMin {
 		return fmt.Errorf("the Z1=%f is less than %f", z1, zMin)
 	}
@@ -196,6 +202,8 @@ func (canvas *Canvas) AddBatch(batch *Batch, z1, z2 float32) error {
 	if err != nil {
 		return err
 	}
+
+	canvas.batchNameIndex[batch.name] = batch
 
 	return nil
 }

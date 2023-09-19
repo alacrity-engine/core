@@ -8,9 +8,10 @@ import (
 // TODO: add a remove canvas method.
 
 type Layout struct {
-	zMin     float32
-	zMax     float32
-	canvases []*Canvas
+	zMin      float32
+	zMax      float32
+	canvases  []*Canvas
+	nameIndex map[string]*Canvas
 }
 
 func (layot *Layout) Range() (float32, float32) {
@@ -30,6 +31,11 @@ func (layout *Layout) Draw() error {
 }
 
 func (layout *Layout) AddCanvas(canvas *Canvas) error {
+	if _, ok := layout.nameIndex[canvas.name]; ok {
+		return fmt.Errorf(
+			"a canvas named '%s' already exists on the layout", canvas.name)
+	}
+
 	if len(layout.canvases) >= 256 {
 		return fmt.Errorf("max number of canvases exceeded")
 	}
@@ -76,6 +82,7 @@ func (layout *Layout) AddCanvas(canvas *Canvas) error {
 
 	canvas.layout = layout
 	canvas.pos = byte(ind)
+	layout.nameIndex[canvas.name] = canvas
 
 	return nil
 }
