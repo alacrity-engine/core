@@ -65,9 +65,9 @@ func (avl *AVLSortedDictionary[TKey, TValue]) Search(key TKey) (TValue, bool, er
 	return node.Value, true, nil
 }
 
-func (avl *AVLSortedDictionary[TKey, TValue]) VisitInOrder(visit func(key TKey, value TValue)) {
-	avl.tree.VisitInOrder(func(node *avltree.AVLNode[TKey, TValue]) {
-		visit(node.Key(), node.Value)
+func (avl *AVLSortedDictionary[TKey, TValue]) VisitInOrder(visit func(key TKey, value TValue) error) error {
+	return avl.tree.VisitInOrder(func(node *avltree.AVLNode[TKey, TValue]) error {
+		return visit(node.Key(), node.Value)
 	})
 }
 

@@ -94,9 +94,9 @@ func (canvas *Canvas) newZBufferDataForSprite(sprite *Sprite) (ZBufferData, erro
 }
 
 func (canvas *Canvas) draw() error {
-	canvas.zBuffer.VisitInOrder(func(key Geometric, data ZBufferData) {
+	err := canvas.zBuffer.VisitInOrder(func(key Geometric, data ZBufferData) error {
 		if len(data.sprites) > 0 {
-			data.timestamps.VisitInOrder(func(key int64, sprite *Sprite) {
+			data.timestamps.VisitInOrder(func(key int64, sprite *Sprite) error {
 				transform := canvas.sprites[sprite]
 
 				if transform != nil {
@@ -105,12 +105,20 @@ func (canvas *Canvas) draw() error {
 
 					canvas.sprites[sprite] = nil
 				}
+
+				return nil
 			})
 		} else if data.batch != nil && canvas.batches[data.batch] {
 			data.batch.draw()
 			canvas.batches[data.batch] = false
 		}
+
+		return nil
 	})
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

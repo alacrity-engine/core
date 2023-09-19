@@ -19,7 +19,7 @@ type SortedDictionary[TKey constraints.Ordered, TValue any] interface {
 	// Remove doesn't return an error if the key doesn't exist.
 	Remove(key TKey) error
 	Search(key TKey) (TValue, bool, error)
-	VisitInOrder(func(key TKey, value TValue))
+	VisitInOrder(func(key TKey, value TValue) error) error
 }
 
 type SortedDictionaryProducer[TKey constraints.Ordered, TValue any] interface {
@@ -38,7 +38,7 @@ type UnrestrictedSortedDictionary[TKey Comparable, TValue any] interface {
 	// Remove doesn't return an error if the key doesn't exist.
 	Remove(key TKey) error
 	Search(key TKey) (TValue, bool, error)
-	VisitInOrder(func(key TKey, value TValue))
+	VisitInOrder(func(key TKey, value TValue) error) error
 }
 
 type UnrestrictedSortedDictionaryProducer[TKey Comparable, TValue any] interface {
@@ -54,5 +54,5 @@ type UnrestrictedSortedSet[TKey Comparable] interface {
 	// Remove doesn't return an error if the key doesn't exist.
 	Remove(key TKey) error
 	Search(key TKey) (bool, error)
-	VisitInOrder(func(key TKey))
+	VisitInOrder(func(key TKey) error) error
 }

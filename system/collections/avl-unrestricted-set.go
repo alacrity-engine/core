@@ -30,8 +30,8 @@ func (set *AVLUnrestrictedSortedSet[TKey]) Search(key TKey) (bool, error) {
 	return set.tree.Search(key) != nil, nil
 }
 
-func (set *AVLUnrestrictedSortedSet[TKey]) VisitInOrder(visit func(key TKey)) {
-	set.tree.VisitInOrder(func(node *UnrestrictedAVLNode[TKey, TKey]) {
-		visit(node.Key())
+func (set *AVLUnrestrictedSortedSet[TKey]) VisitInOrder(visit func(key TKey) error) error {
+	return set.tree.VisitInOrder(func(node *UnrestrictedAVLNode[TKey, TKey]) error {
+		return visit(node.Key())
 	})
 }

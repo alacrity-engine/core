@@ -56,26 +56,40 @@ func (t *UnrestrictedAVLTree[TKey, TValue]) Search(key TKey) (node *Unrestricted
 	return t.root.search(key)
 }
 
-func (t *UnrestrictedAVLTree[TKey, TValue]) VisitInOrder(visit func(node *UnrestrictedAVLNode[TKey, TValue])) {
-	t.visitInOrder(t.root, visit)
+func (t *UnrestrictedAVLTree[TKey, TValue]) VisitInOrder(visit func(node *UnrestrictedAVLNode[TKey, TValue]) error) error {
+	return t.visitInOrder(t.root, visit)
 }
 
-func (t *UnrestrictedAVLTree[TKey, TValue]) visitInOrder(node *UnrestrictedAVLNode[TKey, TValue], visit func(node *UnrestrictedAVLNode[TKey, TValue])) {
+func (t *UnrestrictedAVLTree[TKey, TValue]) visitInOrder(node *UnrestrictedAVLNode[TKey, TValue], visit func(node *UnrestrictedAVLNode[TKey, TValue]) error) error {
 	if node == nil {
-		return
+		return nil
 	}
 
 	if node.left != nil {
-		t.visitInOrder(node.left, visit)
+		err := t.visitInOrder(node.left, visit)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if node != nil {
-		visit(node)
+		err := visit(node)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if node.right != nil {
-		t.visitInOrder(node.right, visit)
+		err := t.visitInOrder(node.right, visit)
+
+		if err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
 func (t *UnrestrictedAVLTree[TKey, TValue]) DisplayInOrder() {
