@@ -12,7 +12,7 @@ import (
 // to be updated once per frame.
 type GameObject struct {
 	name       string
-	components []Component
+	components map[string]Component
 	transform  *geometry.Transform
 	sprite     *render.Sprite
 	scene      *Scene
@@ -110,19 +110,8 @@ func (gmob *GameObject) Draw() error {
 
 // FindComponent searches for the component with the specified name
 // and returns it if it exists.
-func (gmob *GameObject) FindComponent(name string) (int, Component) {
-	ind := -1
-	var component Component
-
-	for i, comp := range gmob.components {
-		if name == comp.Name() {
-			ind = i
-			component = comp
-			break
-		}
-	}
-
-	return ind, component
+func (gmob *GameObject) FindComponent(name string) Component {
+	return gmob.components[name]
 }
 
 // Scene returns the scene where the game object
@@ -139,34 +128,28 @@ func (gmob *GameObject) SetScene(scene *Scene) {
 // HasComponent returns true if the game object has a
 // component with the specified name.
 func (gmob *GameObject) HasComponent(name string) bool {
-	_, component := gmob.FindComponent(name)
+	component := gmob.FindComponent(name)
 
 	return component != nil
 }
 
 // AddComponent adds the component in the game object.
 func (gmob *GameObject) AddComponent(component Component, priority int) error {
-	if gmob.HasComponent(component.Name()) {
-		return fmt.Errorf("game object '%s'"+
-			" already has component '%s'", gmob.Name(), component.Name())
+	regComp, ok := component.(RegisteredComponent)
+
+	if !ok {
+		return fmt.Errorf("the component can't be registered")
 	}
 
-	length := len(gmob.components)
+	typeID := regComp.TypeID()
 
-	if length <= 0 || priority >= length {
-		gmob.components = append(gmob.components,
-			component)
-	} else if priority < 0 {
-		temp := gmob.components[1:]
-
-		gmob.components = []Component{component}
-		gmob.components = append(gmob.components, temp...)
-	} else {
-		gmob.components = append(gmob.components[:priority+1],
-			gmob.components[priority:]...)
-		gmob.components[priority] = component
+	if _, ok := gmob.components[typeID]; ok {
+		return fmt.Errorf(
+			"the game object '%s' already has a '%s' component",
+			gmob.name, typeID)
 	}
 
+	gmob.components[typeID] = component
 	component.SetGameObject(gmob)
 
 	return nil
@@ -174,12 +157,15 @@ func (gmob *GameObject) AddComponent(component Component, priority int) error {
 
 // RemoveComponent removes the component with the specified
 // name from the game object,
-func (gmob *GameObject) RemoveComponent(name string) error {
-	i, component := gmob.FindComponent(name)
+func (gmob *GameObject) RemoveComponent(component Component) error {
+	regComp, ok := component.(RegisteredComponent)
 
-	if component == nil {
-		return fmt.Errorf("game object '%s' has no"+
-			" component '%s'", gmob.Name(), name)
+	if !ok {
+		return fmt.Errorf("the component can't be registered")
+	}
+
+	if !gmob.HasComponent(regComp.TypeID()) {
+		return RaiseErrorNoComponentOnGameObject(gmob, regComp.TypeID())
 	}
 
 	err := component.Destroy()
@@ -188,8 +174,7 @@ func (gmob *GameObject) RemoveComponent(name string) error {
 		return err
 	}
 
-	gmob.components = append(gmob.components[:i],
-		gmob.components[i+1:]...)
+	delete(gmob.components, regComp.TypeID())
 	component.SetGameObject(nil)
 
 	return nil
@@ -205,7 +190,7 @@ func (gmob *GameObject) ComponentCount() int {
 func NewGameObject(parent *geometry.Transform, name string, sprite *render.Sprite) *GameObject {
 	return &GameObject{
 		name:       name,
-		components: []Component{},
+		components: map[string]Component{},
 		transform:  geometry.NewTransform(parent),
 		sprite:     sprite,
 		draw:       false,

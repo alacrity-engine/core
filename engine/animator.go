@@ -117,7 +117,5 @@ func NewAnimator(name string) *Animator {
 		animations:       map[string]*anim.Animation{},
 	}
 
-	animator.SetName(name)
-
 	return animator
 }

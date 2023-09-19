@@ -232,7 +232,5 @@ func NewAudioSource(name string, audioStream io.ReadCloser) (*AudioSource, error
 		loopCancel:        make(chan bool),
 	}
 
-	as.SetName(name)
-
 	return as, nil
 }

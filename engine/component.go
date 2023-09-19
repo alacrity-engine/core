@@ -23,19 +23,8 @@ type RegisteredComponent interface {
 // to be included into any component.
 type BaseComponent struct {
 	typeID string
-	name   string
 	gmob   *GameObject
 	active bool
-}
-
-// Name returns the name of the component.
-func (bc *BaseComponent) Name() string {
-	return bc.name
-}
-
-// SetName sets the name of the component.
-func (bc *BaseComponent) SetName(name string) {
-	bc.name = name
 }
 
 // GameObject returns the game object the component
