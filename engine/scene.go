@@ -13,6 +13,11 @@ import (
 // TODO: mitigate memory allocations by
 // replacing slices with pooled linked
 // lists for addBuffer and changeZBuffer.
+// Maybe it's also worth trying to replace
+// standard collections (maps, slices)
+// with pooled custom counetrparts.
+
+// TODO: use int instead of float64 for zUpd.
 
 // Scene is a collection of game objects
 // to be updated and drawn.
