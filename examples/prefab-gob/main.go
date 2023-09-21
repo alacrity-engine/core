@@ -4,30 +4,30 @@ import (
 	"encoding/gob"
 	"os"
 
+	"github.com/alacrity-engine/core/definitions"
 	"github.com/alacrity-engine/core/geometry"
-	"github.com/alacrity-engine/core/scripting"
 )
 
 func main() {
-	gob.Register(scripting.GameObjectPointer{})
-	gob.Register(scripting.ComponentPointer{})
+	gob.Register(definitions.GameObjectPointer{})
+	gob.Register(definitions.ComponentPointer{})
 
-	prefab := &scripting.Prefab{
+	prefab := &definitions.Prefab{
 		Name: "player",
-		TransformRoot: &scripting.TransformDefinition{
+		TransformRoot: &definitions.TransformDefinition{
 			Position: geometry.V(16.34, 12.32),
 			Angle:    128.92,
 			Scale:    geometry.V(1.5, 0.5),
-			Gmob: &scripting.GameObjectDefinition{
+			Gmob: &definitions.GameObjectDefinition{
 				Name:    "player",
 				ZUpdate: 14,
-				Components: []*scripting.ComponentDefinition{
+				Components: []*definitions.ComponentDefinition{
 					{
 						TypeName: "danmaku__player__Health",
 						Active:   true,
 						Data: map[string]interface{}{
 							"maxHp": int64(100),
-							"healthGUI": scripting.ComponentPointer{
+							"healthGUI": definitions.ComponentPointer{
 								GmobName: "player-health",
 								CompType: "health-gui",
 							},
@@ -51,7 +51,7 @@ func main() {
 	handleError(err)
 	dec := gob.NewDecoder(file)
 
-	var restoredPrefab scripting.Prefab
+	var restoredPrefab definitions.Prefab
 	err = dec.Decode(&restoredPrefab)
 	handleError(err)
 }

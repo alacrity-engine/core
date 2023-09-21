@@ -1,4 +1,4 @@
-package scripting
+package definitions
 
 import "github.com/go-gl/mathgl/mgl32"
 

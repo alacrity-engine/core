@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/alacrity-engine/core/definitions"
 	"github.com/alacrity-engine/core/geometry"
-	"github.com/alacrity-engine/core/scripting"
 	lua "github.com/yuin/gopher-lua"
 	luar "layeh.com/gopher-luar"
 )
@@ -42,7 +42,7 @@ prefab = {
 registerPrefab(prefab)
 `
 
-func registerPrefab(prefab *scripting.Prefab) {
+func registerPrefab(prefab *definitions.Prefab) {
 	fmt.Println(prefab)
 }
 

@@ -1,4 +1,4 @@
-package scripting
+package engine
 
 import "fmt"
 
@@ -6,6 +6,8 @@ import "fmt"
 // from all the scenes of a game.
 var sceneRegistries map[string]map[string]ComponentTypeEntry
 
+// RegisterScene registers all the
+// components of the scene scripts.
 func RegisterScene(sceneID string, compRegistry map[string]ComponentTypeEntry) error {
 	if _, ok := sceneRegistries[sceneID]; ok {
 		return fmt.Errorf(
