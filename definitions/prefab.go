@@ -41,12 +41,3 @@ type SpriteDefinition struct {
 	CanvasID        string
 	BatchID         string
 }
-
-type GameObjectPointer struct {
-	Name string
-}
-
-type ComponentPointer struct {
-	GmobName string
-	CompType string
-}
