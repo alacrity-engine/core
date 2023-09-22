@@ -1,12 +1,15 @@
 package anim
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/alacrity-engine/core/geometry"
 	"github.com/alacrity-engine/core/render"
-	codec "github.com/alacrity-engine/resource-codec"
 )
+
+// TODO: rewrite it without
+// goroutines and channels.
 
 // Animation represent a single
 // animation made of sprites.
@@ -15,7 +18,9 @@ type Animation struct {
 	delays        []time.Duration
 	timeout       <-chan time.Time
 	cancel        chan interface{}
+	errCh         chan error
 	currentFrame  int
+	texture       *render.Texture
 	currentSprite *render.Sprite
 	active        bool
 	loop          bool
@@ -40,6 +45,27 @@ func (anim *Animation) Active() bool {
 	return anim.active
 }
 
+func (anim *Animation) SetSprite(sprite *render.Sprite) error {
+	if anim.texture != sprite.Texture() {
+		return fmt.Errorf(
+			"the sprite must have the same texture as the animtion")
+	}
+
+	anim.currentSprite = sprite
+
+	return nil
+}
+
+func (anim *Animation) LastError() error {
+	select {
+	case err := <-anim.errCh:
+		return err
+
+	default:
+		return nil
+	}
+}
+
 // Start starts playing animation.
 func (anim *Animation) Start() {
 	if anim.active {
@@ -47,7 +73,7 @@ func (anim *Animation) Start() {
 	}
 
 	anim.currentFrame = 0
-	anim.setSprite(anim.currentFrame)
+	anim.setFrame(anim.currentFrame)
 	anim.timeout = time.After(anim.delays[anim.currentFrame])
 	anim.cancel = make(chan interface{})
 	anim.active = true
@@ -71,7 +97,18 @@ func (anim *Animation) process() {
 				anim.currentFrame = 0
 			}
 
-			anim.setSprite(anim.currentFrame)
+			err := anim.setFrame(anim.currentFrame)
+
+			if err != nil {
+				select {
+				case <-anim.errCh:
+					anim.errCh <- err
+
+				default:
+					anim.errCh <- err
+				}
+			}
+
 			anim.timeout = time.After(anim.delays[anim.currentFrame])
 
 		case <-anim.cancel:
@@ -82,9 +119,20 @@ func (anim *Animation) process() {
 	}
 }
 
-func (anim *Animation) setSprite(ind int) {
-	anim.currentSprite.SetTargetArea(
+func (anim *Animation) setFrame(ind int) error {
+	if anim.currentSprite == nil {
+		return fmt.Errorf(
+			"no sprite specified for the animation")
+	}
+
+	err := anim.currentSprite.SetTargetArea(
 		anim.frames[ind])
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (anim *Animation) stopAnimating() {
@@ -104,6 +152,13 @@ func (anim *Animation) Stop() {
 	}
 }
 
+func (anim *Animation) Dispose() error {
+	anim.Stop()
+	close(anim.errCh)
+
+	return nil
+}
+
 // GetCurrentSprite returns a new sprite for the animation frame
 // played at the moment.
 func (anim *Animation) GetCurrentSprite() *render.Sprite {
@@ -113,88 +168,19 @@ func (anim *Animation) GetCurrentSprite() *render.Sprite {
 // NewAnimation creates a new animation
 // out of frames and their delays.
 func NewAnimation(
-	spritesheet *render.Texture,
-	shaderProgram *render.ShaderProgram,
-	vertexDrawMode,
-	colorDrawMode render.DrawMode,
+	texture *render.Texture,
 	frames []geometry.Rect,
 	delays []time.Duration,
 	loop bool,
 ) (*Animation, error) {
-	animSprite, err := render.NewSpriteFromTextureAndProgram(
-		vertexDrawMode, render.DrawModeDynamic,
-		colorDrawMode, spritesheet,
-		shaderProgram, geometry.Rect{})
-
-	if err != nil {
-		return nil, err
-	}
-
 	anim := &Animation{
-		frames:        make([]geometry.Rect, len(frames)),
-		delays:        make([]time.Duration, len(delays)),
-		currentFrame:  0,
-		currentSprite: animSprite,
-		active:        false,
-		loop:          loop,
-	}
-
-	copy(anim.frames, frames)
-	copy(anim.delays, delays)
-
-	return anim, nil
-}
-
-// NewAnimationWithExistingSprite cerates
-// a new animation with the existing sprite.
-func NewAnimationWithExistingSprite(
-	sprite *render.Sprite,
-	frames []geometry.Rect,
-	delays []time.Duration,
-	loop bool,
-) *Animation {
-	anim := &Animation{
-		frames:        make([]geometry.Rect, len(frames)),
-		delays:        make([]time.Duration, len(delays)),
-		currentFrame:  0,
-		currentSprite: sprite,
-		active:        false,
-		loop:          loop,
-	}
-
-	copy(anim.frames, frames)
-	copy(anim.delays, delays)
-
-	return anim
-}
-
-func NewAnimationFromPictureAndData(
-	picture *codec.Picture,
-	filter render.TextureFiltering,
-	vertexDrawMode,
-	colorDrawMode render.DrawMode,
-	shaderProgram *render.ShaderProgram,
-	frames []geometry.Rect,
-	delays []time.Duration,
-	loop bool,
-) (*Animation, error) {
-	texture := render.NewTextureFromPicture(picture, filter)
-	animSprite, err := render.NewSpriteFromTextureAndProgram(
-		vertexDrawMode, render.DrawModeDynamic,
-		colorDrawMode, texture,
-		shaderProgram, geometry.Rect{})
-
-	if err != nil {
-		return nil, err
-	}
-
-	anim := &Animation{
-		frames:        make([]geometry.Rect, len(frames)),
-		delays:        make([]time.Duration, len(delays)),
-		currentFrame:  0,
-		currentSprite: animSprite,
-		active:        false,
-		loop:          loop,
+		frames:       make([]geometry.Rect, len(frames)),
+		delays:       make([]time.Duration, len(delays)),
+		errCh:        make(chan error, 1),
+		currentFrame: 0,
+		texture:      texture,
+		active:       false,
+		loop:         loop,
 	}
 
 	copy(anim.frames, frames)

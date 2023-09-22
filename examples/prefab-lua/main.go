@@ -31,7 +31,8 @@ prefab = {
 						CurrentHP = 50,
 						Frequency = 10.01,
 						Caption = "Life",
-						Pos = Vec(10.25, 13.15)
+						Pos = Vec(10.25, 13.15),
+						CriticalThresholds = {16.51, 80.04}
 					}
 				}
 			}
@@ -44,6 +45,8 @@ registerPrefab(prefab)
 
 func registerPrefab(prefab *definitions.Prefab) {
 	fmt.Println(prefab)
+	_, ok := prefab.TransformRoot.Gmob.Components[0].Data["CriticalThresholds"].([]interface{})
+	fmt.Println(ok)
 }
 
 func Vec(x, y float64) geometry.Vec {

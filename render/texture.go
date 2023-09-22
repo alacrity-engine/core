@@ -3,7 +3,6 @@ package render
 import (
 	"image"
 
-	codec "github.com/alacrity-engine/resource-codec"
 	"github.com/go-gl/gl/v4.6-core/gl"
 )
 
@@ -52,7 +51,7 @@ func NewTextureFromImage(img *image.RGBA, filter TextureFiltering) *Texture {
 	}
 }
 
-func NewTextureFromPicture(picture *codec.Picture, filter TextureFiltering) *Texture {
+func NewTextureFromPicture(picture *Picture, filter TextureFiltering) *Texture {
 	var handler uint32
 
 	gl.GenTextures(1, &handler)

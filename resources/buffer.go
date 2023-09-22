@@ -11,7 +11,7 @@ import (
 // in the buffer and if it isn't loaded the loader
 // will take the resource from the resource file.
 type resourceBuffer struct {
-	pictures   map[string]*codec.Picture
+	pictures   map[string]*codec.PictureData
 	animations map[string]*codec.AnimationData
 	//fonts      map[string]*truetype.Font
 	audio          map[string][]byte
@@ -21,7 +21,7 @@ type resourceBuffer struct {
 }
 
 // putPicture puts the picture in the buffer.
-func (rb *resourceBuffer) putPicture(name string, pic *codec.Picture) error {
+func (rb *resourceBuffer) putPicture(name string, pic *codec.PictureData) error {
 	if _, ok := rb.pictures[name]; ok {
 		return RaiseErrorPictureAlreadyExists(name)
 	}
@@ -32,7 +32,7 @@ func (rb *resourceBuffer) putPicture(name string, pic *codec.Picture) error {
 }
 
 // takePicture takes the picture from the buffer.
-func (rb *resourceBuffer) takePicture(name string) (*codec.Picture, error) {
+func (rb *resourceBuffer) takePicture(name string) (*codec.PictureData, error) {
 	if _, ok := rb.pictures[name]; !ok {
 		return nil, RaiseErrorPictureDoesntExist(name)
 	}
@@ -104,7 +104,7 @@ func (rb *resourceBuffer) takeAudio(name string) ([]byte, error) {
 // to store every resource ever loaded by the loader.
 func newResourceBuffer() *resourceBuffer {
 	return &resourceBuffer{
-		pictures:   map[string]*codec.Picture{},
+		pictures:   map[string]*codec.PictureData{},
 		animations: map[string]*codec.AnimationData{},
 		//fonts:      map[string]*truetype.Font{},
 		audio: map[string][]byte{},

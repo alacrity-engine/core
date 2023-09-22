@@ -35,6 +35,10 @@ type Sprite struct {
 	batchIndex                        int
 }
 
+func (sprite *Sprite) Texture() *Texture {
+	return sprite.texture
+}
+
 func (sprite *Sprite) ColorMask() ColorMask {
 	return sprite.colorMask
 }

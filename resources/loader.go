@@ -13,7 +13,15 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// TODO: load and cache shader sources.
+// TODO: load and cache shader sources,
+// textures, pre-compiled shaders.
+
+// TODO: animations must be based
+// on textures, not pictures. Anytime
+// the the engine requests an animation
+// by id, the resource loader should
+// create a new instance of the requested
+// animation.
 
 // ResourceLoader loads sprites,
 // animations, sound and text
@@ -148,8 +156,8 @@ func (loader *ResourceLoader) LoadAnimation(animID string, filter render.Texture
 }
 
 // LoadPicture loads the picture from the resource file by the name of the picture.
-func (loader *ResourceLoader) LoadPicture(name string) (*codec.Picture, error) {
-	picture, err := loader.buffer.takePicture(name)
+func (loader *ResourceLoader) LoadPicture(name string) (*render.Picture, error) {
+	pictureData, err := loader.buffer.takePicture(name)
 
 	if err != nil {
 		switch err.(type) {
@@ -174,7 +182,7 @@ func (loader *ResourceLoader) LoadPicture(name string) (*codec.Picture, error) {
 					return err
 				}
 
-				picture, err = compressedPicture.Decompress()
+				pictureData, err = compressedPicture.Decompress()
 
 				if err != nil {
 					return err
@@ -187,7 +195,7 @@ func (loader *ResourceLoader) LoadPicture(name string) (*codec.Picture, error) {
 				return nil, er
 			}
 
-			er = loader.buffer.putPicture(name, picture)
+			er = loader.buffer.putPicture(name, pictureData)
 
 			if er != nil {
 				return nil, er
@@ -197,6 +205,8 @@ func (loader *ResourceLoader) LoadPicture(name string) (*codec.Picture, error) {
 			return nil, err
 		}
 	}
+
+	picture := PictureDataToPicture(pictureData)
 
 	return picture, nil
 }

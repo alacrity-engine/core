@@ -13,6 +13,9 @@ import (
 	"github.com/faiface/beep/mp3"
 )
 
+// TODO: rewrite it without
+// goroutines and channels.
+
 // AudioSource is a component for
 // game object to play sound.
 type AudioSource struct {

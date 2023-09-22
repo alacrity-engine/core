@@ -80,6 +80,14 @@ func (animator *Animator) Update() error {
 func (animator *Animator) Destroy() error {
 	animator.StopAnimation()
 
+	for _, anim := range animator.animations {
+		err := anim.Dispose()
+
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -103,7 +111,12 @@ func (animator *Animator) RemoveAnimation(name string) error {
 			name)
 	}
 
-	animator.PlayAnimation(Dummy)
+	err := animator.PlayAnimation(Dummy)
+
+	if err != nil {
+		return err
+	}
+
 	delete(animator.animations, name)
 
 	return nil

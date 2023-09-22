@@ -7,6 +7,10 @@ import (
 	"github.com/alacrity-engine/core/render"
 )
 
+// TODO: add an opportunity for a
+// gameobject to inherit a sprite
+// from another game object by link.
+
 // GameObject represents a single object
 // in the game world which contains components
 // to be updated once per frame.
