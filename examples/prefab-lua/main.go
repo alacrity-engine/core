@@ -45,7 +45,7 @@ registerPrefab(prefab)
 
 func registerPrefab(prefab *definitions.Prefab) {
 	fmt.Println(prefab)
-	_, ok := prefab.TransformRoot.Gmob.Components[0].Data["CriticalThresholds"].([]interface{})
+	_, ok := prefab.TransformRoot.Gmob.Components[0].Data["CriticalThresholds"].(map[interface{}]interface{})
 	fmt.Println(ok)
 }
 
