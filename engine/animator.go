@@ -35,6 +35,7 @@ func (animator *Animator) PlayAnimation(anim string) error {
 	animator.StopAnimation()
 
 	if anim != "" {
+		animator.animations[anim].SetSprite(animator.gmob.sprite)
 		animator.animations[anim].Start()
 	}
 
@@ -68,11 +69,7 @@ func (animator *Animator) Start() error {
 
 // Update sets the current animation sprite to the game object.
 func (animator *Animator) Update() error {
-	currentSprite := animator.
-		animations[animator.currentAnimation].GetCurrentSprite()
-	animator.GameObject().SetSprite(currentSprite)
-
-	return nil
+	return animator.animations[animator.currentAnimation].Update()
 }
 
 // Destroy destroys the component and

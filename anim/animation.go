@@ -8,17 +8,12 @@ import (
 	"github.com/alacrity-engine/core/render"
 )
 
-// TODO: rewrite it without
-// goroutines and channels.
-
 // Animation represent a single
 // animation made of sprites.
 type Animation struct {
 	frames        []geometry.Rect
 	delays        []time.Duration
-	timeout       <-chan time.Time
-	cancel        chan interface{}
-	errCh         chan error
+	cancel        chan struct{}
 	currentFrame  int
 	texture       *render.Texture
 	currentSprite *render.Sprite
@@ -56,16 +51,6 @@ func (anim *Animation) SetSprite(sprite *render.Sprite) error {
 	return nil
 }
 
-func (anim *Animation) LastError() error {
-	select {
-	case err := <-anim.errCh:
-		return err
-
-	default:
-		return nil
-	}
-}
-
 // Start starts playing animation.
 func (anim *Animation) Start() {
 	if anim.active {
@@ -74,46 +59,31 @@ func (anim *Animation) Start() {
 
 	anim.currentFrame = 0
 	anim.setFrame(anim.currentFrame)
-	anim.timeout = time.After(anim.delays[anim.currentFrame])
-	anim.cancel = make(chan interface{})
 	anim.active = true
 
-	go anim.process()
+	timeout := time.After(anim.delays[anim.currentFrame])
+	anim.cancel = make(chan struct{})
+
+	go anim.process(timeout, anim.cancel)
 }
 
-func (anim *Animation) process() {
+func (anim *Animation) process(timeout <-chan time.Time, cancel <-chan struct{}) {
 	for {
 		select {
-		case <-anim.timeout:
-			anim.currentFrame++
-
-			if anim.currentFrame >= len(anim.frames) {
+		case <-timeout:
+			if anim.currentFrame+1 >= len(anim.frames) {
 				if !anim.loop {
-					anim.stopAnimating()
-
 					return
 				}
 
 				anim.currentFrame = 0
+			} else {
+				anim.currentFrame++
 			}
 
-			err := anim.setFrame(anim.currentFrame)
+			timeout = time.After(anim.delays[anim.currentFrame])
 
-			if err != nil {
-				select {
-				case <-anim.errCh:
-					anim.errCh <- err
-
-				default:
-					anim.errCh <- err
-				}
-			}
-
-			anim.timeout = time.After(anim.delays[anim.currentFrame])
-
-		case <-anim.cancel:
-			anim.stopAnimating()
-
+		case <-cancel:
 			return
 		}
 	}
@@ -135,26 +105,21 @@ func (anim *Animation) setFrame(ind int) error {
 	return nil
 }
 
-func (anim *Animation) stopAnimating() {
-	anim.active = false
-
-	close(anim.cancel)
-	anim.cancel = nil
-	anim.timeout = nil
+func (anim *Animation) Update() error {
+	return anim.setFrame(anim.currentFrame)
 }
 
 // Stop stops playing animation.
 func (anim *Animation) Stop() {
 	if anim.active {
-		go func() {
-			anim.cancel <- true
-		}()
+		anim.active = false
+		anim.cancel <- struct{}{}
+		anim.cancel = nil
 	}
 }
 
 func (anim *Animation) Dispose() error {
 	anim.Stop()
-	close(anim.errCh)
 
 	return nil
 }
@@ -176,7 +141,6 @@ func NewAnimation(
 	anim := &Animation{
 		frames:       make([]geometry.Rect, len(frames)),
 		delays:       make([]time.Duration, len(delays)),
-		errCh:        make(chan error, 1),
 		currentFrame: 0,
 		texture:      texture,
 		active:       false,
