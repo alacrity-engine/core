@@ -13,9 +13,6 @@ import (
 	"github.com/faiface/beep/mp3"
 )
 
-// TODO: rewrite it without
-// goroutines and channels.
-
 // AudioSource is a component for
 // game object to play sound.
 type AudioSource struct {
@@ -35,18 +32,12 @@ type AudioSource struct {
 // Loop returns true if the current
 // audio stream should be repeated.
 func (as *AudioSource) Loop() bool {
-	as.loopLocker.Lock()
-	defer as.loopLocker.Unlock()
-
 	return as.loop
 }
 
 // SetLoop sets the current audio
 // stream to be repeated or not.
 func (as *AudioSource) SetLoop(loop bool) {
-	as.loopLocker.Lock()
-	defer as.loopLocker.Unlock()
-
 	as.loop = loop
 }
 
@@ -152,11 +143,7 @@ func (as *AudioSource) loopIterate() {
 		for {
 			select {
 			case <-as.loopDone:
-				as.loopLocker.Lock()
-				loop := as.loop
-				as.loopLocker.Unlock()
-
-				if loop {
+				if as.loop {
 					system.SpeakerPlay(beep.Seq(as.resampledStreamer, beep.Callback(func() {
 						go func() {
 							as.loopDone <- true
