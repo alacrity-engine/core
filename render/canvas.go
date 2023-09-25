@@ -8,18 +8,6 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-// TODO: when we add a new batch to the canvas,
-// it should have its own Z range. All the batch
-// sprites should fall within its range with
-// their Z coordinates. When we add a new batch,
-// we should check that its range doesn't intersect
-// with other sprites and batches. When we add a
-// new sprite, we should check if it doesn't intersect
-// with existing batches.
-
-// TODO: the key of the zBuffer should be geometric,
-// i.e. Point for sprites and Range for batches.
-
 type Canvas struct {
 	index                   int
 	pos                     byte

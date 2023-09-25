@@ -32,8 +32,6 @@ func init() {
 // This will allow me make different versions of the same game for 4:3 and
 // 16:9 aspects.
 
-// TODO: add batch rendering for static and animated sprites.
-
 func main() {
 	// Initialize the engine.
 	err := system.InitializeWindow("Demo", width, height, false, false)
