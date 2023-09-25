@@ -89,8 +89,9 @@ func (layout *Layout) AddCanvas(canvas *Canvas) error {
 
 func NewLayout() *Layout {
 	return &Layout{
-		zMin:     0,
-		zMax:     0,
-		canvases: []*Canvas{},
+		zMin:      0,
+		zMax:      0,
+		canvases:  []*Canvas{},
+		nameIndex: map[string]*Canvas{},
 	}
 }

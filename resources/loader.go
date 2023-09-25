@@ -144,9 +144,7 @@ func (loader *ResourceLoader) LoadAnimation(animID string, filter render.Texture
 		delays = append(delays, delay)
 	}
 
-	anim, err := anim.NewAnimationFromPictureAndData(spritesheet,
-		filter, vertexDrawMode, colorDrawMode, shaderProgram,
-		animData.Frames, delays, false)
+	anim, err := anim.NewAnimation(nil, nil, nil, false)
 
 	if err != nil {
 		return nil, err

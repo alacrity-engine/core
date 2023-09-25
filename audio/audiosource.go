@@ -2,7 +2,7 @@ package audio
 
 import (
 	"io"
-	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/alacrity-engine/core/engine"
@@ -22,23 +22,37 @@ type AudioSource struct {
 	resampledStreamer *beep.Resampler
 	control           *beep.Ctrl
 	volumeControl     *effects.Volume
-	loop              bool
-	loopLocker        *sync.Mutex
+	loop              int32
 	volumeLevel       int
 	loopDone          chan bool
 	loopCancel        chan bool
+	errCh             chan error
 }
 
 // Loop returns true if the current
 // audio stream should be repeated.
 func (as *AudioSource) Loop() bool {
-	return as.loop
+	return atomic.LoadInt32(&as.loop) != 0
+}
+
+func (as *AudioSource) LastError() error {
+	select {
+	case err := <-as.errCh:
+		return err
+
+	default:
+		return nil
+	}
 }
 
 // SetLoop sets the current audio
 // stream to be repeated or not.
 func (as *AudioSource) SetLoop(loop bool) {
-	as.loop = loop
+	if loop {
+		atomic.StoreInt32(&as.loop, 1)
+	} else {
+		atomic.StoreInt32(&as.loop, 0)
+	}
 }
 
 // Pause pauses the audio playback.
@@ -143,7 +157,17 @@ func (as *AudioSource) loopIterate() {
 		for {
 			select {
 			case <-as.loopDone:
-				if as.loop {
+				err := as.streamer.Seek(0)
+
+				select {
+				case <-as.errCh:
+					as.errCh <- err
+
+				default:
+					as.errCh <- err
+				}
+
+				if atomic.LoadInt32(&as.loop) != 0 {
 					system.SpeakerPlay(beep.Seq(as.resampledStreamer, beep.Callback(func() {
 						go func() {
 							as.loopDone <- true
@@ -215,11 +239,11 @@ func NewAudioSource(name string, audioStream io.ReadCloser) (*AudioSource, error
 		resampledStreamer: resampled,
 		control:           ctrl,
 		volumeControl:     volume,
-		loop:              false,
-		loopLocker:        new(sync.Mutex),
+		loop:              0,
 		volumeLevel:       50,
 		loopDone:          make(chan bool),
 		loopCancel:        make(chan bool),
+		errCh:             make(chan error, 1),
 	}
 
 	return as, nil
