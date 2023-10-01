@@ -17,11 +17,6 @@ var (
 	batchVertexShaderSource string
 )
 
-// TODO: create a cache for frequently used runtime
-// objects (for example, compiled standard shaders and programs)
-// so there is no need to create the same object many times.
-// Or maybe just create a global variable for each one of them.
-
 type Batch struct {
 	name                        string
 	glHandler                   uint32 // glHandler is an OpenGL name for the underlying batch VAO.

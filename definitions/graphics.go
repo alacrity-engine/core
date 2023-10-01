@@ -2,8 +2,6 @@ package definitions
 
 import "github.com/go-gl/mathgl/mgl32"
 
-// TODO: create a texture packer.
-
 type BatchDefinition struct {
 	Name      string
 	CanvasID  string
