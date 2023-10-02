@@ -4,8 +4,8 @@ github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym
 github.com/DATA-DOG/go-sqlmock v1.3.3/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b h1:slYM766cy2nI3BwyRiyQj/Ud48djTMtMebDqepE95rw=
 github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b/go.mod h1:1KcenG0jGWcpt8ov532z81sp/kMMUG485J2InIOyADM=
-github.com/alacrity-engine/resource-codec v0.0.0-20230922164524-7f282c9df773 h1:bWduWidNSJ5cDLWwKceqkVjAxx0eDdGd4o+wUCvXXJ4=
-github.com/alacrity-engine/resource-codec v0.0.0-20230922164524-7f282c9df773/go.mod h1:RVJcSCp0zKpe8tCcApTGZWqMAZ2u6NAiTlR46IVh6FE=
+github.com/alacrity-engine/resource-codec v0.0.0-20231002154621-8a3f15bfaab1 h1:snWWx8Aq/H3nKTyarvZMJkEFplWTCV1NGF/gYEnyrHM=
+github.com/alacrity-engine/resource-codec v0.0.0-20231002154621-8a3f15bfaab1/go.mod h1:Q5cEaId2+LP/0m3MkUiA5S6YJKSUJv6NUx9mf6r6FM4=
 github.com/btcsuite/btcd/btcec/v2 v2.2.0 h1:fzn1qaOt32TuLjFlkzYSsBC35Q3KUjT1SwPxiMSCF5k=
 github.com/btcsuite/btcd/btcec/v2 v2.2.0/go.mod h1:U7MHm051Al6XmscBQ0BoNydpOTsFAn707034b5nY8zU=
 github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1 h1:q0rUy8C/TYNBQS1+CGKw68tLOFYSNEs0TFnxxnS9+4U=

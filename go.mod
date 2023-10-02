@@ -3,7 +3,7 @@ module github.com/alacrity-engine/core
 go 1.21.1
 
 require (
-	github.com/alacrity-engine/resource-codec v0.0.0-20230922164524-7f282c9df773
+	github.com/alacrity-engine/resource-codec v0.0.0-20231002154621-8a3f15bfaab1
 	github.com/faiface/beep v1.1.0
 	github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20221017161538-93cebf72946b

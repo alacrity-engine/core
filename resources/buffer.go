@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"fmt"
+
 	"github.com/alacrity-engine/core/render"
 	codec "github.com/alacrity-engine/resource-codec"
 )
@@ -11,17 +13,18 @@ import (
 // in the buffer and if it isn't loaded the loader
 // will take the resource from the resource file.
 type resourceBuffer struct {
-	pictures   map[string]*codec.PictureData
+	pictures   map[string]*render.Picture
 	animations map[string]*codec.AnimationData
 	//fonts      map[string]*truetype.Font
 	audio          map[string][]byte
 	textures       map[string]*render.Texture
 	shaders        map[string]*render.Shader
 	shaderPrograms map[string]*render.ShaderProgram
+	spritesheets   map[string]*codec.SpritesheetData
 }
 
 // putPicture puts the picture in the buffer.
-func (rb *resourceBuffer) putPicture(name string, pic *codec.PictureData) error {
+func (rb *resourceBuffer) putPicture(name string, pic *render.Picture) error {
 	if _, ok := rb.pictures[name]; ok {
 		return RaiseErrorPictureAlreadyExists(name)
 	}
@@ -31,13 +34,51 @@ func (rb *resourceBuffer) putPicture(name string, pic *codec.PictureData) error 
 	return nil
 }
 
+// TODO: use *render.Picture here.
+
 // takePicture takes the picture from the buffer.
-func (rb *resourceBuffer) takePicture(name string) (*codec.PictureData, error) {
+func (rb *resourceBuffer) takePicture(name string) (*render.Picture, error) {
 	if _, ok := rb.pictures[name]; !ok {
 		return nil, RaiseErrorPictureDoesntExist(name)
 	}
 
 	return rb.pictures[name], nil
+}
+
+func (rb *resourceBuffer) putSpritesheet(name string, ss *codec.SpritesheetData) error {
+	if _, ok := rb.spritesheets[name]; ok {
+		return fmt.Errorf("the '%s' spritesheet already exists", name)
+	}
+
+	rb.spritesheets[name] = ss
+
+	return nil
+}
+
+func (rb *resourceBuffer) takeSpritesheet(name string) (*codec.SpritesheetData, error) {
+	if _, ok := rb.spritesheets[name]; !ok {
+		return nil, RaiseErrorSpritesheetDoesntExist(name)
+	}
+
+	return rb.spritesheets[name], nil
+}
+
+func (rb *resourceBuffer) putTexture(name string, texture *render.Texture) error {
+	if _, ok := rb.textures[name]; ok {
+		return fmt.Errorf("the '%s' texture already exists", name)
+	}
+
+	rb.textures[name] = texture
+
+	return nil
+}
+
+func (rb *resourceBuffer) takeTexture(name string) (*render.Texture, error) {
+	if _, ok := rb.textures[name]; !ok {
+		return nil, RaiseErrorTextureDoesntExist(name)
+	}
+
+	return rb.textures[name], nil
 }
 
 // putAnimation puts the animation in the buffer.
@@ -104,7 +145,7 @@ func (rb *resourceBuffer) takeAudio(name string) ([]byte, error) {
 // to store every resource ever loaded by the loader.
 func newResourceBuffer() *resourceBuffer {
 	return &resourceBuffer{
-		pictures:   map[string]*codec.PictureData{},
+		pictures:   map[string]*render.Picture{},
 		animations: map[string]*codec.AnimationData{},
 		//fonts:      map[string]*truetype.Font{},
 		audio: map[string][]byte{},

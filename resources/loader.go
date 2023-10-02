@@ -38,7 +38,7 @@ func (loader *ResourceLoader) Close() error {
 
 // LoadAnimation loads the animation with spritesheet
 // and frames from the resource file.
-func (loader *ResourceLoader) LoadAnimation(animID string, filter render.TextureFiltering, vertexDrawMode, colorDrawMode render.DrawMode, shaderProgram *render.ShaderProgram) (*anim.Animation, error) {
+func (loader *ResourceLoader) LoadAnimation(animID string) (*anim.Animation, error) {
 	// Load the animation frames from the buffer
 	// or the resource file.
 	animData, err := loader.buffer.takeAnimation(animID)
@@ -46,22 +46,21 @@ func (loader *ResourceLoader) LoadAnimation(animID string, filter render.Texture
 	if err != nil {
 		switch err.(type) {
 		case *ErrorAnimationDoesntExist:
-			er := loader.resourceFile.View(func(tx *bolt.Tx) error {
+			err = loader.resourceFile.View(func(tx *bolt.Tx) error {
 				buck := tx.Bucket([]byte("animations"))
 
 				if buck == nil {
-					return fmt.Errorf("bucket 'animations' not found")
+					return fmt.Errorf(
+						"the 'animations' bucket doesn't exist")
 				}
 
-				animDataBytes := buck.Get([]byte(animID))
+				data := buck.Get([]byte(animID))
 
-				if animDataBytes == nil {
-					return fmt.Errorf("animation with ID '%s' not found",
-						animID)
+				if data == nil {
+					return fmt.Errorf("no '%s' animation", animID)
 				}
 
-				var err error
-				animData, err = codec.AnimationDataFromBytes(animDataBytes)
+				animData, err = codec.AnimationDataFromBytes(data)
 
 				if err != nil {
 					return err
@@ -70,14 +69,14 @@ func (loader *ResourceLoader) LoadAnimation(animID string, filter render.Texture
 				return nil
 			})
 
-			if er != nil {
-				return nil, er
+			if err != nil {
+				return nil, err
 			}
 
-			er = loader.buffer.putAnimation(animID, animData)
+			err = loader.buffer.putAnimation(animID, animData)
 
-			if er != nil {
-				return nil, er
+			if err != nil {
+				return nil, err
 			}
 
 		default:
@@ -85,56 +84,10 @@ func (loader *ResourceLoader) LoadAnimation(animID string, filter render.Texture
 		}
 	}
 
-	// Load the spritesheet for the animation from the buffer
-	// or the resource file.
-	spritesheet, err := loader.buffer.takePicture(animData.Spritesheet)
+	texture, err := loader.LoadTexture(animData.TextureID)
 
 	if err != nil {
-		switch err.(type) {
-		case *ErrorPictureDoesntExist:
-			er := loader.resourceFile.View(func(tx *bolt.Tx) error {
-				buck := tx.Bucket([]byte("spritesheets"))
-
-				if buck == nil {
-					return fmt.Errorf("bucket 'spritesheets' not found")
-				}
-
-				spritesheetBytes := buck.Get([]byte(animData.Spritesheet))
-
-				if spritesheetBytes == nil {
-					return fmt.Errorf("spritesheet with ID '%s' not found",
-						animData.Spritesheet)
-				}
-
-				compressedSpritesheet, err := codec.CompressedPictureFromBytes(
-					spritesheetBytes)
-
-				if err != nil {
-					return err
-				}
-
-				spritesheet, err = compressedSpritesheet.Decompress()
-
-				if err != nil {
-					return err
-				}
-
-				return nil
-			})
-
-			if er != nil {
-				return nil, er
-			}
-
-			er = loader.buffer.putPicture(animData.Spritesheet, spritesheet)
-
-			if er != nil {
-				return nil, er
-			}
-
-		default:
-			return nil, err
-		}
+		return nil, err
 	}
 
 	delays := []time.Duration{}
@@ -144,7 +97,8 @@ func (loader *ResourceLoader) LoadAnimation(animID string, filter render.Texture
 		delays = append(delays, delay)
 	}
 
-	anim, err := anim.NewAnimation(nil, nil, nil, false)
+	anim, err := anim.NewAnimation(
+		texture, animData.Frames, delays, false)
 
 	if err != nil {
 		return nil, err
@@ -153,9 +107,111 @@ func (loader *ResourceLoader) LoadAnimation(animID string, filter render.Texture
 	return anim, nil
 }
 
+func (loader *ResourceLoader) LoadTexture(name string) (*render.Texture, error) {
+	texture, err := loader.buffer.takeTexture(name)
+
+	if err != nil {
+		switch err.(type) {
+		case *ErrorTextureDoesntExist:
+			var texData *codec.TextureData
+
+			err = loader.resourceFile.View(func(tx *bolt.Tx) error {
+				buck := tx.Bucket([]byte("textures"))
+
+				if buck == nil {
+					return fmt.Errorf("bucket 'textures' not found")
+				}
+
+				data := buck.Get([]byte(name))
+
+				if data == nil {
+					return fmt.Errorf("no '%s' texture", name)
+				}
+
+				texData, err = codec.TextureDataFromBytes(data)
+
+				if err != nil {
+					return err
+				}
+
+				return nil
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			pic, err := loader.LoadPicture(texData.PictureID)
+
+			if err != nil {
+				return nil, err
+			}
+
+			texture = render.NewTextureFromPicture(
+				pic, render.TextureFiltering(texData.Filtering))
+			err = loader.buffer.putTexture(name, texture)
+
+			if err != nil {
+				return nil, err
+			}
+
+		default:
+			return nil, err
+		}
+	}
+
+	return texture, nil
+}
+
+func (loader *ResourceLoader) loadSpritesheet(id string) (*codec.SpritesheetData, error) {
+	ss, err := loader.buffer.takeSpritesheet(id)
+
+	if err != nil {
+		switch err.(type) {
+		case *ErrorSpritesheetDoesntExist:
+			err = loader.resourceFile.View(func(tx *bolt.Tx) error {
+				buck := tx.Bucket([]byte("spritesheets"))
+
+				if buck == nil {
+					return fmt.Errorf("no 'spritesheets' bucket found")
+				}
+
+				data := buck.Get([]byte(id))
+
+				if data == nil {
+					return fmt.Errorf("no '%s' spritesheet found", id)
+				}
+
+				ss, err = codec.SpritesheetDataFromBytes(data)
+
+				if err != nil {
+					return err
+				}
+
+				return nil
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			err = loader.buffer.putSpritesheet(id, ss)
+
+			if err != nil {
+				return nil, err
+			}
+
+		default:
+			return nil, err
+		}
+	}
+
+	return ss, nil
+}
+
 // LoadPicture loads the picture from the resource file by the name of the picture.
 func (loader *ResourceLoader) LoadPicture(name string) (*render.Picture, error) {
-	pictureData, err := loader.buffer.takePicture(name)
+	picture, err := loader.buffer.takePicture(name)
 
 	if err != nil {
 		switch err.(type) {
@@ -180,11 +236,13 @@ func (loader *ResourceLoader) LoadPicture(name string) (*render.Picture, error) 
 					return err
 				}
 
-				pictureData, err = compressedPicture.Decompress()
+				pictureDataDec, err := compressedPicture.Decompress()
 
 				if err != nil {
 					return err
 				}
+
+				picture = PictureDataToPicture(pictureDataDec)
 
 				return nil
 			})
@@ -193,7 +251,7 @@ func (loader *ResourceLoader) LoadPicture(name string) (*render.Picture, error) 
 				return nil, er
 			}
 
-			er = loader.buffer.putPicture(name, pictureData)
+			er = loader.buffer.putPicture(name, picture)
 
 			if er != nil {
 				return nil, er
@@ -203,8 +261,6 @@ func (loader *ResourceLoader) LoadPicture(name string) (*render.Picture, error) 
 			return nil, err
 		}
 	}
-
-	picture := PictureDataToPicture(pictureData)
 
 	return picture, nil
 }

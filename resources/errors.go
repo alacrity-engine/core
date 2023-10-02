@@ -184,3 +184,35 @@ func RaiseErrorAudioDoesntExist(audioName string) *ErrorAudioDoesntExist {
 		audioName: audioName,
 	}
 }
+
+/*****************************************************************************************************************/
+
+type ErrorTextureDoesntExist struct {
+	textureName string
+}
+
+func (err *ErrorTextureDoesntExist) Error() string {
+	return fmt.Sprintf("the '%s' texture doesn't exist")
+}
+
+func RaiseErrorTextureDoesntExist(textureName string) *ErrorTextureDoesntExist {
+	return &ErrorTextureDoesntExist{
+		textureName: textureName,
+	}
+}
+
+/*****************************************************************************************************************/
+
+type ErrorSpritesheetDoesntExist struct {
+	ssName string
+}
+
+func (err *ErrorSpritesheetDoesntExist) Error() string {
+	return fmt.Sprintf("the '%s' spritesheet doesn't exist", err.ssName)
+}
+
+func RaiseErrorSpritesheetDoesntExist(ssName string) *ErrorSpritesheetDoesntExist {
+	return &ErrorSpritesheetDoesntExist{
+		ssName: ssName,
+	}
+}
