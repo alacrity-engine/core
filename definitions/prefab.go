@@ -35,7 +35,9 @@ type ComponentDefinition struct {
 type SpriteDefinition struct {
 	ColorMask       render.ColorMask
 	TargetArea      geometry.Rect
-	DrawMode        render.DrawMode
+	VertexDrawMode  render.DrawMode
+	TextureDrawMode render.DrawMode
+	ColorDrawMode   render.DrawMode
 	ShaderProgramID string
 	TextureID       string
 	CanvasID        string
