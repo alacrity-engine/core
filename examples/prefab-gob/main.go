@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/alacrity-engine/core/definitions"
-	"github.com/alacrity-engine/core/geometry"
+	"github.com/alacrity-engine/core/math/geometry"
 )
 
 func main() {

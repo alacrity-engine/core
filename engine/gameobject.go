@@ -3,7 +3,7 @@ package engine
 import (
 	"fmt"
 
-	"github.com/alacrity-engine/core/geometry"
+	"github.com/alacrity-engine/core/math/geometry"
 	"github.com/alacrity-engine/core/render"
 )
 

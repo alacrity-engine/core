@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alacrity-engine/core/definitions"
-	"github.com/alacrity-engine/core/geometry"
+	"github.com/alacrity-engine/core/math/geometry"
 	lua "github.com/yuin/gopher-lua"
 	luar "layeh.com/gopher-luar"
 )

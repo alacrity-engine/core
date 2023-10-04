@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/alacrity-engine/core/geometry"
+	"github.com/alacrity-engine/core/math/geometry"
 	"github.com/go-gl/gl/v4.6-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 )

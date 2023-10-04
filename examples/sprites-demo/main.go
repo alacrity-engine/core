@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/alacrity-engine/core/geometry"
+	"github.com/alacrity-engine/core/math/geometry"
 	"github.com/alacrity-engine/core/render"
 	"github.com/alacrity-engine/core/system"
 	"github.com/alacrity-engine/core/system/collections"

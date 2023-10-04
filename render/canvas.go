@@ -3,7 +3,7 @@ package render
 import (
 	"fmt"
 
-	"github.com/alacrity-engine/core/geometry"
+	"github.com/alacrity-engine/core/math/geometry"
 	"github.com/alacrity-engine/core/system/collections"
 	"github.com/go-gl/mathgl/mgl32"
 )

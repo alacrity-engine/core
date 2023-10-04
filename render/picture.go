@@ -1,6 +1,6 @@
 package render
 
-import "github.com/alacrity-engine/core/geometry"
+import "github.com/alacrity-engine/core/math/geometry"
 
 type Picture struct {
 	Width  int32
