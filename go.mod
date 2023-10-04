@@ -9,6 +9,7 @@ require (
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20221017161538-93cebf72946b
 	github.com/go-gl/mathgl v1.1.0
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
+	github.com/robaho/fixed v0.0.0-20230815003229-929de1ea03c3
 	github.com/yuin/gopher-lua v1.1.0
 	github.com/zergon321/cirno v0.0.0-20210828194350-f13a757fd188
 	github.com/zergon321/go-avltree v0.0.0-20230919123536-1348512f9ecf
@@ -28,7 +29,9 @@ require (
 	github.com/hajimehoshi/go-mp3 v0.3.0 // indirect
 	github.com/hajimehoshi/oto v0.7.1 // indirect
 	github.com/holiman/uint256 v1.2.3 // indirect
+	github.com/mattn/go-sqlite3 v1.14.17 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/zergon321/ll v0.0.0-20230724232506-2aa17996b403 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/exp/shiny v0.0.0-20230801115018-d63ba01acd4b // indirect

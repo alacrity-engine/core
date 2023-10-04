@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 
+	cmath "github.com/alacrity-engine/core/math"
 	"github.com/alacrity-engine/core/math/geometry"
 	"github.com/alacrity-engine/core/render"
 )
@@ -22,7 +23,7 @@ type GameObject struct {
 	scene      *Scene
 	draw       bool
 	destroyed  bool
-	zUpdate    float64
+	zUpdate    cmath.Fixed
 	started    bool
 }
 

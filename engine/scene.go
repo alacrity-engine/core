@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	cmath "github.com/alacrity-engine/core/math"
 	"github.com/alacrity-engine/core/render"
 	"github.com/alacrity-engine/core/resources"
 	"github.com/alacrity-engine/core/system/collections"
@@ -24,9 +25,9 @@ import (
 type (
 	Scene struct {
 		name              string
-		gmobs             collections.SortedDictionary[float64, map[*GameObject]struct{}]
+		gmobs             collections.UnrestrictedSortedDictionary[cmath.Fixed, map[*GameObject]struct{}]
 		gmobNameIndex     map[string]*GameObject
-		addBuffer         map[*GameObject]float64
+		addBuffer         map[*GameObject]cmath.Fixed
 		destructionBuffer map[string]struct{}
 		changeZBuffer     []changeZ
 		systems           map[string]System
@@ -37,17 +38,7 @@ type (
 
 	changeZ struct {
 		gmobName string
-		targetZ  float64
-	}
-
-	add struct {
-		gmob *GameObject
-		zUpd float64
-	}
-
-	record struct {
-		gmob *GameObject
-		pos  int
+		targetZ  cmath.Fixed
 	}
 )
 
@@ -154,7 +145,7 @@ func (scene *Scene) RemoveSystem(name string) error {
 // Start starts components of all
 // the game objects on the scene.
 func (scene *Scene) Start() error {
-	err := scene.gmobs.VisitInOrder(func(key float64, gmobs map[*GameObject]struct{}) error {
+	err := scene.gmobs.VisitInOrder(func(key cmath.Fixed, gmobs map[*GameObject]struct{}) error {
 		for gmob := range gmobs {
 			err := gmob.Start()
 
@@ -197,7 +188,7 @@ func (scene *Scene) Update() error {
 	}
 
 	// Update all the game objects.
-	err = scene.gmobs.VisitInOrder(func(key float64, gmobs map[*GameObject]struct{}) error {
+	err = scene.gmobs.VisitInOrder(func(key cmath.Fixed, gmobs map[*GameObject]struct{}) error {
 		for gmob := range gmobs {
 			err = gmob.Update()
 
@@ -225,7 +216,7 @@ func (scene *Scene) Update() error {
 
 // insertGameObject inserts the game object
 // into the sorted Z-buffer using binary search.
-func (scene *Scene) insertGameObject(gmob *GameObject, zUpd float64) error {
+func (scene *Scene) insertGameObject(gmob *GameObject, zUpd cmath.Fixed) error {
 	// Use binary search to insert the game
 	// object into the Z-sorted update buffer.
 	err := scene.gmobs.AddOrUpdate(zUpd,
@@ -315,7 +306,7 @@ func (scene *Scene) addBufferedGameObjects() error {
 		}
 	}
 
-	scene.addBuffer = map[*GameObject]float64{}
+	scene.addBuffer = map[*GameObject]cmath.Fixed{}
 
 	return nil
 }
@@ -388,12 +379,12 @@ func (scene *Scene) FindGameObject(name string) *GameObject {
 // findGameObjectInAdded searches for a game object
 // with the specified name in the buffer where game objects
 // set to be added reside.
-func (scene *Scene) findGameObjectInAdded(gmob *GameObject) (bool, float64) {
+func (scene *Scene) findGameObjectInAdded(gmob *GameObject) (bool, cmath.Fixed) {
 	if zUpd, ok := scene.addBuffer[gmob]; ok {
 		return true, zUpd
 	}
 
-	return false, -1
+	return false, cmath.FixedFromFloat64(-1)
 }
 
 // HasGameObject returns true if the scene has a game
@@ -406,7 +397,7 @@ func (scene *Scene) HasGameObject(name string) bool {
 // AddGameObject adds a new game object on the scene.
 //
 // Should be used before the scene is started.
-func (scene *Scene) AddGameObject(gmob *GameObject, zUpd float64) error {
+func (scene *Scene) AddGameObject(gmob *GameObject, zUpd cmath.Fixed) error {
 	if scene.HasGameObject(gmob.name) {
 		return fmt.Errorf("scene '%s' already has game object '%s'",
 			scene.name, gmob.name)
@@ -427,7 +418,7 @@ func (scene *Scene) AddGameObject(gmob *GameObject, zUpd float64) error {
 // AddGameObjectInRuntime must be called when the game
 // object is created in the game loop and should be added
 // to the scene.
-func (scene *Scene) AddGameObjectInRuntime(gmob *GameObject, zUpd float64) error {
+func (scene *Scene) AddGameObjectInRuntime(gmob *GameObject, zUpd cmath.Fixed) error {
 	if scene.HasGameObject(gmob.name) {
 		return fmt.Errorf("scene '%s' already has game object '%s'",
 			scene.name, gmob.name)
@@ -446,7 +437,7 @@ func (scene *Scene) AddGameObjectInRuntime(gmob *GameObject, zUpd float64) error
 }
 
 // ChangeGameObjectZ changes the game object Z.
-func (scene *Scene) ChangeGameObjectZ(name string, zUpd float64) error {
+func (scene *Scene) ChangeGameObjectZ(name string, zUpd cmath.Fixed) error {
 	if !scene.HasGameObject(name) {
 		return RaiseErrorNoGameObjectOnScene(scene, name)
 	}
@@ -558,7 +549,7 @@ func (scene *Scene) SwitchTo(sceneName string) error {
 
 // NewScene creates a new scene to
 // place game objects onto.
-func NewScene(name string, gmobsDictProducer collections.SortedDictionaryProducer[float64, map[*GameObject]struct{}]) (*Scene, error) {
+func NewScene(name string, gmobsDictProducer collections.UnrestrictedSortedDictionaryProducer[cmath.Fixed, map[*GameObject]struct{}]) (*Scene, error) {
 	gmobs, err := gmobsDictProducer.Produce()
 
 	if err != nil {
@@ -567,7 +558,7 @@ func NewScene(name string, gmobsDictProducer collections.SortedDictionaryProduce
 
 	return &Scene{
 		name:              name,
-		addBuffer:         map[*GameObject]float64{},
+		addBuffer:         map[*GameObject]cmath.Fixed{},
 		changeZBuffer:     []changeZ{},
 		gmobs:             gmobs,
 		destructionBuffer: map[string]struct{}{},
