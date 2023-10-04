@@ -1,7 +1,5 @@
 package definitions
 
-import "github.com/go-gl/mathgl/mgl32"
-
 type BatchDefinition struct {
 	Name      string
 	CanvasID  string
@@ -11,7 +9,6 @@ type BatchDefinition struct {
 }
 
 type CanvasDefinition struct {
-	Name       string
-	DrawZ      int
-	Projection mgl32.Mat4
+	Name  string
+	DrawZ int
 }
