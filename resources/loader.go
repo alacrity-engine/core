@@ -16,12 +16,9 @@ import (
 // TODO: load and cache shader sources,
 // textures, pre-compiled shaders.
 
-// TODO: animations must be based
-// on textures, not pictures. Anytime
-// the the engine requests an animation
-// by id, the resource loader should
-// create a new instance of the requested
-// animation.
+// TODO: add asynchronous versions of all
+// the resource loading functions to use
+// them to load prefabs in runtime.
 
 // ResourceLoader loads sprites,
 // animations, sound and text
