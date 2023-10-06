@@ -4,8 +4,6 @@ package engine
 // which contains data and instructions.
 // Updated once per frame.
 type Component interface {
-	Name() string
-	SetName(string)
 	Start() error
 	Update() error
 	Destroy() error

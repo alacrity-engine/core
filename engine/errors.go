@@ -105,8 +105,9 @@ func (err *ErrorWrongComponentType) ActualType() string {
 
 // Error returns the error message.
 func (err *ErrorWrongComponentType) Error() string {
-	return fmt.Sprintf("component '%s' is of type '%s', but should be '%s'",
-		err.component.Name(), err.actualType, err.assertedType)
+	return fmt.Sprintf(
+		"the component is of type '%s', but should be '%s'",
+		err.actualType, err.assertedType)
 }
 
 // RaiseErrorWrongComponentType returns a new error
