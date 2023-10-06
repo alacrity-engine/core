@@ -192,7 +192,7 @@ type ErrorTextureDoesntExist struct {
 }
 
 func (err *ErrorTextureDoesntExist) Error() string {
-	return fmt.Sprintf("the '%s' texture doesn't exist")
+	return fmt.Sprintf("the '%s' texture doesn't exist", err.textureName)
 }
 
 func RaiseErrorTextureDoesntExist(textureName string) *ErrorTextureDoesntExist {
