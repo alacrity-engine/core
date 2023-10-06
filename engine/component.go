@@ -52,3 +52,15 @@ func (bc *BaseComponent) Active() bool {
 func (bc *BaseComponent) SetActive(active bool) {
 	bc.active = active
 }
+
+func (bc *BaseComponent) Start() error {
+	return nil
+}
+
+func (bc *BaseComponent) Update() error {
+	return nil
+}
+
+func (bc *BaseComponent) Destroy() error {
+	return nil
+}
