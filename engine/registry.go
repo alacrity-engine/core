@@ -4,18 +4,17 @@ import "fmt"
 
 // sceneRegistries contains component type registries
 // from all the scenes of a game.
-var sceneRegistries map[string]map[string]ComponentTypeEntry
+var compTypeRegistry map[string]ComponentTypeEntry
 
 // RegisterScene registers all the
 // components of the scene scripts.
-func RegisterScene(sceneID string, compRegistry map[string]ComponentTypeEntry) error {
-	if _, ok := sceneRegistries[sceneID]; ok {
+func SetRegistry(registry map[string]ComponentTypeEntry) error {
+	if compTypeRegistry != nil {
 		return fmt.Errorf(
-			"a scene with an ID=%s is already registered",
-			sceneID)
+			"the component type registry is already set")
 	}
 
-	sceneRegistries[sceneID] = compRegistry
+	compTypeRegistry = registry
 
 	return nil
 }
