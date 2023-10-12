@@ -34,8 +34,6 @@ func (rb *resourceBuffer) putPicture(name string, pic *render.Picture) error {
 	return nil
 }
 
-// TODO: use *render.Picture here.
-
 // takePicture takes the picture from the buffer.
 func (rb *resourceBuffer) takePicture(name string) (*render.Picture, error) {
 	if _, ok := rb.pictures[name]; !ok {

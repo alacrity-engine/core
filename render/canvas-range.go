@@ -5,8 +5,6 @@ import (
 	"github.com/alacrity-engine/core/system/collections"
 )
 
-// TODO: use fixed point numbers.
-
 type Geometric interface {
 	collections.Comparable
 }
