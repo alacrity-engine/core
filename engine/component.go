@@ -1,5 +1,7 @@
 package engine
 
+import "github.com/alacrity-engine/core/math/geometry"
+
 // Component is a single script
 // which contains data and instructions.
 // Updated once per frame.
@@ -14,7 +16,13 @@ type Component interface {
 }
 
 type RegisteredComponent interface {
+	Component
 	TypeID() string
+}
+
+type DrawableComponent interface {
+	Component
+	Draw(*geometry.Transform) error
 }
 
 // BaseComponent is the base type

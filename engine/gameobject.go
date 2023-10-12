@@ -15,15 +15,16 @@ import (
 // in the game world which contains components
 // to be updated once per frame.
 type GameObject struct {
-	name       string
-	components map[string]Component
-	transform  *geometry.Transform
-	sprite     *render.Sprite
-	scene      *Scene
-	draw       bool
-	destroyed  bool
-	zUpdate    float32
-	started    bool
+	name          string
+	components    map[string]Component
+	drawComponent DrawableComponent
+	transform     *geometry.Transform
+	sprite        *render.Sprite
+	scene         *Scene
+	draw          bool
+	destroyed     bool
+	zUpdate       float32
+	started       bool
 }
 
 // Destroyed returns true if the game object
@@ -105,9 +106,33 @@ func (gmob *GameObject) SetSprite(sprite *render.Sprite) {
 
 // Draw the game object onto the target.
 func (gmob *GameObject) Draw() error {
+	if gmob.draw && gmob.drawComponent != nil {
+		return gmob.drawComponent.Draw(gmob.transform)
+	}
+
 	if gmob.draw && gmob.sprite != nil {
 		return gmob.sprite.Draw(gmob.transform)
 	}
+
+	return nil
+}
+
+func (gmob *GameObject) DelegateDrawing(comp DrawableComponent) error {
+	if gmob.drawComponent != nil {
+		return fmt.Errorf("drawing already delegated")
+	}
+
+	gmob.drawComponent = comp
+
+	return nil
+}
+
+func (gmob *GameObject) ReclaimDrawing() error {
+	if gmob.drawComponent == nil {
+		return fmt.Errorf("no draw component")
+	}
+
+	gmob.drawComponent = nil
 
 	return nil
 }
