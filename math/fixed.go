@@ -12,9 +12,19 @@ func (fixedObj Fixed) Less(other collections.Comparable) bool {
 	return fixed.Fixed(fixedObj).LessThan(fixed.Fixed(otherF))
 }
 
+func (fixedObj Fixed) LessOrEqual(other collections.Comparable) bool {
+	otherF := other.(Fixed)
+	return fixed.Fixed(fixedObj).LessThanOrEqual(fixed.Fixed(otherF))
+}
+
 func (fixedObj Fixed) Greater(other collections.Comparable) bool {
 	otherF := other.(Fixed)
 	return fixed.Fixed(fixedObj).GreaterThan(fixed.Fixed(otherF))
+}
+
+func (fixedObj Fixed) GreaterOrEqual(other collections.Comparable) bool {
+	otherF := other.(Fixed)
+	return fixed.Fixed(fixedObj).GreaterThanOrEqual(fixed.Fixed(otherF))
 }
 
 func (fixedObj Fixed) Equal(other collections.Comparable) bool {

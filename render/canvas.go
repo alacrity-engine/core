@@ -3,6 +3,7 @@ package render
 import (
 	"fmt"
 
+	cmath "github.com/alacrity-engine/core/math"
 	"github.com/alacrity-engine/core/math/geometry"
 	"github.com/alacrity-engine/core/system/collections"
 	"github.com/go-gl/mathgl/mgl32"
@@ -152,8 +153,9 @@ func (canvas *Canvas) AddSprite(sprite *Sprite) error {
 		return err
 	}
 
-	err = canvas.zBuffer.AddOrUpdate(Point{Z: sprite.drawZ}, zData,
-		addSpriteToZBuffer(sprite))
+	err = canvas.zBuffer.AddOrUpdate(
+		Point{Z: cmath.FixedFromFloat32(sprite.drawZ)},
+		zData, addSpriteToZBuffer(sprite))
 
 	if err != nil {
 		return err
@@ -189,7 +191,10 @@ func (canvas *Canvas) AddBatch(batch *Batch, z1, z2 float32) error {
 		batch: batch,
 	}
 
-	err := canvas.zBuffer.AddOrUpdate(Range{Z1: z1, Z2: z2}, data,
+	err := canvas.zBuffer.AddOrUpdate(Range{
+		Z1: cmath.FixedFromFloat32(z1),
+		Z2: cmath.FixedFromFloat32(z2),
+	}, data,
 		func(oldValue ZBufferData) (ZBufferData, error) {
 			return ZBufferData{}, fmt.Errorf(
 				"the batch intersects with existing objects")
@@ -210,7 +215,9 @@ func (canvas *Canvas) AttachSpriteToBatch(batch *Batch, sprite *Sprite) error {
 }
 
 func (canvas *Canvas) setSpriteZ(sprite *Sprite, oldZ, newZ float32) error {
-	err := canvas.zBuffer.Update(Point{Z: oldZ}, removeSpriteFromZBuffer(sprite))
+	err := canvas.zBuffer.Update(
+		Point{Z: cmath.FixedFromFloat32(oldZ)},
+		removeSpriteFromZBuffer(sprite))
 
 	if err != nil {
 		return err
@@ -222,8 +229,9 @@ func (canvas *Canvas) setSpriteZ(sprite *Sprite, oldZ, newZ float32) error {
 		return err
 	}
 
-	err = canvas.zBuffer.AddOrUpdate(Point{Z: newZ}, zData,
-		addSpriteToZBuffer(sprite))
+	err = canvas.zBuffer.AddOrUpdate(
+		Point{Z: cmath.FixedFromFloat32(newZ)},
+		zData, addSpriteToZBuffer(sprite))
 
 	if err != nil {
 		return err
@@ -241,7 +249,8 @@ func (canvas *Canvas) RemoveSprite(sprite *Sprite) error {
 	delete(canvas.sprites, sprite)
 	sprite.canvas = nil
 
-	err := canvas.zBuffer.Update(Point{Z: sprite.drawZ},
+	err := canvas.zBuffer.Update(
+		Point{Z: cmath.FixedFromFloat32(sprite.drawZ)},
 		removeSpriteFromZBuffer(sprite))
 
 	if err != nil {
@@ -264,7 +273,10 @@ func (canvas *Canvas) RemoveBatch(batch *Batch) error {
 	batch.z1 = 0
 	batch.z2 = 0
 
-	err := canvas.zBuffer.Remove(Range{Z1: z1, Z2: z2})
+	err := canvas.zBuffer.Remove(Range{
+		Z1: cmath.FixedFromFloat32(z1),
+		Z2: cmath.FixedFromFloat32(z2),
+	})
 
 	if err != nil {
 		return err
