@@ -1,9 +1,10 @@
-package engine
+package stdcomp
 
 import (
 	"fmt"
 
 	"github.com/alacrity-engine/core/anim"
+	"github.com/alacrity-engine/core/engine"
 )
 
 // Dummy is used to
@@ -14,7 +15,7 @@ const Dummy = ""
 // Animator is a component which controls
 // what animation to play.
 type Animator struct {
-	BaseComponent
+	engine.BaseComponent
 	currentAnimation string
 	animations       map[string]*anim.Animation
 }
@@ -35,7 +36,7 @@ func (animator *Animator) PlayAnimation(anim string) error {
 	animator.StopAnimation()
 
 	if anim != "" {
-		animator.animations[anim].SetSprite(animator.gmob.sprite)
+		animator.animations[anim].SetSprite(animator.GameObject().Sprite())
 		animator.animations[anim].Start()
 	}
 
