@@ -5,6 +5,7 @@ import (
 
 	"github.com/alacrity-engine/core/render"
 	codec "github.com/alacrity-engine/resource-codec"
+	"github.com/golang/freetype/truetype"
 )
 
 // resourceBuffer stores all the resources
@@ -13,9 +14,9 @@ import (
 // in the buffer and if it isn't loaded the loader
 // will take the resource from the resource file.
 type resourceBuffer struct {
-	pictures   map[string]*render.Picture
-	animations map[string]*codec.AnimationData
-	//fonts      map[string]*truetype.Font
+	pictures       map[string]*render.Picture
+	animations     map[string]*codec.AnimationData
+	fonts          map[string]*truetype.Font
 	audio          map[string][]byte
 	textures       map[string]*render.Texture
 	shaders        map[string]*render.Shader
@@ -100,24 +101,24 @@ func (rb *resourceBuffer) takeAnimation(name string) (*codec.AnimationData, erro
 }
 
 // putFont puts the font in the buffer.
-// func (rb *resourceBuffer) putFont(name string, fnt *truetype.Font) error {
-// 	if _, ok := rb.fonts[name]; ok {
-// 		return RaiseErrorFontAlreadyExists(name)
-// 	}
-//
-// 	rb.fonts[name] = fnt
-//
-// 	return nil
-// }
+func (rb *resourceBuffer) putFont(name string, fnt *truetype.Font) error {
+	if _, ok := rb.fonts[name]; ok {
+		return RaiseErrorFontAlreadyExists(name)
+	}
+
+	rb.fonts[name] = fnt
+
+	return nil
+}
 
 // takeFont takes the font from the buffer.
-// func (rb *resourceBuffer) takeFont(name string) (*truetype.Font, error) {
-// 	if _, ok := rb.fonts[name]; !ok {
-// 		return nil, RaiseErrorFontDoesntExist(name)
-// 	}
-//
-// 	return rb.fonts[name], nil
-// }
+func (rb *resourceBuffer) takeFont(name string) (*truetype.Font, error) {
+	if _, ok := rb.fonts[name]; !ok {
+		return nil, RaiseErrorFontDoesntExist(name)
+	}
+
+	return rb.fonts[name], nil
+}
 
 // putAudio puts the audio in the buffer.
 func (rb *resourceBuffer) putAudio(name string, audio []byte) error {
@@ -145,7 +146,7 @@ func newResourceBuffer() *resourceBuffer {
 	return &resourceBuffer{
 		pictures:   map[string]*render.Picture{},
 		animations: map[string]*codec.AnimationData{},
-		//fonts:      map[string]*truetype.Font{},
-		audio: map[string][]byte{},
+		fonts:      map[string]*truetype.Font{},
+		audio:      map[string][]byte{},
 	}
 }

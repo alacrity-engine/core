@@ -8,13 +8,14 @@ import (
 
 	"github.com/alacrity-engine/core/anim"
 	"github.com/alacrity-engine/core/render"
+	"github.com/golang/freetype/truetype"
 
 	codec "github.com/alacrity-engine/resource-codec"
 	bolt "go.etcd.io/bbolt"
 )
 
 // TODO: load and cache shader sources,
-// textures, pre-compiled shaders.
+// and pre-compiled shaders.
 
 // TODO: add asynchronous versions of all
 // the resource loading functions to use
@@ -263,52 +264,52 @@ func (loader *ResourceLoader) LoadPicture(name string) (*render.Picture, error) 
 }
 
 // LoadFont loads a font stored in the resource file under the specified name.
-// func (loader *ResourceLoader) LoadFont(name string) (*truetype.Font, error) {
-// 	font, err := loader.buffer.takeFont(name)
-//
-// 	if err != nil {
-// 		switch err.(type) {
-// 		case *ErrorFontDoesntExist:
-// 			er := loader.resourceFile.View(func(tx *bolt.Tx) error {
-// 				buck := tx.Bucket([]byte("fonts"))
-//
-// 				if buck == nil {
-// 					return fmt.Errorf("bucket 'fonts' not found")
-// 				}
-//
-// 				fontData := buck.Get([]byte(name))
-//
-// 				if fontData == nil {
-// 					return fmt.Errorf("font '%s' not found", name)
-// 				}
-//
-// 				var err error
-// 				font, err = truetype.Parse(fontData)
-//
-// 				if err != nil {
-// 					return err
-// 				}
-//
-// 				return nil
-// 			})
-//
-// 			if er != nil {
-// 				return nil, er
-// 			}
-//
-// 			er = loader.buffer.putFont(name, font)
-//
-// 			if er != nil {
-// 				return nil, er
-// 			}
-//
-// 		default:
-// 			return nil, err
-// 		}
-// 	}
-//
-// 	return font, nil
-// }
+func (loader *ResourceLoader) LoadFont(name string) (*truetype.Font, error) {
+	font, err := loader.buffer.takeFont(name)
+
+	if err != nil {
+		switch err.(type) {
+		case *ErrorFontDoesntExist:
+			er := loader.resourceFile.View(func(tx *bolt.Tx) error {
+				buck := tx.Bucket([]byte("fonts"))
+
+				if buck == nil {
+					return fmt.Errorf("bucket 'fonts' not found")
+				}
+
+				fontData := buck.Get([]byte(name))
+
+				if fontData == nil {
+					return fmt.Errorf("font '%s' not found", name)
+				}
+
+				var err error
+				font, err = truetype.Parse(fontData)
+
+				if err != nil {
+					return err
+				}
+
+				return nil
+			})
+
+			if er != nil {
+				return nil, er
+			}
+
+			er = loader.buffer.putFont(name, font)
+
+			if er != nil {
+				return nil, er
+			}
+
+		default:
+			return nil, err
+		}
+	}
+
+	return font, nil
+}
 
 // LoadAudio loads the specified audio from the resource file.
 func (loader *ResourceLoader) LoadAudio(name string) (io.ReadCloser, error) {

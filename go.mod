@@ -9,6 +9,7 @@ require (
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20221017161538-93cebf72946b
 	github.com/go-gl/mathgl v1.1.0
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/robaho/fixed v0.0.0-20230815003229-929de1ea03c3
 	github.com/yuin/gopher-lua v1.1.0
 	github.com/zergon321/cirno v0.0.0-20210828194350-f13a757fd188
