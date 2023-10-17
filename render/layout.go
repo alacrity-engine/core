@@ -18,6 +18,14 @@ func (layot *Layout) Range() (float32, float32) {
 	return layot.zMin, layot.zMax
 }
 
+func (layout *Layout) CanvasByName(name string) (*Canvas, error) {
+	if canvas, ok := layout.nameIndex[name]; !ok {
+		return nil, fmt.Errorf("canvas '%s' not found", name)
+	} else {
+		return canvas, nil
+	}
+}
+
 func (layout *Layout) Draw() error {
 	for _, canvas := range layout.canvases {
 		err := canvas.draw()

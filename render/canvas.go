@@ -164,6 +164,14 @@ func (canvas *Canvas) AddSprite(sprite *Sprite) error {
 	return nil
 }
 
+func (canvas *Canvas) BatchByName(name string) (*Batch, error) {
+	if batch, ok := canvas.batchNameIndex[name]; !ok {
+		return nil, fmt.Errorf("batch '%s' not found", name)
+	} else {
+		return batch, nil
+	}
+}
+
 func (canvas *Canvas) AddBatch(batch *Batch, z1, z2 float32) error {
 	if _, ok := canvas.batchNameIndex[batch.name]; ok {
 		return fmt.Errorf(

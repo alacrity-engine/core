@@ -7,6 +7,9 @@ import (
 	"github.com/alacrity-engine/core/typography"
 )
 
+// TODO: add all the letter
+// sprites to the font batch.
+
 type Caption struct {
 	engine.BaseComponent
 	text        []rune

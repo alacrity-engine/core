@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/alacrity-engine/core/audio"
+	"github.com/alacrity-engine/core/engine/stdcomp"
 	"github.com/alacrity-engine/core/system"
 )
 
@@ -14,7 +14,7 @@ func main() {
 
 	file, err := os.Open("vyistrel-pistoleta-magnum-357-36128.mp3")
 	handleError(err)
-	audioSource, err := audio.NewAudioSource("pussy", file)
+	audioSource, err := stdcomp.NewAudioSource("pussy", file)
 	handleError(err)
 
 	err = audioSource.Start()
@@ -25,7 +25,7 @@ func main() {
 
 	newFile, err := os.Open("vyistrel-pistoleta-magnum-357-36128.mp3")
 	handleError(err)
-	newAudioSource, err := audio.NewAudioSource("pussy", newFile)
+	newAudioSource, err := stdcomp.NewAudioSource("pussy", newFile)
 	handleError(err)
 
 	err = newAudioSource.Start()

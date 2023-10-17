@@ -1,10 +1,11 @@
-package audio
+package stdcomp
 
 import (
 	"io"
 	"sync/atomic"
 	"time"
 
+	"github.com/alacrity-engine/core/audio"
 	"github.com/alacrity-engine/core/engine"
 	"github.com/alacrity-engine/core/system"
 
@@ -77,7 +78,7 @@ func (as *AudioSource) Unpause() {
 // the volume level by 1%.
 func (as *AudioSource) VolumeUp(amount int) error {
 	if amount < 0 {
-		return RaiseErrorVolumeNegative(amount)
+		return audio.RaiseErrorVolumeNegative(amount)
 	}
 
 	if amount > 100 || as.volumeLevel+amount > 100 {
@@ -101,7 +102,7 @@ func (as *AudioSource) VolumeUp(amount int) error {
 // the volume level by 1%.
 func (as *AudioSource) VolumeDown(amount int) error {
 	if amount < 0 {
-		return RaiseErrorVolumeNegative(amount)
+		return audio.RaiseErrorVolumeNegative(amount)
 	}
 
 	if amount > 100 || as.volumeLevel-amount < 0 {
@@ -137,7 +138,7 @@ func (as *AudioSource) CurrentDuration() time.Duration {
 // Rewind rewinds the audio stream at the specified duration.
 func (as *AudioSource) Rewind(t time.Duration) error {
 	if t > as.Duration() {
-		return RaiseErrorWrongDuration(t)
+		return audio.RaiseErrorWrongDuration(t)
 	}
 
 	pos := as.format.SampleRate.N(t)
