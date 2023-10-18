@@ -11,18 +11,18 @@ var (
 	batches map[string]*render.Batch
 )
 
-func AddBatchToCanvas(canvasName, batchName string, batch *render.Batch, z1, z2 float32) error {
+func AddBatchToCanvas(canvasName string, batch *render.Batch, z1, z2 float32) error {
 	canvas, err := layout.CanvasByName(canvasName)
 
 	if err != nil {
 		return err
 	}
 
-	if _, ok := batches[batchName]; ok {
-		return fmt.Errorf("batch '%s' already exists", batchName)
+	if _, ok := batches[batch.Name()]; ok {
+		return fmt.Errorf("batch '%s' already exists", batch.Name())
 	}
 
-	batches[batchName] = batch
+	batches[batch.Name()] = batch
 	err = canvas.AddBatch(batch, z1, z2)
 
 	if err != nil {
