@@ -1,14 +1,11 @@
 package engine
 
 import (
-	"fmt"
-
 	"github.com/alacrity-engine/core/render"
 )
 
 var (
-	layout  *render.Layout
-	batches map[string]*render.Batch
+	layout *render.Layout
 )
 
 func AddBatchToCanvas(canvasName string, batch *render.Batch, z1, z2 float32) error {
@@ -18,11 +15,10 @@ func AddBatchToCanvas(canvasName string, batch *render.Batch, z1, z2 float32) er
 		return err
 	}
 
-	if _, ok := batches[batch.Name()]; ok {
-		return fmt.Errorf("batch '%s' already exists", batch.Name())
+	if _, err := canvas.BatchByName(batch.Name()); err != nil {
+		return err
 	}
 
-	batches[batch.Name()] = batch
 	err = canvas.AddBatch(batch, z1, z2)
 
 	if err != nil {
@@ -32,9 +28,15 @@ func AddBatchToCanvas(canvasName string, batch *render.Batch, z1, z2 float32) er
 	return nil
 }
 
-func BatchByName(name string) (*render.Batch, error) {
-	if batch, ok := batches[name]; ok {
-		return nil, fmt.Errorf("batch '%s' doesn't exist", name)
+func BatchByName(canvasID, name string) (*render.Batch, error) {
+	canvas, err := layout.CanvasByName(canvasID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if batch, err := canvas.BatchByName(name); err != nil {
+		return nil, err
 	} else {
 		return batch, nil
 	}

@@ -27,3 +27,8 @@ type ResourcePointer struct {
 	ResourceType string
 	ResourceID   string
 }
+
+type BatchPointer struct {
+	CanvasID string
+	BatchID  string
+}

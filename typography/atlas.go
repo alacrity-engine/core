@@ -7,12 +7,15 @@ import (
 	"github.com/alacrity-engine/core/render"
 )
 
-// TODO: automatically create a batch
-// for each loaded font atlas.
-
 type Atlas struct {
-	Frames      map[rune]geometry.Rect
+	Glyphs      map[rune]Glyph
 	CharTexture *render.Texture
+}
+
+type Glyph struct {
+	Dot     geometry.Vec
+	Frame   geometry.Rect
+	Advance float64
 }
 
 func (atlas *Atlas) CreateCharSprite(
@@ -24,7 +27,7 @@ func (atlas *Atlas) CreateCharSprite(
 		return nil, fmt.Errorf("the character texture is nil")
 	}
 
-	frame, ok := atlas.Frames[char]
+	glyph, ok := atlas.Glyphs[char]
 
 	if !ok {
 		return nil, fmt.Errorf("no character entry for '%c'", char)
@@ -32,7 +35,7 @@ func (atlas *Atlas) CreateCharSprite(
 
 	sprite, err := render.NewSpriteFromTextureAndProgram(
 		vertexDrawMode, textureDrawMode, colorDrawMode,
-		atlas.CharTexture, shaderProgram, frame)
+		atlas.CharTexture, shaderProgram, glyph.Frame)
 
 	if err != nil {
 		return nil, err
@@ -46,13 +49,13 @@ func (atlas *Atlas) SetCharForSprite(sprite *render.Sprite, char rune) error {
 		return fmt.Errorf("textures don't match")
 	}
 
-	frame, ok := atlas.Frames[char]
+	glyph, ok := atlas.Glyphs[char]
 
 	if !ok {
 		return fmt.Errorf("no character entry for '%c'", char)
 	}
 
-	err := sprite.SetTargetArea(frame)
+	err := sprite.SetTargetArea(glyph.Frame)
 
 	if err != nil {
 		return err
